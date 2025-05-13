@@ -1,0 +1,135 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [120.6845, 15.0306]
+      },
+      "properties": {
+        "type": "Vehicle Collision",
+        "severity": 3,
+        "date": "2024-05-15",
+        "location": "Barangay Dolores"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [120.6830, 15.0320]
+      },
+      "properties": {
+        "type": "Pedestrian Incident",
+        "severity": 4,
+        "date": "2024-04-22",
+        "location": "Barangay San Jose"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [120.6840, 15.0345]
+      },
+      "properties": {
+        "type": "Vehicle Collision",
+        "severity": 3,
+        "date": "2024-06-10",
+        "location": "Barangay Sindalan"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [120.6825, 15.0350]
+      },
+      "properties": {
+        "type": "Pedestrian Incident",
+        "severity": 4,
+        "date": "2024-07-05",
+        "location": "Barangay San Agustin"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [120.6860, 15.0300]
+      },
+      "properties": {
+        "type": "Vehicle Collision",
+        "severity": 2,
+        "date": "2024-08-01",
+        "location": "Barangay Telabastagan"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [120.6880, 15.0330]
+      },
+      "properties": {
+        "type": "Pedestrian Incident",
+        "severity": 3,
+        "date": "2024-09-14",
+        "location": "Barangay San Isidro"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [120.6810, 15.0285]
+      },
+      "properties": {
+        "type": "Vehicle Collision",
+        "severity": 2,
+        "date": "2024-10-20",
+        "location": "Barangay Maimpis"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [120.6790, 15.0275]
+      },
+      "properties": {
+        "type": "Pedestrian Incident",
+        "severity": 4,
+        "date": "2024-11-08",
+        "location": "Barangay San Nicolas"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [120.6900, 15.0260]
+      },
+      "properties": {
+        "type": "Vehicle Collision",
+        "severity": 1,
+        "date": "2024-12-15",
+        "location": "Barangay Del Pilar"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [120.6820, 15.0290]
+      },
+      "properties": {
+        "type": "Pedestrian Incident",
+        "severity": 3,
+        "date": "2024-01-10",
+        "location": "Barangay Del Rosario"
+      }
+    }
+  ]
+}
