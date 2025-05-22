@@ -672,6 +672,22 @@
         "date": "2024-01-01",
         "location": "Barangay Del Rosario"
       }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          120.7305,
+          15.0405
+        ]
+      },
+      "properties": {
+        "type": "Vehicle Collision",
+        "severity": "3",
+        "date": "2024-03-03",
+        "location": "Barangay Del Rosario"
+      }
     }
   ]
 }

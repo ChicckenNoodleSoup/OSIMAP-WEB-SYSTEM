@@ -546,6 +546,19 @@
       "properties": {
         "severity": "2"
       }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          120.7305,
+          15.0405
+        ]
+      },
+      "properties": {
+        "severity": "3"
+      }
     }
   ]
 }
