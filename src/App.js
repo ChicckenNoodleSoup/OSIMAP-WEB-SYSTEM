@@ -10,7 +10,7 @@ function Sidebar() {
             <div>
                 <div className="logo">
                     <img src="/logo192.png" alt="Logo" />
-                    <span>SAFEMAP</span>
+                    <span>OSIMAP</span>
                 </div>
                 <div className="menu-item" onClick={() => navigate('/')}>
                     <img src="https://via.placeholder.com/24.png?text=Dashboard" alt="Dashboard" />
