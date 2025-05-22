@@ -5,6 +5,7 @@ import MapView from './MapView';
 function Sidebar() {
     const navigate = useNavigate();
 
+    //can be edited for the images of the icons, create a folder first when putting the icons like png or jpeg. create the folder in public
     return (
         <div className="sidebar">
             <div>
@@ -45,7 +46,9 @@ function Sidebar() {
         </div>
     );
 }
+//end of edit
 
+ //can be edited for ui for the dashboard
 function Dashboard() {
     return (
         <div className="main-content">
@@ -95,6 +98,7 @@ function Dashboard() {
         </div>
     );
 }
+// end of edit
 
 function AddRecord({ accidents, setAccidents }) {
     const [formData, setFormData] = useState({
@@ -180,6 +184,7 @@ function AddRecord({ accidents, setAccidents }) {
         linkElement.click();
     };
 
+    // can be editted for the buttons and layouts, check the accidents.geojson and the accidents_for heatmap.geojson for the format of inputted data
     return (
         <div className="main-content">
             <div className="header">
@@ -212,12 +217,13 @@ function AddRecord({ accidents, setAccidents }) {
         </div>
     );
 }
+//end of edit
 
 function App() {
     const initialAccidents = {
         type: "FeatureCollection",
         features: [
-            // your initial features here...
+           
         ]
     };
 
