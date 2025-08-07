@@ -1,46 +1,89 @@
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import './Sidebar.css';
 
 function Sidebar({ onLogout }) {
   const navigate = useNavigate();
+  const location = useLocation();
+  const [collapsed, setCollapsed] = useState(false);
+
+  const isActive = (path) => location.pathname === path;
+
+  const toggleSidebar = () => setCollapsed(!collapsed);
 
   return (
-    <div className="sidebar">
-      <div>
-        <div className="logo">
-          <img src="/logo192.png" alt="Logo" />
-          <span>OSIMAP</span>
+    <div className={`sidebar ${collapsed ? 'collapsed' : ''}`}>
+      <div className="sidebar-top">
+        <div className="sidebar-logo">
+          <img
+            src={collapsed ? "/osimap-logo.png" : "/signin-logo.png"}
+            alt="Logo"
+            className="logo-img"
+          />
         </div>
-        <div className="menu-item" onClick={() => navigate('/')}>
-          <img src="https://via.placeholder.com/24.png?text=Dashboard" alt="Dashboard" />
-          <span>Dashboard</span>
-        </div>
-        <div className="menu-item" onClick={() => navigate('/map')}>
-          <img src="https://via.placeholder.com/24.png?text=Map" alt="Map" />
-          <span>View Map</span>
-        </div>
-        <div className="menu-item" onClick={() => navigate('/add-record')}>
-          <img src="https://via.placeholder.com/24.png?text=Add" alt="Add" />
-          <span>Add Record</span>
-        </div>
-        <div className="menu-item" onClick={() => alert('Feature coming soon!')}>
-          <img src="https://via.placeholder.com/24.png?text=Records" alt="Records" />
-          <span>Current Records</span>
-        </div>
-        <div className="menu-item">
-          <img src="https://via.placeholder.com/24.png?text=Support" alt="Support" />
-          <span>Help & Support</span>
-        </div>
+
+        <div className="hamburger-menu" onClick={toggleSidebar}>☰</div>
+
+        {!collapsed && (
+          <div className="menu">
+            <div
+              className={`menu-item ${isActive('/') ? 'active' : ''}`}
+              onClick={() => navigate('/')}
+            >
+              <img src="/dashboard-icon.png" alt="Dashboard" />
+              <span>Dashboard</span>
+            </div>
+
+            <div
+              className={`menu-item ${isActive('/map') ? 'active' : ''}`}
+              onClick={() => navigate('/map')}
+            >
+              <img src="/map-icon.png" alt="View Map" />
+              <span>View Map</span>
+            </div>
+
+            <div
+              className={`menu-item ${isActive('/current-records') ? 'active' : ''}`}
+              onClick={() => alert('Feature coming soon!')}
+            >
+              <img src="/currentrecords-icon.png" alt="Current Records" />
+              <span>Current Records</span>
+            </div>
+
+            <div
+              className={`menu-item ${isActive('/add-record') ? 'active' : ''}`}
+              onClick={() => navigate('/add-record')}
+            >
+              <img src="/record-icon.png" alt="Add Record" />
+              <span>Add Record</span>
+            </div>
+
+            <div
+              className={`menu-item ${isActive('/help') ? 'active' : ''}`}
+              onClick={() => navigate('/help')}
+            >
+              <img src="/help-icon.png" alt="Help" />
+              <span>Help & Support</span>
+            </div>
+          </div>
+        )}
       </div>
-      <div>
-        <div className="menu-item">
-          <img src="https://via.placeholder.com/24.png?text=Profile" alt="Profile" />
-          <span>User Profile</span>
+
+      {!collapsed && (
+        <div className="sidebar-bottom">
+          <div
+            className={`menu-item ${isActive('/profile') ? 'active' : ''}`}
+            onClick={() => navigate('/profile')}
+          >
+            <img src="/profile-icon.png" alt="User" />
+            <span>User Profile</span>
+          </div>
+
+          <div className="logout-btn" onClick={onLogout}>
+            <button>Logout</button>
+          </div>
         </div>
-        <div className="menu-item" onClick={onLogout}>
-          <span style={{ color: 'red' }}>Logout</span>
-        </div>
-      </div>
+      )}
     </div>
   );
 }
