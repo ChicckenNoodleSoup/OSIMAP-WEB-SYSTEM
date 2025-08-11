@@ -43,8 +43,8 @@ function Sidebar({ onLogout }) {
             </div>
 
             <div
-              className={`menu-item ${isActive('/current-records') ? 'active' : ''}`}
-              onClick={() => alert('Feature coming soon!')}
+              className={`menu-item ${isActive('/currentrecords') ? 'active' : ''}`}
+              onClick={() => navigate('/currentrecords')}
             >
               <img src="/currentrecords-icon.png" alt="Current Records" />
               <span>Current Records</span>

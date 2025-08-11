@@ -24,7 +24,7 @@ function SignIn({ setIsAuthenticated }) {
   return (
     <div className="signin-wrapper">
       <div className="signin-image-side">
-        <img src="/signin-image.png" alt="Background" className="bg-image" />
+        <img src="/signin-image.png" alt="Background" className="signin-bg-image" />
         <img src="/signin-logo.png" alt="Overlay" className="overlay-image" />
       </div>
 

@@ -4,6 +4,8 @@ import SignIn from './SignIn';
 import Sidebar from './Sidebar';
 import Dashboard from './Dashboard';
 import MapView from './MapView';
+import CurrentRecords from './CurrentRecords';
+import './App.css';
 
 function ProtectedRoute({ isAuthenticated, children }) {
   return isAuthenticated ? children : <Navigate to="/signin" />;
@@ -12,7 +14,6 @@ function ProtectedRoute({ isAuthenticated, children }) {
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-  // On page load, check if user was previously logged in
   useEffect(() => {
     const storedAuth = localStorage.getItem('isAuthenticated');
     if (storedAuth === 'true') {
@@ -20,7 +21,6 @@ function App() {
     }
   }, []);
 
-  // Sync auth state to localStorage
   useEffect(() => {
     localStorage.setItem('isAuthenticated', isAuthenticated);
   }, [isAuthenticated]);
@@ -33,26 +33,30 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* Sign In page route */}
         <Route
           path="/signin"
           element={<SignIn setIsAuthenticated={setIsAuthenticated} />}
         />
 
-        {/* Protected routes */}
         <Route
           path="/*"
           element={
             <ProtectedRoute isAuthenticated={isAuthenticated}>
-              <div style={{ display: 'flex', minHeight: '100vh' }}>
-                <Sidebar onLogout={handleLogout} />
-                <div style={{ flex: 1, padding: '40px' }}>
-                  <Routes>
-                    <Route path="/" element={<Dashboard />} />
-                    <Route path="/map" element={<MapView />} />
-                  </Routes>
+              <>
+                {/* Fixed background behind everything */}
+                <img src="/background-image.png" alt="Background" className="bg-image" />
+
+                <div style={{ display: 'flex', minHeight: '100vh', position: 'relative' }}>
+                  <Sidebar onLogout={handleLogout} />
+                  <div className="main-content">
+                    <Routes>
+                      <Route path="/" element={<Dashboard />} />
+                      <Route path="/map" element={<MapView />} />
+                      <Route path="/currentrecords" element={<CurrentRecords />} />
+                    </Routes>
+                  </div>
                 </div>
-              </div>
+              </>
             </ProtectedRoute>
           }
         />
