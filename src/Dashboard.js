@@ -1,55 +1,53 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
+import './Dashboard.css';
 
 function Dashboard() {
+  const navigate = useNavigate();
+
   return (
-    <div className="main-content">
-      <div className="header">
-        <div className="date">May 22, 2025</div>
-        <div className="time">10:28 AM</div>
-      </div>
-      <div className="content">
-        <div className="data-section">
-          <h1 style={{ marginBottom: '20px' }}>San Fernando HeatMap (Prototype)</h1>
-          <h2>Data Analysis</h2>
-          <table>
-            <thead>
-              <tr>
-                <th>Category</th>
-                <th>Value</th>
-                <th>Change</th>
-                <th>Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>Metric 1</td>
-                <td>123</td>
-                <td>+5%</td>
-                <td><button>View Report</button></td>
-              </tr>
-              <tr>
-                <td>Metric 2</td>
-                <td>456</td>
-                <td>-2%</td>
-                <td><button>View Report</button></td>
-              </tr>
-              <tr>
-                <td>Metric 3</td>
-                <td>789</td>
-                <td>+10%</td>
-                <td><button>View Report</button></td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-        <div className="map-section">
-          <div className="map-placeholder">
-            <p>Heatmap preview or placeholder here</p>
+    <div className="dashboard">
+      <h1 className="dashboard-title">Dashboard</h1>
+      <div className="dashboard-grid">
+
+        {/* Left column */}
+        <div className="dashboard-column">
+          <div className="dashboard-card card-large" onClick={() => navigate('/currentrecords')}>
+            <h2>Current Records</h2>
+            <p>View all existing records</p>
+          </div>
+
+          <div className="small-cards-row">
+            <div className="dashboard-card card-small" onClick={() => navigate('/add-record')}>
+              <h2>Add Record</h2>
+              <p>Quickly add a new record</p>
+            </div>
+
+            <div className="dashboard-card card-small" onClick={() => navigate('/help')}>
+              <h2>Help & Support</h2>
+              <p>Get assistance and FAQs</p>
+            </div>
           </div>
         </div>
+
+        {/* Right column */}
+        <div className="dashboard-column">
+          <div className="dashboard-card card-large card-map" onClick={() => navigate('/map')}>
+            <h2>Map View</h2>
+            <p>See accident locations</p>
+          </div>
+
+          <div className="dashboard-card card-medium" onClick={() => navigate('/profile')}>
+              <h2>User Profile</h2>
+              <p>Manage your account</p>
+          </div>
+        </div>
+
       </div>
     </div>
   );
 }
 
 export default Dashboard;
+
+
