@@ -5,6 +5,7 @@
 
 .records-container {
   width: 100%;
+  padding-bottom: 20px;
 }
 
 h1 {
@@ -108,7 +109,7 @@ h1 {
 }
 
 .table-body-wrapper {
-  max-height: 500px; 
+  max-height: 450px; 
   overflow-y: auto;
   border-left: 1px solid #ccc;
   border-right: 1px solid #ccc;
