@@ -23,9 +23,8 @@
   flex: 1;
 }
 
-/* Common card styles */
 .dashboard-card {
-  background: rgba(241, 239, 236, 0.1); /* #F1EFEC with 10% opacity */
+  background: rgba(241, 239, 236, 0.1); 
   border-radius: 28px;
   padding: 20px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
@@ -49,7 +48,6 @@
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
 }
 
-/* Sizes */
 .card-large {
   height: 370px;
 }

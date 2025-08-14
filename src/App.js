@@ -5,6 +5,7 @@ import Sidebar from './Sidebar';
 import Dashboard from './Dashboard';
 import MapView from './MapView';
 import CurrentRecords from './CurrentRecords';
+import HelpSupport from './HelpSupport';
 import './App.css';
 
 function ProtectedRoute({ isAuthenticated, children }) {
@@ -33,26 +34,24 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route
-          path="/signin"
-          element={<SignIn setIsAuthenticated={setIsAuthenticated} />}
-        />
+        {/* Public sign-in */}
+        <Route path="/signin" element={<SignIn setIsAuthenticated={setIsAuthenticated} />} />
 
+        {/* Protected area */}
         <Route
           path="/*"
           element={
             <ProtectedRoute isAuthenticated={isAuthenticated}>
               <>
-                {/* Fixed background behind everything */}
                 <img src="/background-image.png" alt="Background" className="bg-image" />
-
                 <div style={{ display: 'flex', minHeight: '100vh', position: 'relative' }}>
                   <Sidebar onLogout={handleLogout} />
                   <div className="main-content">
                     <Routes>
-                      <Route path="/" element={<Dashboard />} />
-                      <Route path="/map" element={<MapView />} />
-                      <Route path="/currentrecords" element={<CurrentRecords />} />
+                      <Route index element={<Dashboard />} />
+                      <Route path="map" element={<MapView />} />
+                      <Route path="currentrecords" element={<CurrentRecords />} />
+                      <Route path="helpsupport" element={<HelpSupport />} />
                     </Routes>
                   </div>
                 </div>
