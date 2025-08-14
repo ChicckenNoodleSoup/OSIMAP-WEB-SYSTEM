@@ -36,7 +36,7 @@ function SignIn({ setIsAuthenticated }) {
             <h6>Username</h6>
             <input
               type="text"
-              placeholder="jan nikko lozano"
+              placeholder="Enter Username"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
             />
@@ -45,7 +45,7 @@ function SignIn({ setIsAuthenticated }) {
             <div className="password-wrapper">
               <input
                 type={showPassword ? 'text' : 'password'}
-                placeholder="sahurtungtung"
+                placeholder="Enter Password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
