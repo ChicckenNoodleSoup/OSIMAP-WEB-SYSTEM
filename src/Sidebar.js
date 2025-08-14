@@ -59,8 +59,8 @@ function Sidebar({ onLogout }) {
             </div>
 
             <div
-              className={`menu-item ${isActive('/help') ? 'active' : ''}`}
-              onClick={() => navigate('/help')}
+              className={`menu-item ${isActive('/helpsupport') ? 'active' : ''}`}
+              onClick={() => navigate('/helpsupport')}
             >
               <img src="/help-icon.png" alt="Help" />
               <span>Help & Support</span>
