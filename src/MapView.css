@@ -1,0 +1,65 @@
+/* Outer scrollable wrapper */
+.scroll-wrapper {
+  overflow-y: auto;
+  height: 100vh;
+  background-color: transparent;
+  padding: 1rem;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem; /* spacing below header */
+  flex-wrap: wrap; /* wrap on small screens */
+}
+
+.page-title {
+  color: white;
+  margin: 0;
+  font-size: clamp(1.5rem, 4vw, 2.5rem); /* responsive h1 size */
+  font-weight: 700; /* typical h1 weight */
+}
+/* Container for the map section */
+.mapview-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1%;
+}
+
+/* Card styling */
+.map-card {
+  background: rgba(241, 239, 236, 0.1);
+  border-radius: 28px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+  padding: 2%;
+}
+
+/* Map wrapper inside the card */
+.mapview-wrapper {
+  height: 600px; /* default height */
+  width: 100%;
+}
+
+/* Full-size map */
+.mapview-map {
+  height: 100%;
+  width: 100%;
+}
+
+/* Tooltip styling */
+.mapview-tooltip {
+  color: black;
+  font-weight: bold;
+  background: rgba(255, 255, 255, 0.85);
+  padding: 5px;
+  border-radius: 28px;
+}
+
+/* Responsive adjustment for short viewports */
+@media (max-height: 800px) {
+  .mapview-wrapper {
+    height: 70vh; /* shrink map height on short screens */
+  }
+}

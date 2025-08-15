@@ -3,6 +3,7 @@ import './HelpSupport.css';
 
 function HelpSupport() {
   return (
+    <div className='scroll-wrapper'>
     <div className="help-support-container">
       {/* Logo at the top */}
       <img src="/signin-logo.png" alt="Logo" className="help-logo" />
@@ -87,6 +88,7 @@ function HelpSupport() {
           </div>
         </div>
       </div>
+    </div>
     </div>
   );
 }
