@@ -1,13 +1,17 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import './Dashboard.css';
+import { DateTime } from './DateTime';
 
 function Dashboard() {
   const navigate = useNavigate();
 
   return (
     <div className="dashboard">
-      <h1 className="dashboard-title">Dashboard</h1>
+      <div className="page-header">
+        <h1 className="page-title">Dashboard</h1>
+        <DateTime />
+      </div>
       <div className="dashboard-grid">
 
         {/* Left column */}
@@ -23,7 +27,7 @@ function Dashboard() {
               <p>Quickly add a new record</p>
             </div>
 
-            <div className="dashboard-card card-small" onClick={() => navigate('/help')}>
+            <div className="dashboard-card card-small" onClick={() => navigate('/helpsupport')}>
               <h2>Help & Support</h2>
               <p>Get assistance and FAQs</p>
             </div>

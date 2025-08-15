@@ -34,24 +34,28 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* Public sign-in */}
-        <Route path="/signin" element={<SignIn setIsAuthenticated={setIsAuthenticated} />} />
+        <Route
+          path="/signin"
+          element={<SignIn setIsAuthenticated={setIsAuthenticated} />}
+        />
 
-        {/* Protected area */}
         <Route
           path="/*"
           element={
             <ProtectedRoute isAuthenticated={isAuthenticated}>
               <>
+                {/* Fixed background behind everything */}
                 <img src="/background-image.png" alt="Background" className="bg-image" />
+
                 <div style={{ display: 'flex', minHeight: '100vh', position: 'relative' }}>
                   <Sidebar onLogout={handleLogout} />
                   <div className="main-content">
                     <Routes>
-                      <Route index element={<Dashboard />} />
-                      <Route path="map" element={<MapView />} />
-                      <Route path="currentrecords" element={<CurrentRecords />} />
-                      <Route path="helpsupport" element={<HelpSupport />} />
+                      <Route path="/" element={<Dashboard />} />
+                      <Route path="/map" element={<MapView />} />
+                      <Route path="/currentrecords" element={<CurrentRecords />} />
+                      <Route path="/helpsupport" element={<HelpSupport />} />
+                      <Route path="*" element={<div>Page Not Found</div>} />
                     </Routes>
                   </div>
                 </div>

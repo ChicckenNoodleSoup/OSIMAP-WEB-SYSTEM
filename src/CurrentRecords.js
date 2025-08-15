@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import './CurrentRecords.css';
+import { DateTime } from './DateTime';
 
 function CurrentRecords() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -42,7 +43,10 @@ function CurrentRecords() {
   return (
     <div className="scroll-wrapper">
     <div className="records-container">
-      <h1>Current Records</h1>
+      <div className="page-header">
+        <h1 className="page-title">Current Records</h1>
+        <DateTime />
+      </div>
 
       {/* Search & Actions */}
       <div className="search-actions">

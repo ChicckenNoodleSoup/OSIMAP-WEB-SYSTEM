@@ -1,0 +1,13 @@
+.date-time {
+  color: white;
+  font-weight: 700; /* match h1 weight */
+  font-size: clamp(1rem, 2vw, 1.5rem); /* slightly smaller than title but scales */
+  white-space: nowrap;
+  text-align: right;
+}
+
+@media (max-width: 768px) {
+  .date-time {
+    font-size: clamp(1rem, 2vw, 1.5rem); 
+  }
+}
