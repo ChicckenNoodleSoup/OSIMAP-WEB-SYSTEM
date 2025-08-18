@@ -1,0 +1,238 @@
+/* Universal settings */
+* {
+  font-family: 'Poppins', sans-serif;
+  box-sizing: border-box;
+}
+
+.signin-container {
+  position: relative;
+  height: 100vh;
+}
+
+.signin-wrapper {
+  position: relative;
+  display: flex;
+  height: 100%;
+}
+
+.signin-image-side {
+  position: relative;
+  flex: 0 0 50%;
+  overflow: hidden;
+}
+
+.signin-bg-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.overlay-image {
+  position: absolute;
+  top: 35%;
+  left: 45%;
+  transform: translate(-50%, -50%);
+  width: 50%;
+  height: auto;
+  pointer-events: none;
+}
+
+/* Form side */
+.signin-form-side {
+  flex: 0 0 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  z-index: 2;
+}
+
+.frosted-right {
+  position: absolute;
+  top: 0;
+  left: -10%;
+  width: 75%;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.2);
+  border-top-left-radius: 2vw;
+  border-bottom-left-radius: 2vw;
+  z-index: 0;
+}
+
+.signin-form-side::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -5%;
+  width: 105%;
+  height: 100%;
+  background: linear-gradient(to bottom, #000000, #0085FF);
+  z-index: 1;
+  border-top-left-radius: 2vw;
+  border-bottom-left-radius: 2vw;
+}
+
+/* Card */
+.signin-card {
+  position: relative;
+  z-index: 2;
+  background: rgba(241, 239, 236, 0.05);
+  border-radius: 3vw;
+  padding: clamp(1rem, 4vw, 3rem);
+  width: 90%;
+  max-width: 30rem;
+  color: rgba(241, 239, 236, 0.5);
+  box-shadow: 0 0.4rem 0.4rem rgba(0, 0, 0, 0.25);
+  font-weight: bold;
+}
+
+.signin-card-logo {
+  width: 100%;
+  max-height: clamp(6rem, 15vh, 9rem);
+  object-fit: contain;
+  margin-bottom: clamp(1rem, 3vh, 1.5rem);
+}
+
+h6 {
+  color: #F1EFEC;
+  font-size: clamp(0.8rem, 1.2vw, 1rem);
+  margin: 0.3em 0.7em;
+}
+
+/* Inputs */
+.signin-card input {
+  width: 100%;
+  height: clamp(2.2rem, 5vh, 2.8rem);
+  padding: 0.8em 1em;
+  margin: 0.2em 0 1em;
+  border: none;
+  border-radius: 5rem;
+  background: rgba(241, 239, 236, 0.05);
+  color: rgba(241, 239, 236, 0.5);
+  font-size: clamp(0.9rem, 1vw, 1rem);
+  font-weight: bold;
+  box-shadow: inset 0 0 0 0.15rem rgba(0, 0, 0, 0.05);
+}
+
+.signin-card input::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.password-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.password-wrapper input {
+  padding-right: 2.5rem;
+}
+
+.eye-icon {
+  position: absolute;
+  right: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+}
+
+.eye-icon svg {
+  width: clamp(1.2rem, 2vw, 1.5rem);
+  height: auto;
+  fill: rgba(241, 239, 236, 0.5);
+}
+
+/* Options */
+.signin-options {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: clamp(0.7rem, 1vw, 0.8rem);
+  margin-bottom: clamp(1.5rem, 3vh, 2rem);
+  color: #F1EFEC;
+  font-weight: normal;
+  padding: 0 1rem;
+}
+
+.remember-me {
+  display: flex;
+  align-items: center;
+  gap: 0.4em;
+  cursor: pointer;
+  user-select: none;
+  line-height: 1;
+}
+
+.checkbox-icon svg {
+  width: clamp(0.8rem, 1vw, 0.9rem);
+  height: auto;
+}
+
+.checkbox-icon svg rect {
+  fill: transparent;
+  stroke: #F1EFEC;
+  stroke-width: 2;
+  rx: 4;
+}
+
+.checkbox-icon svg path {
+  stroke: #F1EFEC;
+  stroke-width: 2;
+  fill: none;
+}
+
+.remember-text {
+  font-weight: normal;
+  font-size: clamp(0.7rem, 1vw, 0.8rem);
+  color: #F1EFEC;
+}
+
+.forgot-link {
+  text-decoration: none;
+  color: #F1EFEC;
+}
+
+.forgot-link:hover {
+  text-decoration: underline;
+}
+
+/* Button */
+.signin-card button {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: clamp(2.2rem, 5vh, 2.8rem);
+  width: 100%;
+  padding: 0.8em;
+  border-radius: 5rem;
+  font-weight: bold;
+  font-size: clamp(0.9rem, 1vw, 1rem);
+  background: #0085FF;
+  color: #F1EFEC;
+  border: none;
+  cursor: pointer;
+  transition: background 0.3s;
+  box-shadow: 0 0.3rem 0.3rem rgba(0, 0, 0, 0.25);
+}
+
+.signin-card button:hover {
+  background: #1c86ee;
+}
+
+/* Responsive tweaks */
+@media (max-width: 768px) {
+  .signin-wrapper {
+    flex-direction: column;
+  }
+  .signin-image-side {
+    display: none;
+  }
+  .signin-form-side {
+    flex: 1 1 auto;
+  }
+  .frosted-right, .signin-form-side::before {
+    display: none;
+  }
+}

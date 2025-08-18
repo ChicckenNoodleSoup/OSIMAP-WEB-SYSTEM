@@ -1,3 +1,9 @@
+
+
+* {
+  font-family: 'Poppins', sans-serif;
+}
+
 .App {
   text-align: center;
 }
@@ -35,4 +41,23 @@
   to {
     transform: rotate(360deg);
   }
+}
+
+.bg-image {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover; 
+  z-index: -1;
+  background: 
+    linear-gradient(to bottom, black 0%, #0085FF 50%, black 100%), center/cover no-repeat;
+}
+
+.main-content {
+  flex: 1;
+  padding: 20px;
+  box-sizing: border-box;
+  z-index: 1; 
 }

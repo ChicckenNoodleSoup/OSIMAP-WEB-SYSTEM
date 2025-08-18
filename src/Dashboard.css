@@ -1,0 +1,100 @@
+.dashboard {
+  padding: 20px;
+  min-height: 100vh;
+  box-sizing: border-box;
+  max-height: 500px; 
+  overflow-y: auto;
+}
+
+.dashboard-title {
+  margin-bottom: 20px;
+  color: white;
+}
+
+.dashboard-grid {
+  display: flex;
+  gap: 30px;
+}
+
+.dashboard-column {
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+  flex: 1;
+}
+
+.dashboard-card {
+  background: rgba(241, 239, 236, 0.1); 
+  border-radius: 28px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  color: white;
+}
+
+.dashboard-card h2 {
+  font-size: 20px;
+  margin-bottom: 10px;
+}
+
+.dashboard-card p {
+  font-size: 14px;
+  color: white;
+}
+
+.dashboard-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+}
+
+.card-large {
+  height: 370px;
+}
+
+.card-medium {
+  height: 150px;
+}
+
+.card-small {
+  height: 180px;
+  width: auto;
+}
+
+.small-cards-row {
+  display: flex;
+  gap: 20px;
+}
+
+.small-cards-row .dashboard-card.card-small {
+  flex: 1; 
+  height: 180px; 
+  width: auto;
+  margin: 0 3rem 0 3rem;
+}
+
+.card-map{
+    height: 400px;
+}
+
+@media (max-width: 768px) {
+  .dashboard-grid {
+    flex-direction: column;
+  }
+  .dashboard-column {
+    flex: none;
+  }
+  .small-cards-row {
+    flex-direction: column;
+  }
+  .small-cards-row .dashboard-card.card-small {
+    flex: none;
+    width: 100%;
+    height: auto;
+
+  }
+  .card-large,
+  .card-medium {
+    height: auto;
+  }
+}

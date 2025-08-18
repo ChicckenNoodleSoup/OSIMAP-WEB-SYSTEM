@@ -1,0 +1,156 @@
+.help-scroll-wrapper {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;      
+  overflow-y: scroll;     
+  overflow-x: auto;       
+  padding: 20px 0; 
+  box-sizing: border-box;
+}
+
+.help-support-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+  min-height: 100%;
+  width: 100%;
+  padding: 0% 1% 1% 1%;
+  box-sizing: border-box;
+  gap: 1px;
+}
+
+.help-logo {
+  max-width: 300px;
+  height: auto;
+  display: block;
+}
+
+.help-card {
+  background: rgba(241, 239, 236, 0.1);
+  padding: 2% 7% 2% 7%;
+  border-radius: 28px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  width: 100%;
+  max-width: 1200px; 
+  box-sizing: border-box;
+}
+
+.help-title {
+  font-size: 1.8rem;
+  color: white;
+  text-align: center;
+}
+
+.help-text {
+  text-align: justify;
+  display: block;
+  margin-top: -1rem;
+  padding-top: 0;
+}
+
+.text-column-container {
+  display: flex;
+  gap: 100px;
+}
+
+.text-column {
+  display: flex;
+  align-items: center; 
+  gap: 40px;         
+  margin-bottom: 15px;
+}
+
+.columnOne, .columnTwo {
+  flex: 1; 
+  min-width: 0;
+}
+
+.help-icon {
+  width: 45px;
+  height: 45px;
+  flex-shrink: 0; 
+}
+
+.help-details {
+  flex: 1;
+  font-size: 1rem;
+  color: white;
+  line-height: 1.5;
+  text-align: justify;
+  margin: 0;
+}
+
+.help-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.help-form input {
+  padding: 10px;
+  border-radius: 16px;
+  border: none;
+  outline: none;
+  font-size: 1rem;
+  background: rgba(241, 239, 236, 0.1);
+}
+
+.help-form input::placeholder {
+  color: white; 
+}
+
+.message-input {
+  height: 150px;
+  padding: 10px;
+  border-radius: 16px;
+  border: none;
+  outline: none;
+  font-size: 1rem;
+  background: rgba(241, 239, 236, 0.1);
+  color: white;
+  resize: none;
+  box-sizing: border-box;
+}
+
+.message-input::placeholder {
+  color: white;
+  vertical-align: top;
+}
+
+.form-buttons {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.help-btn {
+  flex: 1;
+  padding: 10px 18px;
+  border: none;
+  border-radius: 28px;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.primary-btn {
+  background-color: transparent;
+  color: #F1EFEC;
+}
+
+.secondary-btn {
+  background-color: #0085FF;
+  color: #F1EFEC;
+}
+
+.primary-btn:hover, .secondary-btn:hover {
+  background-color: #0056b3;
+}
+
+@media (max-width: 768px) {
+  .text-column {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
