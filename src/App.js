@@ -7,6 +7,7 @@ import MapView from './MapView';
 import CurrentRecords from './CurrentRecords';
 import AddRecord from './AddRecord';
 import HelpSupport from './HelpSupport';
+import Profile from './Profile';
 import './App.css';
 
 function ProtectedRoute({ isAuthenticated, children }) {
@@ -45,7 +46,6 @@ function App() {
           element={
             <ProtectedRoute isAuthenticated={isAuthenticated}>
               <>
-                {/* Fixed background behind everything */}
                 <img src="/background-image.png" alt="Background" className="bg-image" />
 
                 <div style={{ display: 'flex', minHeight: '100vh', position: 'relative' }}>
@@ -57,6 +57,7 @@ function App() {
                       <Route path="/currentrecords" element={<CurrentRecords />} />
                       <Route path="/add-record" element={<AddRecord />} />
                       <Route path="/helpsupport" element={<HelpSupport />} />
+                      <Route path="/profile" element={<Profile />} />
                       <Route path="*" element={<div>Page Not Found</div>} />
                     </Routes>
                   </div>

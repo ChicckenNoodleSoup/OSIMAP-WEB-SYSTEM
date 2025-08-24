@@ -6,7 +6,7 @@ function CurrentRecords() {
   const [searchTerm, setSearchTerm] = useState('');
   const [isEditing, setIsEditing] = useState(false);
   const [records, setRecords] = useState([
-    { id: 1, date: '2025-08-01', time: '12:30', longitude: '120.98', latitude: '14.60', weather: 'Sunny', accidentType: 'Collision' },
+    { id: 1, date: '2025-08-01', time: '12:30', longitude: '120.98', latitude: '14.60', weather: 'Sunny', accidentType: 'SKIBIDI' },
     { id: 2, date: '2025-08-02', time: '15:45', longitude: '121.05', latitude: '14.55', weather: 'Rainy', accidentType: 'Overturn' },
     { id: 3, date: '2025-08-03', time: '09:15', longitude: '120.99', latitude: '14.65', weather: 'Cloudy', accidentType: 'Breakdown' },
     { id: 4, date: '2025-08-04', time: '14:00', longitude: '121.00', latitude: '14.60', weather: 'Sunny', accidentType: 'Collision' },

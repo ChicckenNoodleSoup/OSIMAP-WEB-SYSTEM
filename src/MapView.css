@@ -1,48 +1,83 @@
-/* Outer scrollable wrapper */
 .scroll-wrapper {
   overflow-y: auto;
   height: 100vh;
   background-color: transparent;
   padding: 1rem;
+
+  /* Firefox scrollbar */
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.3) rgba(241, 239, 236, 0.05);
 }
 
+/* Frosted Glass Scrollbar */
+.scroll-wrapper::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+
+.scroll-wrapper::-webkit-scrollbar-track {
+  background: rgba(241, 239, 236, 0.05);
+  border-radius: 10px;
+}
+
+.scroll-wrapper::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 10px;
+  backdrop-filter: blur(6px);
+  border: 2px solid rgba(241, 239, 236, 0.1);
+  transition: background 0.3s ease, transform 0.2s ease;
+}
+
+.scroll-wrapper::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 133, 255, 0.6);
+  transform: scaleX(1.1);
+  box-shadow: 0 0 6px rgba(0, 133, 255, 0.6);
+}
+
+/* Header */
 .page-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1.5rem; /* spacing below header */
-  flex-wrap: wrap; /* wrap on small screens */
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
 }
 
 .page-title {
   color: white;
   margin: 0;
-  font-size: clamp(1.5rem, 4vw, 2.5rem); /* responsive h1 size */
-  font-weight: 700; /* typical h1 weight */
+  /* font-size: clamp(1.5rem, 4vw, 2.5rem);
+  font-weight: 700; */
 }
+
 /* Container for the map section */
 .mapview-container {
   max-width: 1200px;
   margin: 0 auto;
   padding: 1%;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
 }
 
 /* Card styling */
 .map-card {
-  background: rgba(241, 239, 236, 0.1);
+  background: rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(12px);
   border-radius: 28px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
   overflow: hidden;
   padding: 2%;
+  flex: 1;
+  min-height: 400px;
 }
 
 /* Map wrapper inside the card */
 .mapview-wrapper {
-  height: 600px; /* default height */
+  height: 600px;
   width: 100%;
 }
 
-/* Full-size map */
 .mapview-map {
   height: 100%;
   width: 100%;
@@ -57,9 +92,47 @@
   border-radius: 28px;
 }
 
-/* Responsive adjustment for short viewports */
+/* 🔹 Responsiveness  */
+@media (max-width: 1024px) {
+  .mapview-container {
+    padding: 2%;
+  }
+}
+
+@media (max-width: 768px) {
+  .mapview-container {
+    padding: 4%;
+  }
+
+  .map-card {
+    min-height: auto;
+    padding: 1.5rem;
+  }
+
+  .mapview-wrapper {
+    height: 400px; 
+  }
+}
+
+@media (max-width: 480px) {
+  .mapview-container {
+    padding: 5%;
+  }
+
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .mapview-wrapper {
+    height: 300px; 
+  }
+}
+
+/* For shorter screens (landscape laptops/tablets) */
 @media (max-height: 800px) {
   .mapview-wrapper {
-    height: 70vh; /* shrink map height on short screens */
+    height: 70vh;
   }
 }
