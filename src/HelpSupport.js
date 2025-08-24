@@ -1,9 +1,11 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import './HelpSupport.css';
 
 function HelpSupport() {
+  const navigate = useNavigate();
   return (
-    <div className='scroll-wrapper'>
+    <div className='help-scroll-wrapper'>
     <div className="help-support-container">
       {/* Logo at the top */}
       <img src="/signin-logo.png" alt="Logo" className="help-logo" />
@@ -14,12 +16,13 @@ function HelpSupport() {
 
         <div className="text-column-container">
           {/* Column One */}
-          <div className="columnOne">
-            <h3>Need Help?</h3>
-            <p className="help-text">
-              We’re here to assist you! If you have any questions, concerns, or need support, feel free to reach out to us. Your satisfaction is our priority, and we’re committed to resolving your issues as quickly as possible.
-            </p>
-
+            <div className="columnOne">
+              <h3>Need Help?</h3>
+              <p className="help-text">
+                We’re here to assist you! If you have any questions, concerns, or need support, 
+                feel free to reach out to us. Your satisfaction is our priority, and we’re committed 
+                to resolving your issues as quickly as possible.
+              </p>
             {/* Address */}
             <div className="text-column">
               <svg className="help-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
@@ -81,7 +84,7 @@ function HelpSupport() {
               <input type="text" placeholder="Your Email Address" />
               <textarea className="message-input" type="text" placeholder="Your Message" />
               <div className="form-buttons">
-                <button type="submit" className="help-btn primary-btn">Go Back Home</button>
+                <button type="button" className="help-btn primary-btn" onClick={() => navigate('/')}>Go Back Home</button>
                 <button type="button" className="help-btn secondary-btn">Send Message</button>
               </div>
             </form>

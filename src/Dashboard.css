@@ -1,5 +1,5 @@
 .dashboard {
-  padding: 20px;
+  padding: 25px 2% 2% 2%;
   min-height: 100vh;
   box-sizing: border-box;
   max-height: 500px; 
@@ -11,9 +11,25 @@
   color: white;
 }
 
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem; 
+  flex-wrap: wrap; 
+}
+
+.page-title {
+  color: white;
+  margin: 0;
+  font-size: clamp(1.5rem, 4vw, 2.5rem); 
+  font-weight: 700; 
+}
+
 .dashboard-grid {
   display: flex;
   gap: 30px;
+  flex-wrap: wrap; 
 }
 
 .dashboard-column {
@@ -21,13 +37,15 @@
   flex-direction: column;
   gap: 30px;
   flex: 1;
+  min-width: 300px; 
 }
 
 .dashboard-card {
-  background: rgba(241, 239, 236, 0.1); 
+  background: rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(12px); 
   border-radius: 28px;
   padding: 20px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
   cursor: pointer;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
   color: white;
@@ -64,37 +82,85 @@
 .small-cards-row {
   display: flex;
   gap: 20px;
+  flex-wrap: wrap;
 }
 
 .small-cards-row .dashboard-card.card-small {
   flex: 1; 
   height: 180px; 
   width: auto;
-  margin: 0 3rem 0 3rem;
+  margin: 0;
 }
 
-.card-map{
-    height: 400px;
+.card-map {
+  height: 400px;
 }
 
-@media (max-width: 768px) {
+/* 📱 Responsive Adjustments */
+@media (max-width: 1024px) {
   .dashboard-grid {
     flex-direction: column;
   }
   .dashboard-column {
     flex: none;
+    width: 100%;
   }
+}
+
+@media (max-width: 768px) {
+  .dashboard {
+    padding: 15px;
+  }
+
   .small-cards-row {
     flex-direction: column;
+    gap: 15px;
   }
+
   .small-cards-row .dashboard-card.card-small {
     flex: none;
     width: 100%;
     height: auto;
+    margin: 0; 
+  }
 
-  }
   .card-large,
-  .card-medium {
-    height: auto;
+  .card-medium,
+  .card-map {
+    height: auto; 
   }
+}
+
+.dashboard::-webkit-scrollbar,
+.scroll-wrapper::-webkit-scrollbar {
+  width: 12px; 
+  height: 12px;
+}
+
+.dashboard::-webkit-scrollbar-track,
+.scroll-wrapper::-webkit-scrollbar-track {
+  background: rgba(241, 239, 236, 0.05); 
+  border-radius: 10px;
+}
+
+.dashboard::-webkit-scrollbar-thumb,
+.scroll-wrapper::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2); 
+  border-radius: 10px;
+  backdrop-filter: blur(6px); 
+  border: 2px solid rgba(241, 239, 236, 0.1); 
+  transition: background 0.3s ease, transform 0.2s ease;
+}
+
+.dashboard::-webkit-scrollbar-thumb:hover,
+.scroll-wrapper::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 133, 255, 0.6); 
+  transform: scaleX(1.1); 
+}
+
+/* Firefox support */
+.dashboard,
+.scroll-wrapper {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.3) rgba(241, 239, 236, 0.05);
 }
