@@ -5,6 +5,7 @@ import Sidebar from './Sidebar';
 import Dashboard from './Dashboard';
 import MapView from './MapView';
 import CurrentRecords from './CurrentRecords';
+import AddRecord from './AddRecord';
 import HelpSupport from './HelpSupport';
 import './App.css';
 
@@ -54,6 +55,7 @@ function App() {
                       <Route path="/" element={<Dashboard />} />
                       <Route path="/map" element={<MapView />} />
                       <Route path="/currentrecords" element={<CurrentRecords />} />
+                      <Route path="/add-record" element={<AddRecord />} />
                       <Route path="/helpsupport" element={<HelpSupport />} />
                       <Route path="*" element={<div>Page Not Found</div>} />
                     </Routes>
