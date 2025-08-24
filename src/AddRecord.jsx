@@ -1,27 +1,14 @@
 import React, { useCallback, useState } from "react";
 import { useDropzone } from "react-dropzone";
-import * as XLSX from "xlsx";
+import { Plus } from "lucide-react"; // for the plus icon
 
 export default function AddRecord() {
   const [uploadStatus, setUploadStatus] = useState("");
 
   const onDrop = useCallback((acceptedFiles) => {
     acceptedFiles.forEach((file) => {
-      // Optional: Read Excel locally for logging
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const data = new Uint8Array(e.target.result);
-        const workbook = XLSX.read(data, { type: "array" });
-        const sheetName = workbook.SheetNames[0];
-        const worksheet = workbook.Sheets[sheetName];
-        const jsonData = XLSX.utils.sheet_to_json(worksheet);
-        console.log("Parsed Excel Data:", jsonData);
-      };
-      reader.readAsArrayBuffer(file);
-
-      // Send file to backend
       const formData = new FormData();
-      formData.append("file", file);
+      formData.append("file", file); // must match multer's .single("file")
 
       fetch("http://localhost:5000/upload", {
         method: "POST",
@@ -49,23 +36,35 @@ export default function AddRecord() {
 
   return (
     <div className="flex flex-col h-full justify-center items-center space-y-4">
+      {/* Drag-and-drop box */}
       <div
         {...getRootProps()}
-        className={`border-4 border-dashed rounded-2xl p-10 w-2/3 h-64 flex items-center justify-center cursor-pointer transition-colors ${
-          isDragActive ? "border-blue-500 bg-blue-100" : "border-gray-400"
+        className={`border-4 border-dashed rounded-2xl p-10 w-2/3 h-64 flex flex-col items-center justify-center cursor-pointer transition-colors ${
+          isDragActive ? "border-blue-500 bg-blue-50" : "border-gray-300 bg-gray-50"
         }`}
       >
         <input {...getInputProps()} />
+        {/* Plus Icon */}
+        <Plus className="w-16 h-16 text-gray-400 mb-4" />
+        {/* Text */}
         {isDragActive ? (
-          <p className="text-blue-700 text-lg font-semibold">Drop the file here...</p>
+          <p className="text-blue-600 font-semibold text-lg">Drop the file here...</p>
         ) : (
-          <p className="text-gray-600 text-lg">
-            Drag and drop your Excel file here, or click to select
+          <p className="text-gray-600 font-medium text-lg">
+            Drag & Drop Excel file or <span className="text-blue-600 underline">Click to Upload</span>
           </p>
         )}
       </div>
+
+      {/* Upload Status */}
       {uploadStatus && (
-        <p className="text-center text-lg font-medium">{uploadStatus}</p>
+        <p
+          className={`text-center text-lg font-semibold ${
+            uploadStatus.startsWith("✅") ? "text-green-600" : "text-red-600"
+          }`}
+        >
+          {uploadStatus}
+        </p>
       )}
     </div>
   );
