@@ -2,15 +2,14 @@ import express from "express";
 import multer from "multer";
 import path from "path";
 import cors from "cors";
-import fs from "fs";   // move fs import to the top
+import fs from "fs";
+import { exec } from "child_process";
 
 const app = express();
 const PORT = 5000;
 
 // Enable CORS
 app.use(cors());
-
-// Optional: JSON parsing
 app.use(express.json());
 
 // Ensure "data" folder exists
@@ -34,7 +33,7 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage });
 
-// Optional root route
+// Root route
 app.get("/", (req, res) => {
   res.send("Backend is running. Use POST /upload to upload files.");
 });
@@ -44,9 +43,27 @@ app.post("/upload", upload.single("file"), (req, res) => {
   console.log("POST /upload route hit");
   console.log("File received:", req.file);
 
-  if (!req.file) return res.status(400).json({ message: "No file uploaded" });
+  if (!req.file) {
+    return res.status(400).json({ message: "No file uploaded" });
+  }
 
-  res.json({ message: "File uploaded successfully", filename: req.file.filename });
+  // Respond to frontend immediately
+  res.json({ message: "File uploaded successfully. Cleaning started...", filename: req.file.filename });
+
+  // Run Python cleaning script asynchronously
+  const pythonScript = path.join(process.cwd(), "backend", "cleaning2.py");
+  console.log(`Running Python script: ${pythonScript}`);
+
+  exec(`python "${pythonScript}"`, (error, stdout, stderr) => {
+    if (error) {
+      console.error(`❌ Error running cleaning2.py: ${error.message}`);
+      return;
+    }
+    if (stderr) {
+      console.error(`⚠ Python stderr: ${stderr}`);
+    }
+    console.log(`✅ cleaning2.py Output:\n${stdout}`);
+  });
 });
 
 // Start server
