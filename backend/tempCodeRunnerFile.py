@@ -1,0 +1,1 @@
+OUTPUT_PATH = "./backend/data/accidents.geojson"
