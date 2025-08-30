@@ -1,22 +1,23 @@
 import pandas as pd
 from supabase import create_client, Client
 import os
-import sys
-import argparse
-from typing import Dict, List, Any
 import logging
+from time import sleep
+from typing import Dict, List, Any
 
-# Set up logging
+# ==============================
+# Logging
+# ==============================
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+# ==============================
+# ExcelToSupabase class (keep your old code)
+# ==============================
 class ExcelToSupabase:
     def __init__(self, supabase_url: str, supabase_key: str):
-        """
-        Initialize the ExcelToSupabase class with Supabase credentials
-        """
         self.supabase: Client = create_client(supabase_url, supabase_key)
-        
+
     def read_all_sheets(self, file_path: str) -> Dict[str, pd.DataFrame]:
         try:
             all_sheets = pd.read_excel(file_path, sheet_name=None)
@@ -26,7 +27,7 @@ class ExcelToSupabase:
         except Exception as e:
             logger.error(f"Error reading Excel file: {str(e)}")
             raise
-    
+
     def process_all_sheets(self, file_path: str, table_name: str, add_year_column: bool = True) -> bool:
         try:
             all_sheets = self.read_all_sheets(file_path)
@@ -36,22 +37,22 @@ class ExcelToSupabase:
             for sheet_name, df in all_sheets.items():
                 logger.info(f"Processing sheet: {sheet_name}")
                 df_clean = self.clean_data(df)
-                
+
                 if len(df_clean) == 0:
                     logger.warning(f"No valid data found in sheet {sheet_name}, skipping...")
                     continue
-                
+
                 if add_year_column:
                     year = self.extract_year_from_sheet_name(sheet_name)
                     if year:
                         df_clean['year'] = year
                         logger.info(f"Added year column with value: {year}")
-                
+
                 sheet_data = self.dataframe_to_dict_list(df_clean)
                 combined_data.extend(sheet_data)
-                
+
                 logger.info(f"Processed {len(sheet_data)} records from sheet {sheet_name}")
-            
+
             if combined_data:
                 logger.info(f"Inserting combined data from all sheets ({len(combined_data)} total records)")
                 success = self.insert_data(table_name, combined_data)
@@ -59,12 +60,12 @@ class ExcelToSupabase:
             else:
                 logger.warning("No data found in any sheet!")
                 total_success = False
-            
+
             return total_success
         except Exception as e:
             logger.error(f"Error processing sheets: {str(e)}")
             return False
-    
+
     def extract_year_from_sheet_name(self, sheet_name: str) -> int:
         import re
         year_match = re.search(r'\b(19|20)\d{2}\b', str(sheet_name))
@@ -73,18 +74,6 @@ class ExcelToSupabase:
         logger.warning(f"Could not extract year from sheet name: {sheet_name}")
         return None
 
-    def read_excel(self, file_path: str, sheet_name: str = None) -> pd.DataFrame:
-        try:
-            if sheet_name:
-                df = pd.read_excel(file_path, sheet_name=sheet_name)
-            else:
-                df = pd.read_excel(file_path)
-            logger.info(f"Successfully read {len(df)} rows from {file_path}")
-            return df
-        except Exception as e:
-            logger.error(f"Error reading Excel file: {str(e)}")
-            raise
-    
     def clean_data(self, df: pd.DataFrame) -> pd.DataFrame:
         df.columns = df.columns.str.strip().str.lower().str.replace(' ', '_').str.replace(r'[^\w]', '', regex=True)
         required_columns = ['barangay', 'lat', 'lng', 'datecommitted', 'timecommitted', 'offensetype']
@@ -133,7 +122,7 @@ class ExcelToSupabase:
             severity_dist = df_final['severity'].value_counts()
             logger.info(f"Severity distribution: {severity_dist.to_dict()}")
         return df_final
-    
+
     def calculate_severity(self, row) -> str:
         try:
             victim_count = int(row.get('victimcount', 0))
@@ -141,7 +130,7 @@ class ExcelToSupabase:
             victim_killed = str(row.get('victimkilled', 'No')).lower() in ['yes', 'y', '1', 'true']
             victim_injured = str(row.get('victiminjured', 'No')).lower() in ['yes', 'y', '1', 'true']
             suspect_killed = str(row.get('suspectkilled', 'No')).lower() in ['yes', 'y', '1', 'true']
-            victim_unharmed = str(row.get('victim_unharmed', 'No')).lower() in ['yes', 'y', '1', 'true']
+            victim_unharmed = str(row.get('victimunharmed', 'No')).lower() in ['yes', 'y', '1', 'true']
             severity_score = 0
             if victim_killed or suspect_killed:
                 severity_score += 100
@@ -174,7 +163,7 @@ class ExcelToSupabase:
 
     def dataframe_to_dict_list(self, df: pd.DataFrame) -> List[Dict[str, Any]]:
         return df.to_dict('records')
-    
+
     def insert_data(self, table_name: str, data: List[Dict[str, Any]], batch_size: int = 1000) -> bool:
         try:
             total_records = len(data)
@@ -191,7 +180,7 @@ class ExcelToSupabase:
         except Exception as e:
             logger.error(f"Error inserting data: {str(e)}")
             return False
-    
+
     def upsert_data(self, table_name: str, data: List[Dict[str, Any]], on_conflict: str = None, batch_size: int = 1000) -> bool:
         try:
             total_records = len(data)
@@ -201,7 +190,7 @@ class ExcelToSupabase:
                 if on_conflict:
                     result = self.supabase.table(table_name).upsert(batch, on_conflict=on_conflict).execute()
                 else:
-                    result = self.supabase.table(table_name).upsert(batch).execute()
+                    result = self.supabase.table(batch).upsert(batch).execute()
                 if hasattr(result, 'error') and result.error:
                     logger.error(f"Error upserting batch {i//batch_size + 1}: {result.error}")
                     return False
@@ -212,57 +201,52 @@ class ExcelToSupabase:
             logger.error(f"Error upserting data: {str(e)}")
             return False
 
-# ==================== EXISTING MAIN FUNCTION ==================== #
-
+# ==============================
+# Configuration
+# ==============================
 SUPABASE_URL = os.getenv('SUPABASE_URL', 'https://bdysgnfgqcywjrqaqdsj.supabase.co')
-SUPABASE_KEY = os.getenv('SUPABASE_SERVICE_ROLE_KEY', 'YOUR_KEY_HERE')
-TABLE_NAME = 'road_traffic_accident'  # Supabase table name
-DATA_FOLDER = './data'  # Folder to watch
+SUPABASE_KEY = os.getenv('SUPABASE_SERVICE_ROLE_KEY', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJkeXNnbmZncWN5d2pycWFxZHNqIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1NjAwMzk0OSwiZXhwIjoyMDcxNTc5OTQ5fQ.wERBHIapZAJX1FxZVlTidbgysY0L4Pxc6pVLKer0c4Q')
+TABLE_NAME = 'road_traffic_accident'
+DATA_FOLDER = os.path.join(os.path.dirname(__file__), "data")
 
+# ==============================
+# Main function
+# ==============================
 def main(excel_file_path=None):
     importer = ExcelToSupabase(SUPABASE_URL, SUPABASE_KEY)
     file_to_process = excel_file_path
     if not file_to_process:
-        # Pick first Excel file in the data folder if no path specified
         files = [f for f in os.listdir(DATA_FOLDER) if f.endswith(('.xlsx', '.xls'))]
         if not files:
             logger.warning("No Excel files found in data folder")
-            return
+            return False
         file_to_process = os.path.join(DATA_FOLDER, files[0])
     success = importer.process_all_sheets(file_to_process, TABLE_NAME, add_year_column=True)
     if success:
-        logger.info("All data imported successfully!")
+        logger.info("✅ All data imported successfully!")
     else:
-        logger.error("Some sheets failed to import!")
+        logger.error("❌ Some sheets failed to import!")
+    return success
 
-# ==================== AUTOMATION USING WATCHDOG ==================== #
+# ==============================
+# Automatic folder checker (like React Dropzone)
+# ==============================
+def auto_run(interval=5):
+    processed_files = {}
+    logger.info(f"Automatically checking '{DATA_FOLDER}' for Excel files...")
 
-from watchdog.observers import Observer
-from watchdog.events import FileSystemEventHandler
-import time
+    while True:
+        files = [f for f in os.listdir(DATA_FOLDER) if f.endswith(('.xlsx', '.xls'))]
+        for f in files:
+            full_path = os.path.join(DATA_FOLDER, f)
+            last_modified = os.path.getmtime(full_path)
 
-class ExcelHandler(FileSystemEventHandler):
-    def on_created(self, event):
-        if not event.is_directory and event.src_path.endswith(('.xlsx', '.xls')):
-            logger.info(f"Detected new Excel file: {event.src_path}")
-            main(event.src_path)
-    def on_modified(self, event):
-        if not event.is_directory and event.src_path.endswith(('.xlsx', '.xls')):
-            logger.info(f"Detected modified Excel file: {event.src_path}")
-            main(event.src_path)
-
-def watch_folder():
-    event_handler = ExcelHandler()
-    observer = Observer()
-    observer.schedule(event_handler, DATA_FOLDER, recursive=False)
-    observer.start()
-    logger.info(f"Watching folder {DATA_FOLDER} for new or updated Excel files...")
-    try:
-        while True:
-            time.sleep(1)
-    except KeyboardInterrupt:
-        observer.stop()
-    observer.join()
+            # Only process if file is new or updated
+            if full_path not in processed_files or processed_files[full_path] < last_modified:
+                logger.info(f"Detected new/updated Excel file: {full_path}")
+                main(full_path)
+                processed_files[full_path] = last_modified
+        sleep(interval)
 
 if __name__ == "__main__":
-    watch_folder()
+    auto_run()
