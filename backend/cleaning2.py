@@ -397,7 +397,7 @@ def main():
     # Configuration - replace with your actual values
     SUPABASE_URL = os.getenv('SUPABASE_URL', 'https://bdysgnfgqcywjrqaqdsj.supabase.co')
     SUPABASE_KEY = os.getenv('SUPABASE_SERVICE_ROLE_KEY', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJkeXNnbmZncWN5d2pycWFxZHNqIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1NjAwMzk0OSwiZXhwIjoyMDcxNTc5OTQ5fQ.wERBHIapZAJX1FxZVlTidbgysY0L4Pxc6pVLKer0c4Q')
-    EXCEL_FILE_PATH = 'C:/Users/Jan Nikko/Downloads/osimapdatabaseweb/crime-map-proto/backend/data/DVTSU.xlsx'  # Replace with your Excel file path
+    EXCEL_FILE_PATH = 'C:/Users/Jan Nikko/Downloads/osimapdatabaseweb/crime-map-proto/backend/data/DVTSU(1).xlsx'  # Replace with your Excel file path
     TABLE_NAME = 'road_traffic_accident'  # Replace with your Supabase table name
     
     # Initialize the importer
