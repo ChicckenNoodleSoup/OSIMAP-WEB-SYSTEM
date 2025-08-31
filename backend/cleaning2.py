@@ -2,7 +2,6 @@ import pandas as pd
 from supabase import create_client, Client
 import os
 import logging
-from time import sleep
 from typing import Dict, List, Any
 
 # ==============================
@@ -12,7 +11,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # ==============================
-# ExcelToSupabase class (keep your old code)
+# ExcelToSupabase class
 # ==============================
 class ExcelToSupabase:
     def __init__(self, supabase_url: str, supabase_key: str):
@@ -55,7 +54,13 @@ class ExcelToSupabase:
 
             if combined_data:
                 logger.info(f"Inserting combined data from all sheets ({len(combined_data)} total records)")
-                success = self.insert_data(table_name, combined_data)
+                
+                # Choose insertion method
+                if USE_UPSERT:
+                    success = self.upsert_data(table_name, combined_data)
+                else:
+                    success = self.upsert_data(table_name, combined_data)
+                    
                 total_success = total_success and success
             else:
                 logger.warning("No data found in any sheet!")
@@ -164,41 +169,99 @@ class ExcelToSupabase:
     def dataframe_to_dict_list(self, df: pd.DataFrame) -> List[Dict[str, Any]]:
         return df.to_dict('records')
 
+    def check_existing_data(self, table_name: str) -> set:
+        """Get existing data signatures to avoid duplicates"""
+        try:
+            logger.info("🔍 Checking for existing data to prevent duplicates...")
+            response = self.supabase.table(table_name).select("barangay, lat, lng, datecommitted, timecommitted").execute()
+            
+            if hasattr(response, 'error') and response.error:
+                logger.warning(f"Could not fetch existing data: {response.error}")
+                return set()
+            
+            existing_signatures = set()
+            for row in response.data:
+                # Create a unique signature for each record
+                signature = f"{row.get('barangay', '')}_{row.get('lat', '')}_{row.get('lng', '')}_{row.get('datecommitted', '')}_{row.get('timecommitted', '')}"
+                existing_signatures.add(signature)
+            
+            logger.info(f"📊 Found {len(existing_signatures)} existing records in database")
+            return existing_signatures
+            
+        except Exception as e:
+            logger.warning(f"Error checking existing data: {str(e)}")
+            return set()
+
+    def filter_duplicates(self, data: List[Dict[str, Any]], existing_signatures: set) -> List[Dict[str, Any]]:
+        """Filter out duplicate records"""
+        filtered_data = []
+        duplicate_count = 0
+        
+        for record in data:
+            signature = f"{record.get('barangay', '')}_{record.get('lat', '')}_{record.get('lng', '')}_{record.get('datecommitted', '')}_{record.get('timecommitted', '')}"
+            
+            if signature not in existing_signatures:
+                filtered_data.append(record)
+                existing_signatures.add(signature)  # Add to set to avoid duplicates within the same batch
+            else:
+                duplicate_count += 1
+        
+        logger.info(f"🚫 Filtered out {duplicate_count} duplicate records")
+        logger.info(f"✅ {len(filtered_data)} new records ready for insertion")
+        return filtered_data
+
     def insert_data(self, table_name: str, data: List[Dict[str, Any]], batch_size: int = 1000) -> bool:
         try:
-            total_records = len(data)
-            logger.info(f"Starting to insert {total_records} records into {table_name}")
+            # Check for existing data first
+            existing_signatures = self.check_existing_data(table_name)
+            
+            # Filter out duplicates
+            filtered_data = self.filter_duplicates(data, existing_signatures)
+            
+            if not filtered_data:
+                logger.info("📭 No new records to insert (all were duplicates)")
+                return True
+            
+            total_records = len(filtered_data)
+            logger.info(f"📤 Starting to insert {total_records} new records into {table_name}")
+            
             for i in range(0, total_records, batch_size):
-                batch = data[i:i + batch_size]
+                batch = filtered_data[i:i + batch_size]
                 result = self.supabase.table(table_name).insert(batch).execute()
                 if hasattr(result, 'error') and result.error:
-                    logger.error(f"Error inserting batch {i//batch_size + 1}: {result.error}")
+                    logger.error(f"❌ Error inserting batch {i//batch_size + 1}: {result.error}")
                     return False
-                logger.info(f"Inserted batch {i//batch_size + 1}/{(total_records + batch_size - 1)//batch_size}")
-            logger.info(f"Successfully inserted all {total_records} records")
+                logger.info(f"✅ Inserted batch {i//batch_size + 1}/{(total_records + batch_size - 1)//batch_size}")
+            
+            logger.info(f"🎉 Successfully inserted {total_records} new records")
             return True
+            
         except Exception as e:
-            logger.error(f"Error inserting data: {str(e)}")
+            logger.error(f"❌ Error inserting data: {str(e)}")
             return False
 
-    def upsert_data(self, table_name: str, data: List[Dict[str, Any]], on_conflict: str = None, batch_size: int = 1000) -> bool:
+    def upsert_data(self, table_name: str, data: List[Dict[str, Any]], batch_size: int = 1000) -> bool:
+        """Alternative method using upsert (requires unique constraints in database)"""
         try:
             total_records = len(data)
-            logger.info(f"Starting to upsert {total_records} records into {table_name}")
+            logger.info(f"🔄 Starting to upsert {total_records} records into {table_name}")
+            
             for i in range(0, total_records, batch_size):
                 batch = data[i:i + batch_size]
-                if on_conflict:
-                    result = self.supabase.table(table_name).upsert(batch, on_conflict=on_conflict).execute()
-                else:
-                    result = self.supabase.table(batch).upsert(batch).execute()
+                # Using upsert with ignore_duplicates=True
+                result = self.supabase.table(table_name).upsert(batch, ignore_duplicates=True).execute()
+                
                 if hasattr(result, 'error') and result.error:
-                    logger.error(f"Error upserting batch {i//batch_size + 1}: {result.error}")
+                    logger.error(f"❌ Error upserting batch {i//batch_size + 1}: {result.error}")
                     return False
-                logger.info(f"Upserted batch {i//batch_size + 1}/{(total_records + batch_size - 1)//batch_size}")
-            logger.info(f"Successfully upserted all {total_records} records")
+                    
+                logger.info(f"✅ Upserted batch {i//batch_size + 1}/{(total_records + batch_size - 1)//batch_size}")
+            
+            logger.info(f"🎉 Successfully upserted all {total_records} records")
             return True
+            
         except Exception as e:
-            logger.error(f"Error upserting data: {str(e)}")
+            logger.error(f"❌ Error upserting data: {str(e)}")
             return False
 
 # ==============================
@@ -207,46 +270,60 @@ class ExcelToSupabase:
 SUPABASE_URL = os.getenv('SUPABASE_URL', 'https://bdysgnfgqcywjrqaqdsj.supabase.co')
 SUPABASE_KEY = os.getenv('SUPABASE_SERVICE_ROLE_KEY', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJkeXNnbmZncWN5d2pycWFxZHNqIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1NjAwMzk0OSwiZXhwIjoyMDcxNTc5OTQ5fQ.wERBHIapZAJX1FxZVlTidbgysY0L4Pxc6pVLKer0c4Q')
 TABLE_NAME = 'road_traffic_accident'
-DATA_FOLDER = os.path.join(os.path.dirname(__file__), "data")
+USE_UPSERT = True  # Set to True to use upsert instead of duplicate filtering
+
+def find_latest_excel_file():
+    """Find the most recent Excel file in the data folder"""
+    # Get data folder path (inside backend directory)
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    data_folder = os.path.join(script_dir, "data")
+    
+    if not os.path.exists(data_folder):
+        logger.error(f"Data folder not found: {data_folder}")
+        return None
+    
+    excel_files = [f for f in os.listdir(data_folder) if f.endswith(('.xlsx', '.xls'))]
+    if not excel_files:
+        logger.error("No Excel files found in data folder")
+        return None
+    
+    # Get the most recently modified Excel file
+    excel_files_with_time = []
+    for f in excel_files:
+        full_path = os.path.join(data_folder, f)
+        mod_time = os.path.getmtime(full_path)
+        excel_files_with_time.append((full_path, mod_time))
+    
+    latest_file = max(excel_files_with_time, key=lambda x: x[1])[0]
+    logger.info(f"Processing latest Excel file: {latest_file}")
+    return latest_file
 
 # ==============================
-# Main function
+# Main function (run once, not infinite loop)
 # ==============================
-def main(excel_file_path=None):
-    importer = ExcelToSupabase(SUPABASE_URL, SUPABASE_KEY)
-    file_to_process = excel_file_path
-    if not file_to_process:
-        files = [f for f in os.listdir(DATA_FOLDER) if f.endswith(('.xlsx', '.xls'))]
-        if not files:
-            logger.warning("No Excel files found in data folder")
+def main():
+    try:
+        logger.info("🚀 Starting Excel to Supabase import...")
+        
+        # Find the latest Excel file
+        excel_file = find_latest_excel_file()
+        if not excel_file:
             return False
-        file_to_process = os.path.join(DATA_FOLDER, files[0])
-    success = importer.process_all_sheets(file_to_process, TABLE_NAME, add_year_column=True)
-    if success:
-        logger.info("✅ All data imported successfully!")
-    else:
-        logger.error("❌ Some sheets failed to import!")
-    return success
-
-# ==============================
-# Automatic folder checker (like React Dropzone)
-# ==============================
-def auto_run(interval=5):
-    processed_files = {}
-    logger.info(f"Automatically checking '{DATA_FOLDER}' for Excel files...")
-
-    while True:
-        files = [f for f in os.listdir(DATA_FOLDER) if f.endswith(('.xlsx', '.xls'))]
-        for f in files:
-            full_path = os.path.join(DATA_FOLDER, f)
-            last_modified = os.path.getmtime(full_path)
-
-            # Only process if file is new or updated
-            if full_path not in processed_files or processed_files[full_path] < last_modified:
-                logger.info(f"Detected new/updated Excel file: {full_path}")
-                main(full_path)
-                processed_files[full_path] = last_modified
-        sleep(interval)
+        
+        # Initialize importer and process
+        importer = ExcelToSupabase(SUPABASE_URL, SUPABASE_KEY)
+        success = importer.process_all_sheets(excel_file, TABLE_NAME, add_year_column=True)
+        
+        if success:
+            logger.info("✅ Excel to Supabase import completed successfully!")
+            return True
+        else:
+            logger.error("❌ Excel to Supabase import failed!")
+            return False
+            
+    except Exception as e:
+        logger.error(f"❌ Error in main execution: {str(e)}")
+        return False
 
 if __name__ == "__main__":
-    auto_run()
+    main()

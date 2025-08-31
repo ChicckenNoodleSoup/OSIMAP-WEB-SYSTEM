@@ -1,6 +1,5 @@
 import json
 import os
-import time
 import logging
 from supabase import create_client, Client
 
@@ -10,8 +9,6 @@ from supabase import create_client, Client
 SUPABASE_URL = 'https://bdysgnfgqcywjrqaqdsj.supabase.co'
 SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJkeXNnbmZncWN5d2pycWFxZHNqIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1NjAwMzk0OSwiZXhwIjoyMDcxNTc5OTQ5fQ.wERBHIapZAJX1FxZVlTidbgysY0L4Pxc6pVLKer0c4Q'
 TABLE_NAME = 'road_traffic_accident'
-OUTPUT_PATH = os.path.join(os.path.dirname(__file__), "data", "accidents.geojson")
-POLL_INTERVAL = 30  # seconds between checks
 
 # ==============================
 # SETUP LOGGING
@@ -27,11 +24,26 @@ supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 # ==============================
 # FUNCTIONS
 # ==============================
+def get_output_path():
+    """Get the output path for GeoJSON file in the data folder"""
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    data_folder = os.path.join(script_dir, "data")
+    
+    # Create data folder if it doesn't exist
+    if not os.path.exists(data_folder):
+        os.makedirs(data_folder)
+        logger.info(f"Created data folder: {data_folder}")
+    
+    output_path = os.path.join(data_folder, "accidents.geojson")
+    return output_path
+
 def fetch_all_data(batch_size=1000):
     """Fetch all accident records from Supabase with pagination"""
     all_data = []
     start = 0
 
+    logger.info("📥 Fetching data from Supabase...")
+    
     while True:
         response = supabase.table(TABLE_NAME).select("*").range(start, start + batch_size - 1).execute()
         if hasattr(response, "error") and response.error:
@@ -42,75 +54,113 @@ def fetch_all_data(batch_size=1000):
             break
 
         all_data.extend(data)
+        logger.info(f"Fetched {len(data)} records (total: {len(all_data)})")
         start += batch_size
 
+    logger.info(f"📊 Total records fetched: {len(all_data)}")
     return all_data
 
 def to_geojson(data):
     """Convert Supabase rows to GeoJSON format"""
     features = []
+    skipped_count = 0
+    
+    logger.info("🗺️ Converting data to GeoJSON format...")
+    
     for row in data:
         try:
             lat = float(row.get("lat", 0))
             lon = float(row.get("lng", 0))
+            
+            # Skip invalid coordinates
             if lat == 0 or lon == 0:
-                continue  # skip invalid coordinates
+                skipped_count += 1
+                continue
 
             features.append({
                 "type": "Feature",
-                "geometry": {"type": "Point", "coordinates": [lon, lat]},
+                "geometry": {
+                    "type": "Point", 
+                    "coordinates": [lon, lat]
+                },
                 "properties": {
                     "id": row.get("id"),
                     "datecommitted": row.get("datecommitted"),
+                    "timecommitted": row.get("timecommitted"),
                     "barangay": row.get("barangay"),
                     "offensetype": row.get("offensetype"),
-                    "severity": row.get("severity")
+                    "severity": row.get("severity"),
+                    "year": row.get("year")
                 }
             })
         except Exception as e:
             logger.warning(f"Skipping row due to error: {e}")
+            skipped_count += 1
 
-    return {"type": "FeatureCollection", "features": features}
+    logger.info(f"✅ Converted {len(features)} valid records to GeoJSON")
+    if skipped_count > 0:
+        logger.warning(f"⚠️ Skipped {skipped_count} records due to invalid coordinates or errors")
 
-def save_geojson(geojson):
-    """Save GeoJSON into the existing data folder"""
-    folder = os.path.dirname(OUTPUT_PATH)
-    if not os.path.exists(folder):
-        os.makedirs(folder)
-    with open(OUTPUT_PATH, "w", encoding="utf-8") as f:
-        json.dump(geojson, f, ensure_ascii=False, indent=2)
-    logger.info(f"GeoJSON exported to {OUTPUT_PATH}")
+    return {
+        "type": "FeatureCollection", 
+        "features": features,
+        "metadata": {
+            "total_features": len(features),
+            "generated_at": "2025-08-31",  # You might want to use datetime.now().isoformat()
+            "source_table": TABLE_NAME
+        }
+    }
 
-# ==============================
-# AUTO RUN / POLLING
-# ==============================
-def auto_run():
-    last_count = None
-    last_data_hash = None
-
-    while True:
-        try:
-            rows = fetch_all_data()
-            current_count = len(rows)
-            current_data_hash = hash(json.dumps(rows, sort_keys=True))  # simple way to detect changes
-
-            if last_count != current_count or last_data_hash != current_data_hash:
-                logger.info(f"Change detected in Supabase table (rows: {current_count})")
-                geojson = to_geojson(rows)
-                save_geojson(geojson)
-                logger.info("GeoJSON updated successfully!")
-                last_count = current_count
-                last_data_hash = current_data_hash
-            else:
-                logger.info("No changes detected.")
-
-        except Exception as e:
-            logger.error(f"Error during polling: {e}")
-
-        time.sleep(POLL_INTERVAL)
+def save_geojson(geojson, output_path):
+    """Save GeoJSON to file"""
+    try:
+        with open(output_path, "w", encoding="utf-8") as f:
+            json.dump(geojson, f, ensure_ascii=False, indent=2)
+        logger.info(f"💾 GeoJSON saved to: {output_path}")
+        
+        # Log file size
+        file_size = os.path.getsize(output_path)
+        file_size_mb = file_size / (1024 * 1024)
+        logger.info(f"📏 File size: {file_size_mb:.2f} MB")
+        
+        return True
+    except Exception as e:
+        logger.error(f"❌ Error saving GeoJSON: {e}")
+        return False
 
 # ==============================
-# MAIN
+# MAIN FUNCTION (run once, not infinite loop)
 # ==============================
+def main():
+    try:
+        logger.info("🚀 Starting Supabase to GeoJSON export...")
+        
+        # Get output path
+        output_path = get_output_path()
+        
+        # Fetch data from Supabase
+        rows = fetch_all_data()
+        
+        if not rows:
+            logger.warning("⚠️ No data found in Supabase table")
+            return False
+        
+        # Convert to GeoJSON
+        geojson = to_geojson(rows)
+        
+        # Save GeoJSON file
+        success = save_geojson(geojson, output_path)
+        
+        if success:
+            logger.info("✅ Supabase to GeoJSON export completed successfully!")
+            return True
+        else:
+            logger.error("❌ Failed to save GeoJSON file")
+            return False
+            
+    except Exception as e:
+        logger.error(f"❌ Error in main execution: {str(e)}")
+        return False
+
 if __name__ == "__main__":
-    auto_run()
+    main()
