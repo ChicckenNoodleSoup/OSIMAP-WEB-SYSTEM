@@ -59,7 +59,7 @@ class ExcelToSupabase:
                 if USE_UPSERT:
                     success = self.upsert_data(table_name, combined_data)
                 else:
-                    success = self.upsert_data(table_name, combined_data)
+                    success = self.insert_data(table_name, combined_data)
                     
                 total_success = total_success and success
             else:
@@ -169,93 +169,194 @@ class ExcelToSupabase:
     def dataframe_to_dict_list(self, df: pd.DataFrame) -> List[Dict[str, Any]]:
         return df.to_dict('records')
 
-    def check_existing_data(self, table_name: str) -> set:
-        """Get existing data signatures to avoid duplicates"""
+    def check_existing_data(self, table_name: str) -> Dict[str, Any]:
+        """Get existing data with more comprehensive duplicate checking"""
         try:
             logger.info("🔍 Checking for existing data to prevent duplicates...")
-            response = self.supabase.table(table_name).select("barangay, lat, lng, datecommitted, timecommitted").execute()
+            response = self.supabase.table(table_name).select("*").execute()
             
             if hasattr(response, 'error') and response.error:
                 logger.warning(f"Could not fetch existing data: {response.error}")
-                return set()
+                return {"signatures": set(), "full_records": []}
             
             existing_signatures = set()
-            for row in response.data:
-                # Create a unique signature for each record
-                signature = f"{row.get('barangay', '')}_{row.get('lat', '')}_{row.get('lng', '')}_{row.get('datecommitted', '')}_{row.get('timecommitted', '')}"
-                existing_signatures.add(signature)
+            existing_records = response.data or []
             
-            logger.info(f"📊 Found {len(existing_signatures)} existing records in database")
-            return existing_signatures
+            for row in existing_records:
+                barangay = str(row.get('barangay', '')).lower().strip()
+                lat = row.get('lat', '')
+                lng = row.get('lng', '')
+                date_committed = row.get('datecommitted', '')
+                time_committed = row.get('timecommitted', '')
+                offense_type = str(row.get('offensetype', '')).lower().strip()
+                
+                # Create multiple signature types for better matching
+                # Primary signature with all fields including offense type and time
+                primary_sig = f"{barangay}|{lat}|{lng}|{date_committed}|{time_committed}|{offense_type}"
+                
+                # Alternative signature without time (in case time formatting differs)
+                alt_sig = f"{barangay}|{lat}|{lng}|{date_committed}|{offense_type}"
+                
+                # Coordinate + offense signature (in case barangay spelling differs)
+                coord_offense_sig = f"{lat}|{lng}|{date_committed}|{offense_type}"
+                
+                # Full match signature with time (most restrictive)
+                full_sig = f"{barangay}|{lat}|{lng}|{date_committed}|{time_committed}|{offense_type}"
+                
+                existing_signatures.add(primary_sig)
+                existing_signatures.add(alt_sig)
+                existing_signatures.add(coord_offense_sig)
+                existing_signatures.add(full_sig)
+            
+            logger.info(f"📊 Found {len(existing_records)} existing records in database")
+            logger.info(f"🔑 Generated {len(existing_signatures)} signature variations for matching")
+            
+            return {
+                "signatures": existing_signatures,
+                "full_records": existing_records,
+                "count": len(existing_records)
+            }
             
         except Exception as e:
-            logger.warning(f"Error checking existing data: {str(e)}")
-            return set()
+            logger.error(f"❌ Error checking existing data: {str(e)}")
+            return {"signatures": set(), "full_records": [], "count": 0}
 
-    def filter_duplicates(self, data: List[Dict[str, Any]], existing_signatures: set) -> List[Dict[str, Any]]:
-        """Filter out duplicate records"""
+    def filter_duplicates(self, data: List[Dict[str, Any]], existing_data: Dict[str, Any]) -> List[Dict[str, Any]]:
+        """Filter out duplicate records using multiple signature matching including offense type"""
         filtered_data = []
         duplicate_count = 0
+        existing_signatures = existing_data["signatures"]
+        
+        # Track signatures from current batch to avoid internal duplicates
+        current_batch_signatures = set()
         
         for record in data:
-            signature = f"{record.get('barangay', '')}_{record.get('lat', '')}_{record.get('lng', '')}_{record.get('datecommitted', '')}_{record.get('timecommitted', '')}"
+            barangay = str(record.get('barangay', '')).lower().strip()
+            lat = record.get('lat', '')
+            lng = record.get('lng', '')
+            date_committed = record.get('datecommitted', '')
+            time_committed = record.get('timecommitted', '')
+            offense_type = str(record.get('offensetype', '')).lower().strip()
             
-            if signature not in existing_signatures:
+            # Create the same signature types as in check_existing_data
+            primary_sig = f"{barangay}|{lat}|{lng}|{date_committed}|{time_committed}|{offense_type}"
+            alt_sig = f"{barangay}|{lat}|{lng}|{date_committed}|{offense_type}"
+            coord_offense_sig = f"{lat}|{lng}|{date_committed}|{offense_type}"
+            full_sig = f"{barangay}|{lat}|{lng}|{date_committed}|{time_committed}|{offense_type}"
+            
+            # Check if any signature matches existing data
+            is_duplicate = (
+                primary_sig in existing_signatures or 
+                alt_sig in existing_signatures or 
+                coord_offense_sig in existing_signatures or
+                full_sig in existing_signatures or
+                primary_sig in current_batch_signatures
+            )
+            
+            if not is_duplicate:
                 filtered_data.append(record)
-                existing_signatures.add(signature)  # Add to set to avoid duplicates within the same batch
+                current_batch_signatures.add(primary_sig)
+                # Add to existing signatures to prevent future duplicates in this session
+                existing_signatures.add(primary_sig)
+                existing_signatures.add(alt_sig)
+                existing_signatures.add(coord_offense_sig)
+                existing_signatures.add(full_sig)
             else:
                 duplicate_count += 1
+                logger.debug(f"🚫 Duplicate found: {barangay} at ({lat}, {lng}) on {date_committed} - {offense_type}")
         
         logger.info(f"🚫 Filtered out {duplicate_count} duplicate records")
-        logger.info(f"✅ {len(filtered_data)} new records ready for insertion")
+        logger.info(f"✅ {len(filtered_data)} new unique records ready for insertion")
+        
         return filtered_data
 
     def insert_data(self, table_name: str, data: List[Dict[str, Any]], batch_size: int = 1000) -> bool:
         try:
             # Check for existing data first
-            existing_signatures = self.check_existing_data(table_name)
+            existing_data = self.check_existing_data(table_name)
+            
+            logger.info(f"📋 Original data count: {len(data)}")
+            logger.info(f"📊 Existing records in database: {existing_data['count']}")
             
             # Filter out duplicates
-            filtered_data = self.filter_duplicates(data, existing_signatures)
+            filtered_data = self.filter_duplicates(data, existing_data)
             
             if not filtered_data:
-                logger.info("📭 No new records to insert (all were duplicates)")
+                logger.info("📭 No new records to insert - all records already exist in database")
                 return True
             
             total_records = len(filtered_data)
             logger.info(f"📤 Starting to insert {total_records} new records into {table_name}")
             
+            inserted_count = 0
             for i in range(0, total_records, batch_size):
                 batch = filtered_data[i:i + batch_size]
-                result = self.supabase.table(table_name).insert(batch).execute()
-                if hasattr(result, 'error') and result.error:
-                    logger.error(f"❌ Error inserting batch {i//batch_size + 1}: {result.error}")
-                    return False
-                logger.info(f"✅ Inserted batch {i//batch_size + 1}/{(total_records + batch_size - 1)//batch_size}")
+                
+                try:
+                    result = self.supabase.table(table_name).insert(batch).execute()
+                    
+                    if hasattr(result, 'error') and result.error:
+                        logger.error(f"❌ Error inserting batch {i//batch_size + 1}: {result.error}")
+                        # Try individual inserts for this batch to see which records are problematic
+                        self.insert_batch_individually(table_name, batch, i//batch_size + 1)
+                    else:
+                        batch_size_actual = len(batch)
+                        inserted_count += batch_size_actual
+                        logger.info(f"✅ Inserted batch {i//batch_size + 1}/{(total_records + batch_size - 1)//batch_size} ({batch_size_actual} records)")
+                        
+                except Exception as e:
+                    logger.error(f"❌ Exception inserting batch {i//batch_size + 1}: {str(e)}")
+                    self.insert_batch_individually(table_name, batch, i//batch_size + 1)
             
-            logger.info(f"🎉 Successfully inserted {total_records} new records")
+            logger.info(f"🎉 Successfully processed {total_records} records, inserted {inserted_count} new records")
             return True
             
         except Exception as e:
-            logger.error(f"❌ Error inserting data: {str(e)}")
+            logger.error(f"❌ Error in insert_data: {str(e)}")
             return False
 
+    def insert_batch_individually(self, table_name: str, batch: List[Dict[str, Any]], batch_num: int):
+        """Try to insert records individually when batch fails"""
+        logger.info(f"🔄 Attempting individual inserts for batch {batch_num}")
+        
+        for i, record in enumerate(batch):
+            try:
+                result = self.supabase.table(table_name).insert([record]).execute()
+                if hasattr(result, 'error') and result.error:
+                    logger.warning(f"⚠️ Failed to insert individual record {i+1}: {result.error}")
+                else:
+                    logger.debug(f"✅ Individual insert successful for record {i+1}")
+            except Exception as e:
+                logger.warning(f"⚠️ Exception inserting individual record {i+1}: {str(e)}")
+
     def upsert_data(self, table_name: str, data: List[Dict[str, Any]], batch_size: int = 1000) -> bool:
-        """Alternative method using upsert (requires unique constraints in database)"""
+        """Use Supabase upsert with comprehensive conflict resolution including offense type"""
         try:
             total_records = len(data)
             logger.info(f"🔄 Starting to upsert {total_records} records into {table_name}")
+            logger.info("🔧 Using upsert mode - will update existing records or insert new ones")
             
             for i in range(0, total_records, batch_size):
                 batch = data[i:i + batch_size]
-                # Using upsert with ignore_duplicates=True
-                result = self.supabase.table(table_name).upsert(batch, ignore_duplicates=True).execute()
                 
-                if hasattr(result, 'error') and result.error:
-                    logger.error(f"❌ Error upserting batch {i//batch_size + 1}: {result.error}")
-                    return False
+                try:
+                    # Use upsert with on_conflict parameter including offense type and time
+                    result = self.supabase.table(table_name).upsert(
+                        batch,
+                        on_conflict="barangay,lat,lng,datecommitted,timecommitted,offensetype",  # All key fields including time
+                        ignore_duplicates=False  # Update instead of ignoring
+                    ).execute()
                     
-                logger.info(f"✅ Upserted batch {i//batch_size + 1}/{(total_records + batch_size - 1)//batch_size}")
+                    if hasattr(result, 'error') and result.error:
+                        logger.error(f"❌ Error upserting batch {i//batch_size + 1}: {result.error}")
+                        # Fall back to individual upserts
+                        self.upsert_batch_individually(table_name, batch, i//batch_size + 1)
+                    else:
+                        logger.info(f"✅ Upserted batch {i//batch_size + 1}/{(total_records + batch_size - 1)//batch_size}")
+                        
+                except Exception as e:
+                    logger.error(f"❌ Exception upserting batch {i//batch_size + 1}: {str(e)}")
+                    self.upsert_batch_individually(table_name, batch, i//batch_size + 1)
             
             logger.info(f"🎉 Successfully upserted all {total_records} records")
             return True
@@ -264,13 +365,27 @@ class ExcelToSupabase:
             logger.error(f"❌ Error upserting data: {str(e)}")
             return False
 
+    def upsert_batch_individually(self, table_name: str, batch: List[Dict[str, Any]], batch_num: int):
+        """Try to upsert records individually when batch fails"""
+        logger.info(f"🔄 Attempting individual upserts for batch {batch_num}")
+        
+        for i, record in enumerate(batch):
+            try:
+                result = self.supabase.table(table_name).upsert([record], ignore_duplicates=True).execute()
+                if hasattr(result, 'error') and result.error:
+                    logger.warning(f"⚠️ Failed to upsert individual record {i+1}: {result.error}")
+                else:
+                    logger.debug(f"✅ Individual upsert successful for record {i+1}")
+            except Exception as e:
+                logger.warning(f"⚠️ Exception upserting individual record {i+1}: {str(e)}")
+
 # ==============================
 # Configuration
 # ==============================
 SUPABASE_URL = os.getenv('SUPABASE_URL', 'https://bdysgnfgqcywjrqaqdsj.supabase.co')
 SUPABASE_KEY = os.getenv('SUPABASE_SERVICE_ROLE_KEY', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJkeXNnbmZncWN5d2pycWFxZHNqIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1NjAwMzk0OSwiZXhwIjoyMDcxNTc5OTQ5fQ.wERBHIapZAJX1FxZVlTidbgysY0L4Pxc6pVLKer0c4Q')
 TABLE_NAME = 'road_traffic_accident'
-USE_UPSERT = True  # Set to True to use upsert instead of duplicate filtering
+USE_UPSERT = False  # Set to True to use upsert instead of duplicate filtering
 
 def find_latest_excel_file():
     """Find the most recent Excel file in the data folder"""
