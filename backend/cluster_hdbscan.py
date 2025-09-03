@@ -83,14 +83,14 @@ class AccidentClusterAnalyzer:
             return False
         
         # Prepare coordinates for clustering
-        coords = self.df[['latitude', 'longitude']].values
+        coords = np.radians(self.df[['latitude', 'longitude']].values)
         
         # Initialize HDBSCAN
         clusterer = HDBSCAN(
             min_cluster_size=min_cluster_size,
             min_samples=min_samples,
             metric=metric,
-            cluster_selection_epsilon=0.01  # Adjust based on your coordinate precision
+            cluster_selection_epsilon=0.000001  # Adjust based on your coordinate precision
         )
         
         # Perform clustering
