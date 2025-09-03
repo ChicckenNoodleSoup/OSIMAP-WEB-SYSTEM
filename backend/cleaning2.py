@@ -1,8 +1,11 @@
 import pandas as pd
 from supabase import create_client, Client
 import os
+from dotenv import load_dotenv
 import logging
 from typing import Dict, List, Any
+
+load_dotenv()
 
 # ==============================
 # Logging
@@ -382,8 +385,9 @@ class ExcelToSupabase:
 # ==============================
 # Configuration
 # ==============================
-SUPABASE_URL = os.getenv('SUPABASE_URL', 'https://bdysgnfgqcywjrqaqdsj.supabase.co')
-SUPABASE_KEY = os.getenv('SUPABASE_SERVICE_ROLE_KEY', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJkeXNnbmZncWN5d2pycWFxZHNqIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1NjAwMzk0OSwiZXhwIjoyMDcxNTc5OTQ5fQ.wERBHIapZAJX1FxZVlTidbgysY0L4Pxc6pVLKer0c4Q')
+SUPABASE_URL = os.getenv("SUPABASE_URL")
+SUPABASE_KEY = os.getenv("SUPABASE_KEY")
+supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 TABLE_NAME = 'road_traffic_accident'
 USE_UPSERT = False  # Set to True to use upsert instead of duplicate filtering
 

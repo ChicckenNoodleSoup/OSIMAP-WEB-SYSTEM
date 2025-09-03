@@ -12,7 +12,7 @@ class AccidentClusterAnalyzer:
         self.clustered_df = None
         self.cluster_centers = None
         
-    def load_geojson_data(self, file_path: str):
+    def load_geojson_data(self, file_path: str = "data/accidents.geojson"):
         """Load accident data from GeoJSON file."""
         try:
             with open(file_path, 'r', encoding='utf-8') as f:
@@ -145,7 +145,7 @@ class AccidentClusterAnalyzer:
         self.cluster_centers = cluster_stats
         print(f"Calculated statistics for {len(cluster_stats)} clusters")
     
-    def export_to_geojson(self, output_file: str):
+    def export_to_geojson(self, output_file: str = "clustered.geojson"):
         """Export clustered data to GeoJSON format."""
         if self.clustered_df is None:
             print("No clustered data to export. Run clustering first.")
@@ -254,9 +254,37 @@ def main():
     if not analyzer.preprocess_data():
         return
     
-    print("Performing HDBSCAN clustering...")
-    if not analyzer.perform_clustering(min_cluster_size=5, min_samples=3):
+    print("Performing HDBSCAN clustering with hotspot-optimized parameters...")
+    # Try different parameter combinations to find optimal clustering
+    # Start with more granular settings for hotspot detection
+    if not analyzer.perform_clustering(
+        min_cluster_size=15,        # Minimum 15 accidents per hotspot
+        min_samples=10,             # At least 10 accidents to form core
+        metric='haversine'          # Geographic distance
+    ):
         return
+    
+    # If still too few clusters, try more aggressive parameters
+    cluster_count = len(analyzer.clustered_df[analyzer.clustered_df['cluster'] != -1]['cluster'].unique())
+    if cluster_count < 10:  # If less than 10 clusters, try smaller parameters
+        print(f"\nOnly {cluster_count} clusters found. Trying more granular parameters...")
+        if not analyzer.perform_clustering(
+            min_cluster_size=8,         # Even smaller hotspots
+            min_samples=5,              # Lower threshold
+            metric='haversine'
+        ):
+            return
+    
+    # If still too few clusters, try very aggressive parameters
+    cluster_count = len(analyzer.clustered_df[analyzer.clustered_df['cluster'] != -1]['cluster'].unique())
+    if cluster_count < 15:  # If less than 15 clusters, try very small parameters
+        print(f"\nStill only {cluster_count} clusters found. Trying very granular parameters...")
+        if not analyzer.perform_clustering(
+            min_cluster_size=5,         # Very small hotspots
+            min_samples=3,              # Very low threshold
+            metric='haversine'
+        ):
+            return
     
     print("Exporting to GeoJSON...")
     if not analyzer.export_to_geojson(OUTPUT_FILE):

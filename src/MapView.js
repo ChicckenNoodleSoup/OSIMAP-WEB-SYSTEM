@@ -286,6 +286,8 @@ export default function MapView() {
             <MapContainer
               center={[15.0306, 120.6845]}
               zoom={14}
+              minZoom={12} // Limit zoom out to see all of San Fernando
+              maxZoom={18}
               scrollWheelZoom={true}
               className="mapview-map"
               preferCanvas={true} // Use canvas for better performance
