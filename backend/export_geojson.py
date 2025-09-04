@@ -1,13 +1,17 @@
 import json
 import os
 import logging
+from dotenv import load_dotenv
 from supabase import create_client, Client
+
+load_dotenv()
 
 # ==============================
 # CONFIGURATION
 # ==============================
-SUPABASE_URL = 'https://bdysgnfgqcywjrqaqdsj.supabase.co'
-SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJkeXNnbmZncWN5d2pycWFxZHNqIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1NjAwMzk0OSwiZXhwIjoyMDcxNTc5OTQ5fQ.wERBHIapZAJX1FxZVlTidbgysY0L4Pxc6pVLKer0c4Q'
+SUPABASE_URL = os.getenv("SUPABASE_URL")
+SUPABASE_KEY = os.getenv("SUPABASE_KEY")
+supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 TABLE_NAME = 'road_traffic_accident'
 
 # ==============================

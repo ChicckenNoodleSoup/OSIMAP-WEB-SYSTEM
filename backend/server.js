@@ -41,7 +41,7 @@ const upload = multer({ storage });
 const runPythonScripts = () => {
   const script1 = path.join(process.cwd(), "cleaning2.py");
   const script2 = path.join(process.cwd(), "export_geojson.py");
-  const script3 = path.join(process.cwd(), "hdbscan_clustering.py"); // Add your HDBSCAN script
+  const script3 = path.join(process.cwd(), "cluster_hdbscan.py"); // Add your HDBSCAN script
 
   console.log("🚀 Starting Python script execution...");
   console.log(`Step 1: Running ${script1}`);

@@ -90,7 +90,7 @@ class AccidentClusterAnalyzer:
             min_cluster_size=min_cluster_size,
             min_samples=min_samples,
             metric=metric,
-            cluster_selection_epsilon=0.000001  # Adjust based on your coordinate precision
+            cluster_selection_epsilon=0.0000001  # Adjust based on your coordinate precision
         )
         
         # Perform clustering

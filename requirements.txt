@@ -1,0 +1,6 @@
+pandas
+numpy
+hdbscan
+python-dotenv
+supabase
+openpyxl
