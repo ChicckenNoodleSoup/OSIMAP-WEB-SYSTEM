@@ -37,10 +37,10 @@ class AccidentClusterAnalyzer:
     # ======================================================
     def load_geojson_data(self):
         if not os.path.exists(self.file_path):
-            print(f"❌ GeoJSON not found: {self.file_path}")
+            print(f" GeoJSON not found: {self.file_path}")
             return False
 
-        print(f"📂 Loading accidents from {self.file_path}...")
+        print(f" Loading accidents from {self.file_path}...")
         with open(self.file_path, "r", encoding="utf-8") as f:
             data = json.load(f)
 
@@ -57,7 +57,7 @@ class AccidentClusterAnalyzer:
             })
 
         self.df = pd.DataFrame(records)
-        print(f"✅ Loaded {len(self.df)} accident records")
+        print(f" Loaded {len(self.df)} accident records")
         return True
 
     def preprocess_data(self):
@@ -83,14 +83,14 @@ class AccidentClusterAnalyzer:
                 # Just use datecommitted
                 self.df['date'] = pd.to_datetime(self.df['datecommitted'], errors='coerce')
         elif 'date' not in self.df.columns:
-            print("⚠️  No datecommitted column found. Adding current date for all records.")
+            print(" No datecommitted column found. Adding current date for all records.")
             self.df['date'] = self.current_date
         
         # Fill NaT values with current date
         self.df['date'] = self.df['date'].fillna(self.current_date)
         
         after = len(self.df)
-        print(f"🛠️  Cleaned {before - after} invalid records → {after} remain")
+        print(f"  Cleaned {before - after} invalid records {after} remain")
         return True
 
     # ======================================================
@@ -218,14 +218,14 @@ class AccidentClusterAnalyzer:
         print("\n=== PARAMETER TUNING ===")
         for r in results:
             print(f"size={r['min_cluster_size']}, eps={r['epsilon']:.6f} "
-                  f"→ clusters={r['clusters']}, noise={r['noise_ratio']}, "
+                  f" clusters={r['clusters']}, noise={r['noise_ratio']}, "
                   f"s={r['silhouette']}")
 
         results = sorted(results,
                          key=lambda x: ((x["silhouette"] is not None), x["silhouette"] or -1, x["clusters"]),
                          reverse=True)
         best = results[0]
-        print("\n🏆 Best params:", best)
+        print("\n Best params:", best)
         return best
 
     # ======================================================
@@ -244,7 +244,7 @@ class AccidentClusterAnalyzer:
         self.clustered_df = self.df.copy()
         
         # Calculate temporal weights and trends for all data
-        print("🕐 Calculating temporal weights and trends...")
+        print(" Calculating temporal weights and trends...")
         self.temporal_weights = self.calculate_temporal_weights()
         self.trend_scores = self.analyze_accident_trends()
         
@@ -253,7 +253,7 @@ class AccidentClusterAnalyzer:
         self.clustered_df['trend_score'] = self.trend_scores
         
         n_clusters = len(set(labels)) - (1 if -1 in labels else 0)
-        print(f"✅ HDBSCAN → {n_clusters} clusters, {list(labels).count(-1)} noise")
+        print(f" HDBSCAN  {n_clusters} clusters, {list(labels).count(-1)} noise")
         return labels
 
     # ======================================================
@@ -277,7 +277,7 @@ class AccidentClusterAnalyzer:
         if max_accidents is None:
             max_accidents = self.highway_cluster_threshold
             
-        print(f"\n🔍 Temporal sub-clustering for clusters > {max_accidents} accidents...")
+        print(f"\n Temporal sub-clustering for clusters > {max_accidents} accidents...")
         clusters_to_process = self.clustered_df["cluster"].unique()
 
         next_cluster_id = self.clustered_df["cluster"].max() + 1
@@ -293,7 +293,7 @@ class AccidentClusterAnalyzer:
             should_subcluster = accident_count > max_accidents
             
             if should_subcluster:
-                print(f"   🚧 Sub-clustering Cluster {cid} ({accident_count} accidents)")
+                print(f"  Sub-clustering Cluster {cid} ({accident_count} accidents)")
                 subclustered_count += 1
                 
                 # Extract coordinates and temporal data
@@ -345,11 +345,11 @@ class AccidentClusterAnalyzer:
                     
                     # Update cluster assignments
                     self.clustered_df.loc[cluster_points.index, "cluster"] = mapped_labels
-                    print(f"      ✅ Split into {n_sub_clusters} sub-clusters")
+                    print(f"       Split into {n_sub_clusters} sub-clusters")
                 else:
-                    print(f"      ⚠️  No meaningful sub-clusters found, keeping original")
+                    print(f"        No meaningful sub-clusters found, keeping original")
 
-        print(f"✅ Sub-clustered {subclustered_count} large clusters")
+        print(f" Sub-clustered {subclustered_count} large clusters")
         
         # Recalculate cluster centers after sub-clustering
         self.calculate_cluster_centers()
@@ -404,7 +404,7 @@ class AccidentClusterAnalyzer:
         # Filter clusters above threshold
         alert_clusters = [c for c in self.cluster_centers if c["danger_score"] >= threshold]
         
-        print(f"\n📱 Alert-worthy clusters (top {threshold_percentile}%):")
+        print(f"\n Alert-worthy clusters (top {threshold_percentile}%):")
         print(f"   Danger score threshold: {threshold:.4f}")
         print(f"   Number of alert clusters: {len(alert_clusters)}")
         
@@ -516,7 +516,7 @@ class AccidentClusterAnalyzer:
         
         with open(output, "w", encoding="utf-8") as f:
             json.dump(geojson, f, indent=2, ensure_ascii=False)
-        print(f"💾 Exported combined GeoJSON to {output}")
+        print(f" Exported combined GeoJSON to {output}")
 
     def export_cluster_centers(self, filename="cluster_centers.json"):
         """Export cluster centers with danger scores for mobile app"""
@@ -530,7 +530,7 @@ class AccidentClusterAnalyzer:
             
         with open(output, "w", encoding="utf-8") as f:
             json.dump(self.cluster_centers, f, indent=2, ensure_ascii=False)
-        print(f"📊 Exported cluster centers to {output}")
+        print(f" Exported cluster centers to {output}")
 
     def export_mobile_alerts(self, filename="mobile_alerts.json", threshold_percentile=20):
         """Export mobile-ready alert data"""
@@ -545,7 +545,7 @@ class AccidentClusterAnalyzer:
         
         with open(output, "w", encoding="utf-8") as f:
             json.dump(alert_data, f, indent=2, ensure_ascii=False)
-        print(f"📱 Exported {len(alert_data)} mobile alerts to {output}")
+        print(f" Exported {len(alert_data)} mobile alerts to {output}")
 
     # ======================================================
     # MAIN PIPELINE
@@ -577,7 +577,7 @@ class AccidentClusterAnalyzer:
         if export_alerts:
             self.export_mobile_alerts()
             
-        print(f"\n🎯 Analysis complete! Check data folder for mobile app integration files.")
+        print(f"\n Analysis complete! Check data folder for mobile app integration files.")
 
 
 if __name__ == "__main__":
