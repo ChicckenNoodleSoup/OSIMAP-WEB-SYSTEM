@@ -1,0 +1,98 @@
+[
+  {
+    "cluster_id": 4,
+    "center_lat": 15.078667081967215,
+    "center_lon": 120.65309934426229,
+    "radius_km": 0.5,
+    "danger_level": "MEDIUM",
+    "danger_score": 0.5435,
+    "accident_count": 122,
+    "recent_accidents": 7,
+    "trend": "stable",
+    "alert_message": "Accident-prone area ahead . 7 recent accidents reported here. Drive carefully."
+  },
+  {
+    "cluster_id": 1,
+    "center_lat": 15.093225377850162,
+    "center_lon": 120.6508851107492,
+    "radius_km": 0.5,
+    "danger_level": "MEDIUM",
+    "danger_score": 0.5382,
+    "accident_count": 307,
+    "recent_accidents": 23,
+    "trend": "stable",
+    "alert_message": "Accident-prone area ahead . 23 recent accidents reported here. Drive carefully."
+  },
+  {
+    "cluster_id": 7,
+    "center_lat": 15.068818321070232,
+    "center_lon": 120.64014906688965,
+    "radius_km": 0.5,
+    "danger_level": "MEDIUM",
+    "danger_score": 0.5254,
+    "accident_count": 299,
+    "recent_accidents": 19,
+    "trend": "stable",
+    "alert_message": "Accident-prone area ahead . 19 recent accidents reported here. Drive carefully."
+  },
+  {
+    "cluster_id": 0,
+    "center_lat": 15.084423396551722,
+    "center_lon": 120.66439469827586,
+    "radius_km": 0.5,
+    "danger_level": "MEDIUM",
+    "danger_score": 0.5241,
+    "accident_count": 116,
+    "recent_accidents": 4,
+    "trend": "stable",
+    "alert_message": "Accident-prone area ahead . 4 recent accidents reported here. Drive carefully."
+  },
+  {
+    "cluster_id": 21,
+    "center_lat": 15.06649683532934,
+    "center_lon": 120.65069034431137,
+    "radius_km": 0.5,
+    "danger_level": "MEDIUM",
+    "danger_score": 0.5241,
+    "accident_count": 334,
+    "recent_accidents": 24,
+    "trend": "stable",
+    "alert_message": "Accident-prone area ahead . 24 recent accidents reported here. Drive carefully."
+  },
+  {
+    "cluster_id": 12,
+    "center_lat": 15.10202348076923,
+    "center_lon": 120.61973844230769,
+    "radius_km": 0.5,
+    "danger_level": "MEDIUM",
+    "danger_score": 0.5196,
+    "accident_count": 104,
+    "recent_accidents": 19,
+    "trend": "stable",
+    "alert_message": "Accident-prone area ahead . 19 recent accidents reported here. Drive carefully."
+  },
+  {
+    "cluster_id": 14,
+    "center_lat": 15.022086435424356,
+    "center_lon": 120.67762553505536,
+    "radius_km": 0.5,
+    "danger_level": "MEDIUM",
+    "danger_score": 0.5128,
+    "accident_count": 271,
+    "recent_accidents": 5,
+    "trend": "stable",
+    "alert_message": "Accident-prone area ahead . 5 recent accidents reported here. Drive carefully."
+  },
+  {
+    "cluster_id": 16,
+    "center_lat": 15.059245968749998,
+    "center_lon": 120.65002074609374,
+    "radius_km": 0.5,
+    "danger_level": "MEDIUM",
+    "danger_score": 0.5127,
+    "accident_count": 256,
+    "recent_accidents": 0,
+    "trend": "stable",
+    "alert_message": "Accident-prone area ahead .  reported here. Drive carefully."
+  }
+]

@@ -1,0 +1,651 @@
+[
+  {
+    "cluster_id": 4,
+    "center_lat": 15.078667081967215,
+    "center_lon": 120.65309934426229,
+    "accident_count": 122,
+    "danger_score": 0.5435,
+    "recent_accidents": 7,
+    "avg_temporal_weight": 0.6087,
+    "avg_trend_score": 0.0232,
+    "barangays": [
+      "MALPITIC",
+      "SINDALAN",
+      "CALULUT",
+      "DEL ROSARIO",
+      "BULAON"
+    ]
+  },
+  {
+    "cluster_id": 1,
+    "center_lat": 15.093225377850162,
+    "center_lon": 120.6508851107492,
+    "accident_count": 307,
+    "danger_score": 0.5382,
+    "recent_accidents": 23,
+    "avg_temporal_weight": 0.5872,
+    "avg_trend_score": 0.0252,
+    "barangays": [
+      "CALULUT",
+      "SINDALAN",
+      "DEL CARMEN",
+      "BULAON"
+    ]
+  },
+  {
+    "cluster_id": 7,
+    "center_lat": 15.068818321070232,
+    "center_lon": 120.64014906688965,
+    "accident_count": 299,
+    "danger_score": 0.5254,
+    "recent_accidents": 19,
+    "avg_temporal_weight": 0.5634,
+    "avg_trend_score": 0.0053,
+    "barangays": [
+      "DEL ROSARIO",
+      "DELA PAZ NORTE",
+      "CALULUT",
+      "SANTO ROSARIO (POB.)",
+      "SAGUIN",
+      "DOLORES"
+    ]
+  },
+  {
+    "cluster_id": 0,
+    "center_lat": 15.084423396551722,
+    "center_lon": 120.66439469827586,
+    "accident_count": 116,
+    "danger_score": 0.5241,
+    "recent_accidents": 4,
+    "avg_temporal_weight": 0.5602,
+    "avg_trend_score": 0.028,
+    "barangays": [
+      "BULAON",
+      "CALULUT",
+      "MAIMPIS",
+      "SINDALAN",
+      "TELABASTAGAN"
+    ]
+  },
+  {
+    "cluster_id": 21,
+    "center_lat": 15.06649683532934,
+    "center_lon": 120.65069034431137,
+    "accident_count": 334,
+    "danger_score": 0.5241,
+    "recent_accidents": 24,
+    "avg_temporal_weight": 0.5413,
+    "avg_trend_score": 0.0211,
+    "barangays": [
+      "MAIMPIS",
+      "SINDALAN",
+      "SAN ISIDRO",
+      "DEL ROSARIO",
+      "CALULUT"
+    ]
+  },
+  {
+    "cluster_id": 12,
+    "center_lat": 15.10202348076923,
+    "center_lon": 120.61973844230769,
+    "accident_count": 104,
+    "danger_score": 0.5196,
+    "recent_accidents": 19,
+    "avg_temporal_weight": 0.549,
+    "avg_trend_score": 0.0,
+    "barangays": [
+      "BALITI",
+      "SAGUIN",
+      "TELABASTAGAN",
+      "PANIPUAN",
+      "LARA",
+      "PULUNG BULU"
+    ]
+  },
+  {
+    "cluster_id": 14,
+    "center_lat": 15.022086435424356,
+    "center_lon": 120.67762553505536,
+    "accident_count": 271,
+    "danger_score": 0.5128,
+    "recent_accidents": 5,
+    "avg_temporal_weight": 0.532,
+    "avg_trend_score": 0.0169,
+    "barangays": [
+      "SAN JUAN",
+      "SANTO NIñO",
+      "DOLORES",
+      "MAIMPIS",
+      "JULIANA",
+      "DEL PILAR",
+      "SAN ISIDRO",
+      "SAN NICOLAS"
+    ]
+  },
+  {
+    "cluster_id": 16,
+    "center_lat": 15.059245968749998,
+    "center_lon": 120.65002074609374,
+    "accident_count": 256,
+    "danger_score": 0.5127,
+    "recent_accidents": 0,
+    "avg_temporal_weight": 0.5258,
+    "avg_trend_score": -0.0003,
+    "barangays": [
+      "SAN ISIDRO",
+      "SAN AGUSTIN",
+      "DEL ROSARIO",
+      "SINDALAN",
+      "DELA PAZ NORTE"
+    ]
+  },
+  {
+    "cluster_id": 20,
+    "center_lat": 15.067800488,
+    "center_lon": 120.655881276,
+    "accident_count": 250,
+    "danger_score": 0.507,
+    "recent_accidents": 4,
+    "avg_temporal_weight": 0.5175,
+    "avg_trend_score": 0.0073,
+    "barangays": [
+      "MAIMPIS",
+      "SAN JUAN",
+      "SINDALAN",
+      "BALITI",
+      "SANTO NIñO",
+      "SAN ISIDRO",
+      "QUEBIAUAN"
+    ]
+  },
+  {
+    "cluster_id": 3,
+    "center_lat": 15.100729403846154,
+    "center_lon": 120.63346853205127,
+    "accident_count": 156,
+    "danger_score": 0.4954,
+    "recent_accidents": 0,
+    "avg_temporal_weight": 0.4884,
+    "avg_trend_score": -0.0199,
+    "barangays": [
+      "BALITI",
+      "PANIPUAN",
+      "SAGUIN",
+      "MAIMPIS"
+    ]
+  },
+  {
+    "cluster_id": 8,
+    "center_lat": 15.115422761445782,
+    "center_lon": 120.60791753253014,
+    "accident_count": 415,
+    "danger_score": 0.494,
+    "recent_accidents": 51,
+    "avg_temporal_weight": 0.4838,
+    "avg_trend_score": 0.0365,
+    "barangays": [
+      "TELABASTAGAN",
+      "SAGUIN",
+      "SAN JOSE",
+      "SINDALAN",
+      "SAN AGUSTIN",
+      "DELA PAZ NORTE",
+      "BALITI"
+    ]
+  },
+  {
+    "cluster_id": 5,
+    "center_lat": 15.06047725531915,
+    "center_lon": 120.66660312765957,
+    "accident_count": 94,
+    "danger_score": 0.4939,
+    "recent_accidents": 0,
+    "avg_temporal_weight": 0.5139,
+    "avg_trend_score": 0.0053,
+    "barangays": [
+      "QUEBIAUAN",
+      "SAN AGUSTIN",
+      "SAN ISIDRO"
+    ]
+  },
+  {
+    "cluster_id": 15,
+    "center_lat": 15.024560830845768,
+    "center_lon": 120.68380209950247,
+    "accident_count": 201,
+    "danger_score": 0.492,
+    "recent_accidents": 0,
+    "avg_temporal_weight": 0.4799,
+    "avg_trend_score": 0.0059,
+    "barangays": [
+      "SANTO NIñO",
+      "DOLORES",
+      "SANTO ROSARIO (POB.)",
+      "SAN JUAN",
+      "SAN PEDRO"
+    ]
+  },
+  {
+    "cluster_id": 13,
+    "center_lat": 15.097459139737992,
+    "center_lon": 120.62297368558954,
+    "accident_count": 229,
+    "danger_score": 0.4881,
+    "recent_accidents": 12,
+    "avg_temporal_weight": 0.4702,
+    "avg_trend_score": 0.004,
+    "barangays": [
+      "SAGUIN",
+      "TELABASTAGAN",
+      "DELA PAZ NORTE",
+      "BALITI",
+      "MAIMPIS"
+    ]
+  },
+  {
+    "cluster_id": 38,
+    "center_lat": 15.080855507936509,
+    "center_lon": 120.64253218253968,
+    "accident_count": 126,
+    "danger_score": 0.4802,
+    "recent_accidents": 0,
+    "avg_temporal_weight": 0.4506,
+    "avg_trend_score": 0.0,
+    "barangays": [
+      "SINDALAN",
+      "SAN JOSE",
+      "CALULUT"
+    ]
+  },
+  {
+    "cluster_id": 22,
+    "center_lat": 15.03113719230769,
+    "center_lon": 120.67623964615386,
+    "accident_count": 130,
+    "danger_score": 0.4785,
+    "recent_accidents": 5,
+    "avg_temporal_weight": 0.4318,
+    "avg_trend_score": -0.0038,
+    "barangays": [
+      "SAN JUAN",
+      "DOLORES",
+      "MAGLIMAN",
+      "LOURDES",
+      "QUEBIAUAN",
+      "SAN AGUSTIN",
+      "SAN JOSE",
+      "SANTO NIñO"
+    ]
+  },
+  {
+    "cluster_id": 31,
+    "center_lat": 15.047364611570247,
+    "center_lon": 120.69281457024795,
+    "accident_count": 121,
+    "danger_score": 0.4731,
+    "recent_accidents": 8,
+    "avg_temporal_weight": 0.4327,
+    "avg_trend_score": 0.0,
+    "barangays": [
+      "SAN JOSE",
+      "DOLORES",
+      "SAN AGUSTIN"
+    ]
+  },
+  {
+    "cluster_id": 18,
+    "center_lat": 15.019124099999999,
+    "center_lon": 120.70086581250001,
+    "accident_count": 240,
+    "danger_score": 0.4713,
+    "recent_accidents": 2,
+    "avg_temporal_weight": 0.4282,
+    "avg_trend_score": -0.001,
+    "barangays": [
+      "SAN NICOLAS",
+      "DOLORES",
+      "DEL PILAR",
+      "SANTO NIñO",
+      "SANTA LUCIA"
+    ]
+  },
+  {
+    "cluster_id": 26,
+    "center_lat": 15.044578719424463,
+    "center_lon": 120.69986082733814,
+    "accident_count": 139,
+    "danger_score": 0.4698,
+    "recent_accidents": 0,
+    "avg_temporal_weight": 0.4244,
+    "avg_trend_score": 0.0,
+    "barangays": [
+      "SAN JOSE",
+      "SINDALAN",
+      "DOLORES"
+    ]
+  },
+  {
+    "cluster_id": 23,
+    "center_lat": 15.034002109243698,
+    "center_lon": 120.69573266386554,
+    "accident_count": 238,
+    "danger_score": 0.4676,
+    "recent_accidents": 4,
+    "avg_temporal_weight": 0.4189,
+    "avg_trend_score": 0.0061,
+    "barangays": [
+      "SAN JOSE",
+      "JULIANA",
+      "LOURDES",
+      "DEL PILAR",
+      "SANTO NIñO",
+      "SANTO ROSARIO (POB.)",
+      "DOLORES",
+      "SANTA TERESITA",
+      "SINDALAN"
+    ]
+  },
+  {
+    "cluster_id": 25,
+    "center_lat": 15.058572332278484,
+    "center_lon": 120.65742432594934,
+    "accident_count": 316,
+    "danger_score": 0.4592,
+    "recent_accidents": 11,
+    "avg_temporal_weight": 0.3979,
+    "avg_trend_score": -0.1555,
+    "barangays": [
+      "QUEBIAUAN",
+      "SAN ISIDRO",
+      "MAIMPIS",
+      "TELABASTAGAN",
+      "DOLORES",
+      "SAN AGUSTIN",
+      "MALPITIC",
+      "SAN JOSE",
+      "MAGLIMAN",
+      "SINDALAN",
+      "CALULUT",
+      "DEL ROSARIO",
+      "SAN JUAN",
+      "BULAON",
+      "PANIPUAN",
+      "SAGUIN",
+      "SAN NICOLAS",
+      "BALITI",
+      "DEL CARMEN",
+      "JULIANA",
+      "DEL PILAR",
+      "SANTO ROSARIO (POB.)",
+      "DELA PAZ NORTE",
+      "SANTO NIñO"
+    ]
+  },
+  {
+    "cluster_id": 24,
+    "center_lat": 15.028521733746127,
+    "center_lon": 120.6932677863777,
+    "accident_count": 323,
+    "danger_score": 0.4578,
+    "recent_accidents": 3,
+    "avg_temporal_weight": 0.3946,
+    "avg_trend_score": -0.0422,
+    "barangays": [
+      "SANTO ROSARIO (POB.)",
+      "SANTA LUCIA",
+      "DEL PILAR",
+      "CALULUT",
+      "LOURDES",
+      "SAN JOSE",
+      "SANTO NIñO",
+      "DOLORES",
+      "SAN JUAN",
+      "SANTA TERESITA",
+      "SINDALAN"
+    ]
+  },
+  {
+    "cluster_id": 17,
+    "center_lat": 15.037107269662918,
+    "center_lon": 120.67381110112359,
+    "accident_count": 89,
+    "danger_score": 0.4524,
+    "recent_accidents": 6,
+    "avg_temporal_weight": 0.4467,
+    "avg_trend_score": 0.0,
+    "barangays": [
+      "DOLORES",
+      "SAN JOSE",
+      "SAN AGUSTIN",
+      "SAN JUAN",
+      "BALITI",
+      "SANTO NIñO"
+    ]
+  },
+  {
+    "cluster_id": 2,
+    "center_lat": 15.056556579545456,
+    "center_lon": 120.68629127272726,
+    "accident_count": 88,
+    "danger_score": 0.4523,
+    "recent_accidents": 0,
+    "avg_temporal_weight": 0.4707,
+    "avg_trend_score": 0.0368,
+    "barangays": [
+      "DEL CARMEN",
+      "DOLORES"
+    ]
+  },
+  {
+    "cluster_id": 6,
+    "center_lat": 15.119620808219178,
+    "center_lon": 120.60237238356164,
+    "accident_count": 73,
+    "danger_score": 0.4503,
+    "recent_accidents": 17,
+    "avg_temporal_weight": 0.5783,
+    "avg_trend_score": 0.0479,
+    "barangays": [
+      "TELABASTAGAN",
+      "BALITI"
+    ]
+  },
+  {
+    "cluster_id": 10,
+    "center_lat": 15.090725608108107,
+    "center_lon": 120.62910804054057,
+    "accident_count": 74,
+    "danger_score": 0.4496,
+    "recent_accidents": 11,
+    "avg_temporal_weight": 0.569,
+    "avg_trend_score": -0.0009,
+    "barangays": [
+      "DELA PAZ NORTE",
+      "SAGUIN",
+      "DELA PAZ SUR",
+      "DEL ROSARIO",
+      "BALITI",
+      "BULAON",
+      "TELABASTAGAN",
+      "SINDALAN"
+    ]
+  },
+  {
+    "cluster_id": 30,
+    "center_lat": 15.051219612676059,
+    "center_lon": 120.69846775352111,
+    "accident_count": 142,
+    "danger_score": 0.4452,
+    "recent_accidents": 0,
+    "avg_temporal_weight": 0.3629,
+    "avg_trend_score": -0.068,
+    "barangays": [
+      "SAN JOSE",
+      "DOLORES",
+      "TELABASTAGAN",
+      "SAN AGUSTIN"
+    ]
+  },
+  {
+    "cluster_id": 34,
+    "center_lat": 15.040119010968922,
+    "center_lon": 120.68005660146252,
+    "accident_count": 547,
+    "danger_score": 0.4394,
+    "recent_accidents": 0,
+    "avg_temporal_weight": 0.3427,
+    "avg_trend_score": -0.0048,
+    "barangays": [
+      "DOLORES",
+      "BULAON",
+      "SAN ISIDRO",
+      "SINDALAN",
+      "SANTO ROSARIO (POB.)",
+      "SAN JOSE",
+      "SAN JUAN",
+      "MAIMPIS",
+      "SAN AGUSTIN",
+      "JULIANA"
+    ]
+  },
+  {
+    "cluster_id": 27,
+    "center_lat": 15.052900378640778,
+    "center_lon": 120.66247588349515,
+    "accident_count": 103,
+    "danger_score": 0.4382,
+    "recent_accidents": 0,
+    "avg_temporal_weight": 0.3455,
+    "avg_trend_score": -0.0371,
+    "barangays": [
+      "SAN AGUSTIN",
+      "SAN ISIDRO",
+      "SAN JUAN",
+      "QUEBIAUAN",
+      "DOLORES"
+    ]
+  },
+  {
+    "cluster_id": 39,
+    "center_lat": 15.0783861328125,
+    "center_lon": 120.6403662578125,
+    "accident_count": 128,
+    "danger_score": 0.4296,
+    "recent_accidents": 0,
+    "avg_temporal_weight": 0.3122,
+    "avg_trend_score": 0.0018,
+    "barangays": [
+      "SINDALAN",
+      "DOLORES",
+      "SAN ISIDRO",
+      "DELA PAZ SUR",
+      "MAIMPIS",
+      "DEL ROSARIO"
+    ]
+  },
+  {
+    "cluster_id": 36,
+    "center_lat": 15.046750033333332,
+    "center_lon": 120.6698008095238,
+    "accident_count": 210,
+    "danger_score": 0.4278,
+    "recent_accidents": 0,
+    "avg_temporal_weight": 0.3173,
+    "avg_trend_score": 0.0,
+    "barangays": [
+      "SAN AGUSTIN",
+      "DOLORES",
+      "SAGUIN",
+      "QUEBIAUAN",
+      "SAN ISIDRO"
+    ]
+  },
+  {
+    "cluster_id": 35,
+    "center_lat": 15.043238846774194,
+    "center_lon": 120.6866510282258,
+    "accident_count": 248,
+    "danger_score": 0.4207,
+    "recent_accidents": 0,
+    "avg_temporal_weight": 0.3017,
+    "avg_trend_score": -0.0256,
+    "barangays": [
+      "DOLORES",
+      "SAN JOSE"
+    ]
+  },
+  {
+    "cluster_id": 29,
+    "center_lat": 15.044467714285718,
+    "center_lon": 120.69577397142857,
+    "accident_count": 70,
+    "danger_score": 0.394,
+    "recent_accidents": 0,
+    "avg_temporal_weight": 0.46,
+    "avg_trend_score": -0.0011,
+    "barangays": [
+      "SAN JOSE"
+    ]
+  },
+  {
+    "cluster_id": 32,
+    "center_lat": 15.035353685714286,
+    "center_lon": 120.68518444285709,
+    "accident_count": 70,
+    "danger_score": 0.3911,
+    "recent_accidents": 4,
+    "avg_temporal_weight": 0.4526,
+    "avg_trend_score": -0.019,
+    "barangays": [
+      "DOLORES",
+      "SAN JOSE",
+      "DEL PILAR",
+      "JULIANA"
+    ]
+  },
+  {
+    "cluster_id": 9,
+    "center_lat": 15.115701898305085,
+    "center_lon": 120.605323779661,
+    "accident_count": 59,
+    "danger_score": 0.3746,
+    "recent_accidents": 0,
+    "avg_temporal_weight": 0.494,
+    "avg_trend_score": 0.0,
+    "barangays": [
+      "TELABASTAGAN"
+    ]
+  },
+  {
+    "cluster_id": 19,
+    "center_lat": 15.024443927536232,
+    "center_lon": 120.69752952173914,
+    "accident_count": 69,
+    "danger_score": 0.3604,
+    "recent_accidents": 1,
+    "avg_temporal_weight": 0.3834,
+    "avg_trend_score": -0.0229,
+    "barangays": [
+      "SANTA LUCIA",
+      "DEL PILAR",
+      "SANTO ROSARIO (POB.)",
+      "SAN NICOLAS",
+      "SAN AGUSTIN"
+    ]
+  },
+  {
+    "cluster_id": 37,
+    "center_lat": 15.048740925,
+    "center_lon": 120.66667897500001,
+    "accident_count": 40,
+    "danger_score": 0.2286,
+    "recent_accidents": 0,
+    "avg_temporal_weight": 0.2714,
+    "avg_trend_score": 0.0,
+    "barangays": [
+      "SAN AGUSTIN",
+      "DOLORES",
+      "SAN JOSE"
+    ]
+  }
+]
