@@ -4,3 +4,5 @@ hdbscan
 python-dotenv
 supabase
 openpyxl
+scikit-learn
+scipy
