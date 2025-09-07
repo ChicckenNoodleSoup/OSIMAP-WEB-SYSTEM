@@ -175,7 +175,7 @@ class ExcelToSupabase:
     def check_existing_data(self, table_name: str) -> Dict[str, Any]:
         """Get existing data with more comprehensive duplicate checking"""
         try:
-            logger.info("🔍 Checking for existing data to prevent duplicates...")
+            logger.info(" Checking for existing data to prevent duplicates...")
             response = self.supabase.table(table_name).select("*").execute()
             
             if hasattr(response, 'error') and response.error:
@@ -211,8 +211,8 @@ class ExcelToSupabase:
                 existing_signatures.add(coord_offense_sig)
                 existing_signatures.add(full_sig)
             
-            logger.info(f"📊 Found {len(existing_records)} existing records in database")
-            logger.info(f"🔑 Generated {len(existing_signatures)} signature variations for matching")
+            logger.info(f" Found {len(existing_records)} existing records in database")
+            logger.info(f" Generated {len(existing_signatures)} signature variations for matching")
             
             return {
                 "signatures": existing_signatures,
@@ -221,7 +221,7 @@ class ExcelToSupabase:
             }
             
         except Exception as e:
-            logger.error(f"❌ Error checking existing data: {str(e)}")
+            logger.error(f" Error checking existing data: {str(e)}")
             return {"signatures": set(), "full_records": [], "count": 0}
 
     def filter_duplicates(self, data: List[Dict[str, Any]], existing_data: Dict[str, Any]) -> List[Dict[str, Any]]:
@@ -266,10 +266,10 @@ class ExcelToSupabase:
                 existing_signatures.add(full_sig)
             else:
                 duplicate_count += 1
-                logger.debug(f"🚫 Duplicate found: {barangay} at ({lat}, {lng}) on {date_committed} - {offense_type}")
+                logger.debug(f" Duplicate found: {barangay} at ({lat}, {lng}) on {date_committed} - {offense_type}")
         
-        logger.info(f"🚫 Filtered out {duplicate_count} duplicate records")
-        logger.info(f"✅ {len(filtered_data)} new unique records ready for insertion")
+        logger.info(f" Filtered out {duplicate_count} duplicate records")
+        logger.info(f" {len(filtered_data)} new unique records ready for insertion")
         
         return filtered_data
 
@@ -278,18 +278,18 @@ class ExcelToSupabase:
             # Check for existing data first
             existing_data = self.check_existing_data(table_name)
             
-            logger.info(f"📋 Original data count: {len(data)}")
-            logger.info(f"📊 Existing records in database: {existing_data['count']}")
+            logger.info(f" Original data count: {len(data)}")
+            logger.info(f" Existing records in database: {existing_data['count']}")
             
             # Filter out duplicates
             filtered_data = self.filter_duplicates(data, existing_data)
             
             if not filtered_data:
-                logger.info("📭 No new records to insert - all records already exist in database")
+                logger.info(" No new records to insert - all records already exist in database")
                 return True
             
             total_records = len(filtered_data)
-            logger.info(f"📤 Starting to insert {total_records} new records into {table_name}")
+            logger.info(f" Starting to insert {total_records} new records into {table_name}")
             
             inserted_count = 0
             for i in range(0, total_records, batch_size):
@@ -299,45 +299,45 @@ class ExcelToSupabase:
                     result = self.supabase.table(table_name).insert(batch).execute()
                     
                     if hasattr(result, 'error') and result.error:
-                        logger.error(f"❌ Error inserting batch {i//batch_size + 1}: {result.error}")
+                        logger.error(f" Error inserting batch {i//batch_size + 1}: {result.error}")
                         # Try individual inserts for this batch to see which records are problematic
                         self.insert_batch_individually(table_name, batch, i//batch_size + 1)
                     else:
                         batch_size_actual = len(batch)
                         inserted_count += batch_size_actual
-                        logger.info(f"✅ Inserted batch {i//batch_size + 1}/{(total_records + batch_size - 1)//batch_size} ({batch_size_actual} records)")
+                        logger.info(f" Inserted batch {i//batch_size + 1}/{(total_records + batch_size - 1)//batch_size} ({batch_size_actual} records)")
                         
                 except Exception as e:
-                    logger.error(f"❌ Exception inserting batch {i//batch_size + 1}: {str(e)}")
+                    logger.error(f" Exception inserting batch {i//batch_size + 1}: {str(e)}")
                     self.insert_batch_individually(table_name, batch, i//batch_size + 1)
             
-            logger.info(f"🎉 Successfully processed {total_records} records, inserted {inserted_count} new records")
+            logger.info(f" Successfully processed {total_records} records, inserted {inserted_count} new records")
             return True
             
         except Exception as e:
-            logger.error(f"❌ Error in insert_data: {str(e)}")
+            logger.error(f" Error in insert_data: {str(e)}")
             return False
 
     def insert_batch_individually(self, table_name: str, batch: List[Dict[str, Any]], batch_num: int):
         """Try to insert records individually when batch fails"""
-        logger.info(f"🔄 Attempting individual inserts for batch {batch_num}")
+        logger.info(f" Attempting individual inserts for batch {batch_num}")
         
         for i, record in enumerate(batch):
             try:
                 result = self.supabase.table(table_name).insert([record]).execute()
                 if hasattr(result, 'error') and result.error:
-                    logger.warning(f"⚠️ Failed to insert individual record {i+1}: {result.error}")
+                    logger.warning(f" Failed to insert individual record {i+1}: {result.error}")
                 else:
-                    logger.debug(f"✅ Individual insert successful for record {i+1}")
+                    logger.debug(f" Individual insert successful for record {i+1}")
             except Exception as e:
-                logger.warning(f"⚠️ Exception inserting individual record {i+1}: {str(e)}")
+                logger.warning(f" Exception inserting individual record {i+1}: {str(e)}")
 
     def upsert_data(self, table_name: str, data: List[Dict[str, Any]], batch_size: int = 1000) -> bool:
         """Use Supabase upsert with comprehensive conflict resolution including offense type"""
         try:
             total_records = len(data)
-            logger.info(f"🔄 Starting to upsert {total_records} records into {table_name}")
-            logger.info("🔧 Using upsert mode - will update existing records or insert new ones")
+            logger.info(f" Starting to upsert {total_records} records into {table_name}")
+            logger.info(" Using upsert mode - will update existing records or insert new ones")
             
             for i in range(0, total_records, batch_size):
                 batch = data[i:i + batch_size]
@@ -351,36 +351,36 @@ class ExcelToSupabase:
                     ).execute()
                     
                     if hasattr(result, 'error') and result.error:
-                        logger.error(f"❌ Error upserting batch {i//batch_size + 1}: {result.error}")
+                        logger.error(f" Error upserting batch {i//batch_size + 1}: {result.error}")
                         # Fall back to individual upserts
                         self.upsert_batch_individually(table_name, batch, i//batch_size + 1)
                     else:
-                        logger.info(f"✅ Upserted batch {i//batch_size + 1}/{(total_records + batch_size - 1)//batch_size}")
+                        logger.info(f" Upserted batch {i//batch_size + 1}/{(total_records + batch_size - 1)//batch_size}")
                         
                 except Exception as e:
-                    logger.error(f"❌ Exception upserting batch {i//batch_size + 1}: {str(e)}")
+                    logger.error(f" Exception upserting batch {i//batch_size + 1}: {str(e)}")
                     self.upsert_batch_individually(table_name, batch, i//batch_size + 1)
             
-            logger.info(f"🎉 Successfully upserted all {total_records} records")
+            logger.info(f" Successfully upserted all {total_records} records")
             return True
             
         except Exception as e:
-            logger.error(f"❌ Error upserting data: {str(e)}")
+            logger.error(f" Error upserting data: {str(e)}")
             return False
 
     def upsert_batch_individually(self, table_name: str, batch: List[Dict[str, Any]], batch_num: int):
         """Try to upsert records individually when batch fails"""
-        logger.info(f"🔄 Attempting individual upserts for batch {batch_num}")
+        logger.info(f" Attempting individual upserts for batch {batch_num}")
         
         for i, record in enumerate(batch):
             try:
                 result = self.supabase.table(table_name).upsert([record], ignore_duplicates=True).execute()
                 if hasattr(result, 'error') and result.error:
-                    logger.warning(f"⚠️ Failed to upsert individual record {i+1}: {result.error}")
+                    logger.warning(f" Failed to upsert individual record {i+1}: {result.error}")
                 else:
-                    logger.debug(f"✅ Individual upsert successful for record {i+1}")
+                    logger.debug(f" Individual upsert successful for record {i+1}")
             except Exception as e:
-                logger.warning(f"⚠️ Exception upserting individual record {i+1}: {str(e)}")
+                logger.warning(f" Exception upserting individual record {i+1}: {str(e)}")
 
 # ==============================
 # Configuration
@@ -422,7 +422,7 @@ def find_latest_excel_file():
 # ==============================
 def main():
     try:
-        logger.info("🚀 Starting Excel to Supabase import...")
+        logger.info(" Starting Excel to Supabase import...")
         
         # Find the latest Excel file
         excel_file = find_latest_excel_file()
@@ -434,14 +434,14 @@ def main():
         success = importer.process_all_sheets(excel_file, TABLE_NAME, add_year_column=True)
         
         if success:
-            logger.info("✅ Excel to Supabase import completed successfully!")
+            logger.info(" Excel to Supabase import completed successfully!")
             return True
         else:
-            logger.error("❌ Excel to Supabase import failed!")
+            logger.error(" Excel to Supabase import failed!")
             return False
             
     except Exception as e:
-        logger.error(f"❌ Error in main execution: {str(e)}")
+        logger.error(f" Error in main execution: {str(e)}")
         return False
 
 if __name__ == "__main__":

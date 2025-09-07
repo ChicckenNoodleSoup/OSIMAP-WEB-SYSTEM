@@ -37,54 +37,71 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage });
 
-// Function to run Python scripts sequentially (including HDBSCAN clustering)
+
+// Function to run Python scripts sequentially (including cleanup after processing)
 const runPythonScripts = () => {
   const script1 = path.join(process.cwd(), "cleaning2.py");
   const script2 = path.join(process.cwd(), "export_geojson.py");
-  const script3 = path.join(process.cwd(), "cluster_hdbscan.py"); // Add your HDBSCAN script
+  const script3 = path.join(process.cwd(), "cluster_hdbscan.py");
+  const cleanupScript = path.join(process.cwd(), "cleanup_files.py"); // New cleanup script
 
-  console.log("🚀 Starting Python script execution...");
+  console.log(" Starting Python script execution...");
   console.log(`Step 1: Running ${script1}`);
 
   // Run cleaning2.py first
   exec(`python "${script1}"`, (error1, stdout1, stderr1) => {
     if (error1) {
-      console.error(`❌ Error running cleaning2.py: ${error1.message}`);
+      console.error(` Error running cleaning2.py: ${error1.message}`);
       return;
     }
     if (stderr1) {
-      console.error(`⚠️ cleaning2.py stderr: ${stderr1}`);
+      console.error(` cleaning2.py stderr: ${stderr1}`);
     }
-    console.log(`✅ cleaning2.py completed:\n${stdout1}`);
+    console.log(` cleaning2.py completed:\n${stdout1}`);
 
-    // Run export_geojson.py after the first script completes
-    console.log(`Step 2: Running ${script2}`);
-    exec(`python "${script2}"`, (error2, stdout2, stderr2) => {
-      if (error2) {
-        console.error(`❌ Error running export_geojson.py: ${error2.message}`);
-        return;
+    // Run cleanup script after successful data processing
+    console.log(`Step 2: Running cleanup script ${cleanupScript}`);
+    exec(`python "${cleanupScript}"`, (errorCleanup, stdoutCleanup, stderrCleanup) => {
+      if (errorCleanup) {
+        console.error(` Warning - cleanup script failed: ${errorCleanup.message}`);
+        // Don't return here - continue with other scripts even if cleanup fails
+      } else {
+        if (stderrCleanup) {
+          console.error(` cleanup_files.py stderr: ${stderrCleanup}`);
+        }
+        console.log(` cleanup_files.py completed:\n${stdoutCleanup}`);
       }
-      if (stderr2) {
-        console.error(`⚠️ export_geojson.py stderr: ${stderr2}`);
-      }
-      console.log(`✅ export_geojson.py completed:\n${stdout2}`);
 
-      // Run HDBSCAN clustering script after GeoJSON export completes
-      console.log(`Step 3: Running ${script3}`);
-      exec(`python "${script3}"`, (error3, stdout3, stderr3) => {
-        if (error3) {
-          console.error(`❌ Error running hdbscan_clustering.py: ${error3.message}`);
+      // Run export_geojson.py after cleanup (regardless of cleanup success/failure)
+      console.log(`Step 3: Running ${script2}`);
+      exec(`python "${script2}"`, (error2, stdout2, stderr2) => {
+        if (error2) {
+          console.error(` Error running export_geojson.py: ${error2.message}`);
           return;
         }
-        if (stderr3) {
-          console.error(`⚠️ hdbscan_clustering.py stderr: ${stderr3}`);
+        if (stderr2) {
+          console.error(` export_geojson.py stderr: ${stderr2}`);
         }
-        console.log(`✅ hdbscan_clustering.py completed:\n${stdout3}`);
-        console.log("🎉 All Python scripts completed successfully!");
+        console.log(` export_geojson.py completed:\n${stdout2}`);
+
+        // Run HDBSCAN clustering script after GeoJSON export completes
+        console.log(`Step 4: Running ${script3}`);
+        exec(`python "${script3}"`, (error3, stdout3, stderr3) => {
+          if (error3) {
+            console.error(` Error running cluster_hdbscan.py: ${error3.message}`);
+            return;
+          }
+          if (stderr3) {
+            console.error(` cluster_hdbscan.py stderr: ${stderr3}`);
+          }
+          console.log(` cluster_hdbscan.py completed:\n${stdout3}`);
+          console.log(" All Python scripts completed successfully!");
+        });
       });
     });
   });
 };
+
 
 // Root route
 app.get("/", (req, res) => {
