@@ -20,7 +20,7 @@ function CurrentRecords() {
     const fetchRecords = async () => {
       setLoading(true);
       const { data, error } = await supabase
-        .from("road_traffic_accident") //  your table
+        .from("road_traffic_accident") // your table
         .select(
           "id, barangay, lat, lng, datecommitted, timecommitted, offensetype, year, severity"
         )
@@ -37,9 +37,10 @@ function CurrentRecords() {
     fetchRecords();
   }, []);
 
-  // Search filter
+  // Search filter (now includes ID)
   const filteredRecords = records.filter((record) =>
     [
+      record.id?.toString(),
       record.datecommitted,
       record.timecommitted,
       record.barangay,
@@ -51,7 +52,7 @@ function CurrentRecords() {
     ]
       .filter(Boolean) // ignore null/undefined
       .some((field) =>
-        field.toLowerCase().includes(searchTerm.toLowerCase())
+        String(field).toLowerCase().includes(searchTerm.toLowerCase())
       )
   );
 
@@ -81,7 +82,7 @@ function CurrentRecords() {
             </svg>
             <input
               type="text"
-              placeholder="Search records..."
+              placeholder="Search records by ID, barangay, etc..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="search-input"
@@ -98,6 +99,7 @@ function CurrentRecords() {
               <table className="records-table">
                 <thead>
                   <tr>
+                    <th>ID</th>
                     <th>Date</th>
                     <th>Time</th>
                     <th>Barangay</th>
@@ -116,6 +118,7 @@ function CurrentRecords() {
                     {filteredRecords.length > 0 ? (
                       filteredRecords.map((record) => (
                         <tr key={record.id}>
+                          <td>{record.id}</td>
                           <td>{record.datecommitted}</td>
                           <td>{record.timecommitted}</td>
                           <td>{record.barangay}</td>
@@ -128,7 +131,7 @@ function CurrentRecords() {
                       ))
                     ) : (
                       <tr>
-                        <td colSpan="8" className="no-records">
+                        <td colSpan="9" className="no-records">
                           No records found
                         </td>
                       </tr>
