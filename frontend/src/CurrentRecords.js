@@ -24,7 +24,7 @@ function CurrentRecords() {
         .select(
           "id, barangay, lat, lng, datecommitted, timecommitted, offensetype, year, severity"
         )
-        .order("datecomitted", { ascending: false });
+        .order("datecommitted", { ascending: false });
 
       if (error) {
         console.error(" Error fetching records:", error.message);
@@ -40,8 +40,8 @@ function CurrentRecords() {
   // Search filter
   const filteredRecords = records.filter((record) =>
     [
-      record.datecomitted,
-      record.timecomitted,
+      record.datecommitted,
+      record.timecommitted,
       record.barangay,
       record.offensetype,
       record.severity,
@@ -116,8 +116,8 @@ function CurrentRecords() {
                     {filteredRecords.length > 0 ? (
                       filteredRecords.map((record) => (
                         <tr key={record.id}>
-                          <td>{record.datecomitted}</td>
-                          <td>{record.timecomitted}</td>
+                          <td>{record.datecommitted}</td>
+                          <td>{record.timecommitted}</td>
                           <td>{record.barangay}</td>
                           <td>{record.lat}</td>
                           <td>{record.lng}</td>
