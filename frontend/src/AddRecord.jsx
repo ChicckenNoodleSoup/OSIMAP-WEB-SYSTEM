@@ -25,7 +25,7 @@ export default function AddRecord() {
       setCurrentStep(1);
       setUploadStatus("📤 Uploading file...");
 
-      fetch("https://crime-map-proto-backend.onrender.com/upload", {
+      fetch("https://crime-map-proto.onrender.com/upload", {
         method: "POST",
         body: formData,
       })

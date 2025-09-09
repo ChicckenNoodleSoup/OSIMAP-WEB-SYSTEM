@@ -6,7 +6,7 @@ import fs from "fs";
 import { exec } from "child_process";
 
 const app = express();
-const PORT = 5000;
+const PORT = process.env.PORT || 5000; 
 
 // Enable CORS
 app.use(cors());
