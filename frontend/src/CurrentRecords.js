@@ -15,29 +15,48 @@ function CurrentRecords() {
   const [records, setRecords] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Fetch records from Supabase
+  // Fetch ALL records from Supabase (with pagination)
   useEffect(() => {
-    const fetchRecords = async () => {
+    const fetchAllRecords = async () => {
       setLoading(true);
-      const { data, error } = await supabase
-        .from("road_traffic_accident") // your table
-        .select(
-          "id, barangay, lat, lng, datecommitted, timecommitted, offensetype, year, severity"
-        )
-        .order("datecommitted", { ascending: false });
 
-      if (error) {
-        console.error(" Error fetching records:", error.message);
-      } else {
-        setRecords(data || []);
+      let allRecords = [];
+      const pageSize = 1000; // fetch in chunks of 1000
+      let from = 0;
+      let to = pageSize - 1;
+      let done = false;
+
+      while (!done) {
+        const { data, error } = await supabase
+          .from("road_traffic_accident")
+          .select(
+            "id, barangay, lat, lng, datecommitted, timecommitted, offensetype, year, severity"
+          )
+          .order("datecommitted", { ascending: false })
+          .range(from, to);
+
+        if (error) {
+          console.error(" Error fetching records:", error.message);
+          done = true;
+        } else {
+          allRecords = [...allRecords, ...(data || [])];
+          if (!data || data.length < pageSize) {
+            done = true; // last page
+          } else {
+            from += pageSize;
+            to += pageSize;
+          }
+        }
       }
+
+      setRecords(allRecords);
       setLoading(false);
     };
 
-    fetchRecords();
+    fetchAllRecords();
   }, []);
 
-  // Search filter (now includes ID)
+  // Search filter (includes ID)
   const filteredRecords = records.filter((record) =>
     [
       record.id?.toString(),
@@ -50,7 +69,7 @@ function CurrentRecords() {
       record.lat?.toString(),
       record.lng?.toString(),
     ]
-      .filter(Boolean) // ignore null/undefined
+      .filter(Boolean)
       .some((field) =>
         String(field).toLowerCase().includes(searchTerm.toLowerCase())
       )
@@ -93,7 +112,7 @@ function CurrentRecords() {
         {/* Records Table */}
         <div className="records-card">
           {loading ? (
-            <p>Loading records...</p>
+            <p>Loading {records.length} records...</p>
           ) : (
             <>
               <table className="records-table">
