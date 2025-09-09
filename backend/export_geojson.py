@@ -46,7 +46,7 @@ def fetch_all_data(batch_size=1000):
     all_data = []
     start = 0
 
-    logger.info("📥 Fetching data from Supabase...")
+    logger.info(" Fetching data from Supabase...")
     
     while True:
         response = supabase.table(TABLE_NAME).select("*").range(start, start + batch_size - 1).execute()
@@ -61,7 +61,7 @@ def fetch_all_data(batch_size=1000):
         logger.info(f"Fetched {len(data)} records (total: {len(all_data)})")
         start += batch_size
 
-    logger.info(f"📊 Total records fetched: {len(all_data)}")
+    logger.info(f" Total records fetched: {len(all_data)}")
     return all_data
 
 def to_geojson(data):
@@ -69,7 +69,7 @@ def to_geojson(data):
     features = []
     skipped_count = 0
     
-    logger.info("🗺️ Converting data to GeoJSON format...")
+    logger.info(" Converting data to GeoJSON format...")
     
     for row in data:
         try:
@@ -101,9 +101,9 @@ def to_geojson(data):
             logger.warning(f"Skipping row due to error: {e}")
             skipped_count += 1
 
-    logger.info(f"✅ Converted {len(features)} valid records to GeoJSON")
+    logger.info(f" Converted {len(features)} valid records to GeoJSON")
     if skipped_count > 0:
-        logger.warning(f"⚠️ Skipped {skipped_count} records due to invalid coordinates or errors")
+        logger.warning(f" Skipped {skipped_count} records due to invalid coordinates or errors")
 
     return {
         "type": "FeatureCollection", 
@@ -120,16 +120,16 @@ def save_geojson(geojson, output_path):
     try:
         with open(output_path, "w", encoding="utf-8") as f:
             json.dump(geojson, f, ensure_ascii=False, indent=2)
-        logger.info(f"💾 GeoJSON saved to: {output_path}")
+        logger.info(f" GeoJSON saved to: {output_path}")
         
         # Log file size
         file_size = os.path.getsize(output_path)
         file_size_mb = file_size / (1024 * 1024)
-        logger.info(f"📏 File size: {file_size_mb:.2f} MB")
+        logger.info(f" File size: {file_size_mb:.2f} MB")
         
         return True
     except Exception as e:
-        logger.error(f"❌ Error saving GeoJSON: {e}")
+        logger.error(f" Error saving GeoJSON: {e}")
         return False
 
 # ==============================
@@ -137,7 +137,7 @@ def save_geojson(geojson, output_path):
 # ==============================
 def main():
     try:
-        logger.info("🚀 Starting Supabase to GeoJSON export...")
+        logger.info(" Starting Supabase to GeoJSON export...")
         
         # Get output path
         output_path = get_output_path()
@@ -146,7 +146,7 @@ def main():
         rows = fetch_all_data()
         
         if not rows:
-            logger.warning("⚠️ No data found in Supabase table")
+            logger.warning(" No data found in Supabase table")
             return False
         
         # Convert to GeoJSON
@@ -156,14 +156,14 @@ def main():
         success = save_geojson(geojson, output_path)
         
         if success:
-            logger.info("✅ Supabase to GeoJSON export completed successfully!")
+            logger.info(" Supabase to GeoJSON export completed successfully!")
             return True
         else:
-            logger.error("❌ Failed to save GeoJSON file")
+            logger.error(" Failed to save GeoJSON file")
             return False
             
     except Exception as e:
-        logger.error(f"❌ Error in main execution: {str(e)}")
+        logger.error(f" Error in main execution: {str(e)}")
         return False
 
 if __name__ == "__main__":

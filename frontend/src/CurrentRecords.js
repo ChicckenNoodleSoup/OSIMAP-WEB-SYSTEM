@@ -20,14 +20,14 @@ function CurrentRecords() {
     const fetchRecords = async () => {
       setLoading(true);
       const { data, error } = await supabase
-        .from("road_traffic_accident") // ✅ your table
+        .from("road_traffic_accident") //  your table
         .select(
-          "id, barangay, lat, lng, datecomitted, timecomitted, offensetype, year, severity"
+          "id, barangay, lat, lng, datecommitted, timecommitted, offensetype, year, severity"
         )
         .order("datecomitted", { ascending: false });
 
       if (error) {
-        console.error("❌ Error fetching records:", error.message);
+        console.error(" Error fetching records:", error.message);
       } else {
         setRecords(data || []);
       }
