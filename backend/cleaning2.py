@@ -173,7 +173,7 @@ class ExcelToSupabase:
         return df.to_dict('records')
 
     def check_existing_data(self, table_name: str) -> Dict[str, Any]:
-        """Get existing data with more comprehensive duplicate checking"""
+        """Get existing data with optimized duplicate checking using sets - OPTIMIZED VERSION"""
         try:
             logger.info(" Checking for existing data to prevent duplicates...")
             response = self.supabase.table(table_name).select("*").execute()
@@ -182,34 +182,28 @@ class ExcelToSupabase:
                 logger.warning(f"Could not fetch existing data: {response.error}")
                 return {"signatures": set(), "full_records": []}
             
-            existing_signatures = set()
             existing_records = response.data or []
             
+            # Use set for O(1) lookups
+            existing_signatures = set()
+            
+            # Batch process records to reduce function call overhead
             for row in existing_records:
+                # Pre-compute and clean values once
                 barangay = str(row.get('barangay', '')).lower().strip()
-                lat = row.get('lat', '')
-                lng = row.get('lng', '')
-                date_committed = row.get('datecommitted', '')
-                time_committed = row.get('timecommitted', '')
+                lat = str(row.get('lat', ''))  # Convert to string for consistency
+                lng = str(row.get('lng', ''))
+                date_committed = str(row.get('datecommitted', ''))
+                time_committed = str(row.get('timecommitted', ''))
                 offense_type = str(row.get('offensetype', '')).lower().strip()
                 
-                # Create multiple signature types for better matching
-                # Primary signature with all fields including offense type and time
-                primary_sig = f"{barangay}|{lat}|{lng}|{date_committed}|{time_committed}|{offense_type}"
-                
-                # Alternative signature without time (in case time formatting differs)
-                alt_sig = f"{barangay}|{lat}|{lng}|{date_committed}|{offense_type}"
-                
-                # Coordinate + offense signature (in case barangay spelling differs)
-                coord_offense_sig = f"{lat}|{lng}|{date_committed}|{offense_type}"
-                
-                # Full match signature with time (most restrictive)
-                full_sig = f"{barangay}|{lat}|{lng}|{date_committed}|{time_committed}|{offense_type}"
-                
-                existing_signatures.add(primary_sig)
-                existing_signatures.add(alt_sig)
-                existing_signatures.add(coord_offense_sig)
-                existing_signatures.add(full_sig)
+                # Create all signature variations at once and add to set
+                signatures = {
+                    f"{barangay}|{lat}|{lng}|{date_committed}|{time_committed}|{offense_type}",  # primary
+                    f"{barangay}|{lat}|{lng}|{date_committed}|{offense_type}",  # without time
+                    f"{lat}|{lng}|{date_committed}|{offense_type}",  # coordinate + offense
+                }
+                existing_signatures.update(signatures)
             
             logger.info(f" Found {len(existing_records)} existing records in database")
             logger.info(f" Generated {len(existing_signatures)} signature variations for matching")
@@ -225,50 +219,92 @@ class ExcelToSupabase:
             return {"signatures": set(), "full_records": [], "count": 0}
 
     def filter_duplicates(self, data: List[Dict[str, Any]], existing_data: Dict[str, Any]) -> List[Dict[str, Any]]:
-        """Filter out duplicate records using multiple signature matching including offense type"""
-        filtered_data = []
-        duplicate_count = 0
+        """Optimized duplicate filtering with O(n) complexity - OPTIMIZED VERSION"""
         existing_signatures = existing_data["signatures"]
         
-        # Track signatures from current batch to avoid internal duplicates
+        # Use set for current batch signatures for O(1) lookup
         current_batch_signatures = set()
+        filtered_data = []
+        duplicate_count = 0
         
         for record in data:
+            # Pre-compute and clean values once per record
             barangay = str(record.get('barangay', '')).lower().strip()
-            lat = record.get('lat', '')
-            lng = record.get('lng', '')
-            date_committed = record.get('datecommitted', '')
-            time_committed = record.get('timecommitted', '')
+            lat = str(record.get('lat', ''))
+            lng = str(record.get('lng', ''))
+            date_committed = str(record.get('datecommitted', ''))
+            time_committed = str(record.get('timecommitted', ''))
             offense_type = str(record.get('offensetype', '')).lower().strip()
             
-            # Create the same signature types as in check_existing_data
+            # Create primary signature for current batch tracking
             primary_sig = f"{barangay}|{lat}|{lng}|{date_committed}|{time_committed}|{offense_type}"
-            alt_sig = f"{barangay}|{lat}|{lng}|{date_committed}|{offense_type}"
-            coord_offense_sig = f"{lat}|{lng}|{date_committed}|{offense_type}"
-            full_sig = f"{barangay}|{lat}|{lng}|{date_committed}|{time_committed}|{offense_type}"
             
-            # Check if any signature matches existing data
-            is_duplicate = (
-                primary_sig in existing_signatures or 
-                alt_sig in existing_signatures or 
-                coord_offense_sig in existing_signatures or
-                full_sig in existing_signatures or
-                primary_sig in current_batch_signatures
-            )
+            # Check current batch first (most likely to hit)
+            if primary_sig in current_batch_signatures:
+                duplicate_count += 1
+                continue
             
-            if not is_duplicate:
-                filtered_data.append(record)
-                current_batch_signatures.add(primary_sig)
-                # Add to existing signatures to prevent future duplicates in this session
-                existing_signatures.add(primary_sig)
-                existing_signatures.add(alt_sig)
-                existing_signatures.add(coord_offense_sig)
-                existing_signatures.add(full_sig)
-            else:
+            # Create signature variations for existing data check
+            signatures_to_check = {
+                primary_sig,
+                f"{barangay}|{lat}|{lng}|{date_committed}|{offense_type}",
+                f"{lat}|{lng}|{date_committed}|{offense_type}",
+            }
+            
+            # Check if any signature exists in existing data using set intersection (very fast)
+            if existing_signatures & signatures_to_check:  # Set intersection
                 duplicate_count += 1
                 logger.debug(f" Duplicate found: {barangay} at ({lat}, {lng}) on {date_committed} - {offense_type}")
+            else:
+                # Not a duplicate - add to results
+                filtered_data.append(record)
+                current_batch_signatures.add(primary_sig)
         
         logger.info(f" Filtered out {duplicate_count} duplicate records")
+        logger.info(f" {len(filtered_data)} new unique records ready for insertion")
+        
+        return filtered_data
+
+    def filter_duplicates_pandas(self, data: List[Dict[str, Any]], existing_data: Dict[str, Any]) -> List[Dict[str, Any]]:
+        """Ultra-fast duplicate filtering using pandas for large datasets - ALTERNATIVE OPTIMIZED VERSION"""
+        if not data:
+            return data
+        
+        # Convert to DataFrame for vectorized operations
+        df_new = pd.DataFrame(data)
+        
+        # Clean and prepare columns using vectorized operations
+        df_new['barangay_clean'] = df_new['barangay'].astype(str).str.lower().str.strip()
+        df_new['lat_clean'] = df_new['lat'].astype(str)
+        df_new['lng_clean'] = df_new['lng'].astype(str)
+        df_new['date_clean'] = df_new['datecommitted'].astype(str)
+        df_new['time_clean'] = df_new['timecommitted'].astype(str)
+        df_new['offense_clean'] = df_new['offensetype'].astype(str).str.lower().str.strip()
+        
+        # Create signature using vectorized string operations
+        df_new['signature'] = (
+            df_new['barangay_clean'] + '|' + 
+            df_new['lat_clean'] + '|' + 
+            df_new['lng_clean'] + '|' + 
+            df_new['date_clean'] + '|' + 
+            df_new['time_clean'] + '|' + 
+            df_new['offense_clean']
+        )
+        
+        # Remove internal duplicates within the new dataset
+        df_new_unique = df_new.drop_duplicates(subset=['signature'], keep='first')
+        
+        # Filter against existing signatures using pandas isin() which is highly optimized
+        existing_signatures = existing_data["signatures"]
+        mask_not_duplicate = ~df_new_unique['signature'].isin(existing_signatures)
+        df_filtered = df_new_unique[mask_not_duplicate]
+        
+        # Convert back to list of dictionaries, excluding our helper columns
+        original_columns = [col for col in df_filtered.columns if not col.endswith('_clean') and col != 'signature']
+        filtered_data = df_filtered[original_columns].to_dict('records')
+        
+        duplicate_count = len(data) - len(filtered_data)
+        logger.info(f" Pandas filtering removed {duplicate_count} duplicate records")
         logger.info(f" {len(filtered_data)} new unique records ready for insertion")
         
         return filtered_data
@@ -281,7 +317,9 @@ class ExcelToSupabase:
             logger.info(f" Original data count: {len(data)}")
             logger.info(f" Existing records in database: {existing_data['count']}")
             
-            # Filter out duplicates
+            # Filter out duplicates - USE OPTIMIZED VERSION
+            # For very large datasets (100K+ records), uncomment the next line instead:
+            # filtered_data = self.filter_duplicates_pandas(data, existing_data)
             filtered_data = self.filter_duplicates(data, existing_data)
             
             if not filtered_data:
