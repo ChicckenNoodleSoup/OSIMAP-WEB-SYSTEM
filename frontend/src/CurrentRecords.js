@@ -15,13 +15,17 @@ function CurrentRecords() {
   const [records, setRecords] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Fetch ALL records from Supabase (with pagination)
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(1);
+  const recordsPerPage = 500;
+
+  // Fetch ALL records from Supabase (in batches of 1000)
   useEffect(() => {
     const fetchAllRecords = async () => {
       setLoading(true);
 
       let allRecords = [];
-      const pageSize = 1000; // fetch in chunks of 1000
+      const pageSize = 1000;
       let from = 0;
       let to = pageSize - 1;
       let done = false;
@@ -56,7 +60,7 @@ function CurrentRecords() {
     fetchAllRecords();
   }, []);
 
-  // Search filter (includes ID)
+  // Search filter
   const filteredRecords = records.filter((record) =>
     [
       record.id?.toString(),
@@ -73,6 +77,15 @@ function CurrentRecords() {
       .some((field) =>
         String(field).toLowerCase().includes(searchTerm.toLowerCase())
       )
+  );
+
+  // Pagination logic
+  const totalPages = Math.ceil(filteredRecords.length / recordsPerPage);
+  const indexOfLastRecord = currentPage * recordsPerPage;
+  const indexOfFirstRecord = indexOfLastRecord - recordsPerPage;
+  const currentRecords = filteredRecords.slice(
+    indexOfFirstRecord,
+    indexOfLastRecord
   );
 
   return (
@@ -103,7 +116,10 @@ function CurrentRecords() {
               type="text"
               placeholder="Search records by ID, barangay, etc..."
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={(e) => {
+                setSearchTerm(e.target.value);
+                setCurrentPage(1); // reset to first page on search
+              }}
               className="search-input"
             />
           </div>
@@ -134,8 +150,8 @@ function CurrentRecords() {
               <div className="table-body-wrapper">
                 <table className="records-table">
                   <tbody>
-                    {filteredRecords.length > 0 ? (
-                      filteredRecords.map((record) => (
+                    {currentRecords.length > 0 ? (
+                      currentRecords.map((record) => (
                         <tr key={record.id}>
                           <td>{record.id}</td>
                           <td>{record.datecommitted}</td>
@@ -157,6 +173,31 @@ function CurrentRecords() {
                     )}
                   </tbody>
                 </table>
+              </div>
+
+              {/* Pagination Controls */}
+              <div className="pagination">
+                <button
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.max(prev - 1, 1))
+                  }
+                  disabled={currentPage === 1}
+                >
+                  ⬅ Prev
+                </button>
+                <span>
+                  Page {currentPage} of {totalPages}
+                </span>
+                <button
+                  onClick={() =>
+                    setCurrentPage((prev) =>
+                      Math.min(prev + 1, totalPages)
+                    )
+                  }
+                  disabled={currentPage === totalPages}
+                >
+                  Next ➡
+                </button>
               </div>
             </>
           )}
