@@ -24,11 +24,16 @@ const getClusterColor = (clusterId) => {
   return clusterId === -1 ? '#95A5A6' : colors[clusterId % colors.length];
 };
 
+// 🔒 Define San Fernando bounding box
+const sanFernandoBounds = [
+  [14.9666, 120.5874], // Southwest corner
+  [15.0858, 120.7722]  // Northeast corner
+];
+
 // Optimized Heatmap Layer Component
 function ClusteredHeatmapLayer({ accidentData, showHeatmap }) {
   const map = useMap();
 
-  // Memoize heatmap points to avoid recalculation
   const heatmapPoints = useMemo(() => {
     if (!accidentData || !showHeatmap) return [];
 
@@ -39,8 +44,7 @@ function ClusteredHeatmapLayer({ accidentData, showHeatmap }) {
         const [lng, lat] = geometry.coordinates;
         if (typeof lat !== "number" || typeof lng !== "number") return null;
         
-        // Use severity for intensity
-        let intensity = 0.5; // default
+        let intensity = 0.5;
         if (properties.severity) {
           const severityMap = { 'Critical': 1.0, 'High': 0.8, 'Medium': 0.6, 'Low': 0.4, 'Minor': 0.2 };
           intensity = severityMap[properties.severity] || 0.5;
@@ -78,13 +82,12 @@ function ClusteredHeatmapLayer({ accidentData, showHeatmap }) {
   return null;
 }
 
-// Optimized Cluster Centers Component
 function ClusterCenters({ clusterCenters, showClusters }) {
   if (!showClusters || !clusterCenters) return null;
 
   return (
     <>
-      {clusterCenters.map((feature, idx) => {
+      {clusterCenters.map((feature) => {
         const [lng, lat] = feature.geometry.coordinates;
         const { properties } = feature;
         const color = getClusterColor(properties.cluster_id);
@@ -122,7 +125,6 @@ function ClusterCenters({ clusterCenters, showClusters }) {
   );
 }
 
-// Optimized Individual Markers Component
 function AccidentMarkers({ accidentPoints, showMarkers }) {
   if (!showMarkers || !accidentPoints) return null;
 
@@ -168,10 +170,9 @@ export default function MapView() {
   const [accidentData, setAccidentData] = useState(null);
   const [showClusters, setShowClusters] = useState(true);
   const [showHeatmap, setShowHeatmap] = useState(true);
-  const [showMarkers, setShowMarkers] = useState(false); // Off by default for performance
+  const [showMarkers, setShowMarkers] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  // Memoize processed data to avoid recalculation
   const { accidentPoints, clusterCenters, stats } = useMemo(() => {
     if (!accidentData) {
       return { accidentPoints: [], clusterCenters: [], stats: null };
@@ -239,7 +240,6 @@ export default function MapView() {
           <DateTime />
         </div>
         
-        {/* Optimized Controls */}
         <div className="controls-panel" style={{ 
           padding: '8px 12px', 
           marginBottom: '8px', 
@@ -250,29 +250,14 @@ export default function MapView() {
           alignItems: 'center',
           fontSize: '14px'
         }}>
-          <label style={{ display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}>
-            <input
-              type="checkbox"
-              checked={showHeatmap}
-              onChange={handleToggle(setShowHeatmap)}
-            />
-            Heatmap
+          <label>
+            <input type="checkbox" checked={showHeatmap} onChange={handleToggle(setShowHeatmap)} /> Heatmap
           </label>
-          <label style={{ display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}>
-            <input
-              type="checkbox"
-              checked={showClusters}
-              onChange={handleToggle(setShowClusters)}
-            />
-            Clusters
+          <label>
+            <input type="checkbox" checked={showClusters} onChange={handleToggle(setShowClusters)} /> Clusters
           </label>
-          <label style={{ display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}>
-            <input
-              type="checkbox"
-              checked={showMarkers}
-              onChange={handleToggle(setShowMarkers)}
-            />
-            Points
+          <label>
+            <input type="checkbox" checked={showMarkers} onChange={handleToggle(setShowMarkers)} /> Points
           </label>
           {stats && (
             <div style={{ marginLeft: 'auto', fontSize: '12px', color: '#666' }}>
@@ -286,44 +271,37 @@ export default function MapView() {
             <MapContainer
               center={[15.0306, 120.6845]}
               zoom={14}
-              minZoom={12} // Limit zoom out to see all of San Fernando
+              minZoom={12}
               maxZoom={18}
               scrollWheelZoom={true}
               className="mapview-map"
-              preferCanvas={true} // Use canvas for better performance
-              updateWhenZooming={false} // Reduce updates during zoom
-              updateWhenIdle={true} // Only update when idle
+              preferCanvas={true}
+              updateWhenZooming={false}
+              updateWhenIdle={true}
+              maxBounds={sanFernandoBounds}       // 🔒 Lock map to San Fernando
+              maxBoundsViscosity={1.0}            // 1 = hard lock, 0 = elastic
             >
               <LayersControl position="topright">
                 <LayersControl.BaseLayer checked name="Light">
                   <TileLayer
                     url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
                     attribution="© CartoDB"
-                    updateWhenIdle={true}
-                    updateWhenZooming={false}
                   />
                 </LayersControl.BaseLayer>
-
                 <LayersControl.BaseLayer name="Streets">
                   <TileLayer
                     url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                     attribution="© OpenStreetMap contributors"
-                    updateWhenIdle={true}
-                    updateWhenZooming={false}
                   />
                 </LayersControl.BaseLayer>
-
                 <LayersControl.BaseLayer name="Dark">
                   <TileLayer
                     url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
                     attribution="© CartoDB"
-                    updateWhenIdle={true}
-                    updateWhenZooming={false}
                   />
                 </LayersControl.BaseLayer>
               </LayersControl>
 
-              {/* Optimized Layers */}
               <ClusteredHeatmapLayer accidentData={accidentData} showHeatmap={showHeatmap} />
               <ClusterCenters clusterCenters={clusterCenters} showClusters={showClusters} />
               <AccidentMarkers accidentPoints={accidentPoints} showMarkers={showMarkers} />
