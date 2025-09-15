@@ -178,23 +178,36 @@ function CurrentRecords() {
               {/* Pagination Controls */}
               <div className="pagination">
                 <button
-                  onClick={() =>
-                    setCurrentPage((prev) => Math.max(prev - 1, 1))
-                  }
+                  onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
                   disabled={currentPage === 1}
+                  className="pagination-btn"
                 >
                   ⬅ Prev
                 </button>
-                <span>
-                  Page {currentPage} of {totalPages}
-                </span>
-                <button
-                  onClick={() =>
-                    setCurrentPage((prev) =>
-                      Math.min(prev + 1, totalPages)
+
+                <div className="pagination-numbers">
+                  {Array.from({ length: totalPages }, (_, i) => i + 1)
+                    .slice(
+                      Math.max(0, currentPage - 3),
+                      Math.min(totalPages, currentPage + 2)
                     )
-                  }
+                    .map((pageNum) => (
+                      <button
+                        key={pageNum}
+                        onClick={() => setCurrentPage(pageNum)}
+                        className={`pagination-number ${
+                          currentPage === pageNum ? "active" : ""
+                        }`}
+                      >
+                        {pageNum}
+                      </button>
+                    ))}
+                </div>
+
+                <button
+                  onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
                   disabled={currentPage === totalPages}
+                  className="pagination-btn"
                 >
                   Next ➡
                 </button>

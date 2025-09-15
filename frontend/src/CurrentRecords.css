@@ -85,7 +85,9 @@ h1 {
   border: none;
   cursor: pointer;
   text-align: center;
-  transition: background-color 0.3s ease, transform 0.2s ease;
+  transition-property: background-color, transform, box-shadow;
+  transition-duration: 0.3s, 0.2s, 0.3s;
+  transition-timing-function: ease, ease, ease;
 }
 
 .edit-btn:hover,
@@ -160,9 +162,12 @@ h1 {
 .scroll-wrapper::-webkit-scrollbar-thumb {
   background: rgba(255, 255, 255, 0.2); 
   border-radius: 10px;
-  backdrop-filter: blur(6px); 
+  -webkit-backdrop-filter: blur(6px); /* Safari support */
+  backdrop-filter: blur(6px);         /* Modern browsers */
   border: 2px solid rgba(241, 239, 236, 0.1); 
-  transition: background 0.3s ease, transform 0.2s ease;
+  transition-property: background, transform, box-shadow;
+  transition-duration: 0.3s, 0.2s, 0.3s;
+  transition-timing-function: ease, ease, ease;
 }
 
 .scroll-wrapper::-webkit-scrollbar-thumb:hover {
@@ -213,4 +218,61 @@ h1 {
   .records-table td {
     padding: 0.5rem;
   }
+}
+
+/* Pagination */
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  margin: 20px 0;
+  font-size: 14px;
+}
+
+.pagination-btn {
+  padding: 6px 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  background: #f8f9fa;
+  cursor: pointer;
+  transition-property: background, color, transform;
+  transition-duration: 0.2s, 0.2s, 0.2s;
+  transition-timing-function: ease-in-out, ease-in-out, ease-in-out;
+}
+
+.pagination-btn:hover:not(:disabled) {
+  background: #e9ecef;
+}
+
+.pagination-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.pagination-numbers {
+  display: flex;
+  gap: 6px;
+}
+
+.pagination-number {
+  padding: 6px 10px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  background: #fff;
+  cursor: pointer;
+  transition-property: background, color;
+  transition-duration: 0.2s, 0.2s;
+  transition-timing-function: ease-in-out, ease-in-out;
+}
+
+.pagination-number:hover {
+  background: #f1f3f5;
+}
+
+.pagination-number.active {
+  background: #007bff;
+  color: #fff;
+  border-color: #007bff;
+  font-weight: bold;
 }
