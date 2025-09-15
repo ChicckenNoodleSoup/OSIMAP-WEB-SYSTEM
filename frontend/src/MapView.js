@@ -12,25 +12,25 @@ import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import "leaflet.heat";
 import "./MapView.css";
-import { DateTime } from './DateTime';
+import { DateTime } from "./DateTime";
 
-// Cluster colors for different clusters
+// Cluster colors
 const getClusterColor = (clusterId) => {
   const colors = [
-    '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7',
-    '#DDA0DD', '#98D8C8', '#F7DC6F', '#BB8FCE', '#85C1E9',
-    '#F8C471', '#82E0AA', '#F1948A', '#85C1E9', '#D7DBDD'
+    "#FF6B6B", "#4ECDC4", "#45B7D1", "#96CEB4", "#FFEAA7",
+    "#DDA0DD", "#98D8C8", "#F7DC6F", "#BB8FCE", "#85C1E9",
+    "#F8C471", "#82E0AA", "#F1948A", "#85C1E9", "#D7DBDD",
   ];
-  return clusterId === -1 ? '#95A5A6' : colors[clusterId % colors.length];
+  return clusterId === -1 ? "#95A5A6" : colors[clusterId % colors.length];
 };
 
-// 🔒 Define San Fernando bounding box
+// 🔒 San Fernando bounding box
 const sanFernandoBounds = [
-  [14.9666, 120.5874], // Southwest corner
-  [15.0858, 120.7722]  // Northeast corner
+  [14.9666, 120.5874], // Southwest
+  [15.0858, 120.7722], // Northeast
 ];
 
-// Optimized Heatmap Layer Component
+// Heatmap layer
 function ClusteredHeatmapLayer({ accidentData, showHeatmap }) {
   const map = useMap();
 
@@ -38,18 +38,24 @@ function ClusteredHeatmapLayer({ accidentData, showHeatmap }) {
     if (!accidentData || !showHeatmap) return [];
 
     return accidentData.features
-      .filter(feature => feature.properties.type === "accident_point")
+      .filter((f) => f.properties.type === "accident_point")
       .map(({ geometry, properties }) => {
         if (!geometry || !geometry.coordinates) return null;
         const [lng, lat] = geometry.coordinates;
         if (typeof lat !== "number" || typeof lng !== "number") return null;
-        
+
         let intensity = 0.5;
         if (properties.severity) {
-          const severityMap = { 'Critical': 1.0, 'High': 0.8, 'Medium': 0.6, 'Low': 0.4, 'Minor': 0.2 };
+          const severityMap = {
+            Critical: 1.0,
+            High: 0.8,
+            Medium: 0.6,
+            Low: 0.4,
+            Minor: 0.2,
+          };
           intensity = severityMap[properties.severity] || 0.5;
         }
-        
+
         return [lat, lng, intensity];
       })
       .filter(Boolean);
@@ -65,7 +71,7 @@ function ClusteredHeatmapLayer({ accidentData, showHeatmap }) {
       gradient: {
         0.2: "blue",
         0.4: "cyan",
-        0.6: "lime", 
+        0.6: "lime",
         0.8: "yellow",
         1.0: "red",
       },
@@ -73,26 +79,24 @@ function ClusteredHeatmapLayer({ accidentData, showHeatmap }) {
     });
 
     map.addLayer(heatLayer);
-
-    return () => {
-      map.removeLayer(heatLayer);
-    };
+    return () => map.removeLayer(heatLayer);
   }, [map, heatmapPoints, showHeatmap]);
 
   return null;
 }
 
+// Cluster circles
 function ClusterCenters({ clusterCenters, showClusters }) {
   if (!showClusters || !clusterCenters) return null;
 
   return (
     <>
-      {clusterCenters.map((feature) => {
-        const [lng, lat] = feature.geometry.coordinates;
-        const { properties } = feature;
+      {clusterCenters.map((f) => {
+        const [lng, lat] = f.geometry.coordinates;
+        const { properties } = f;
         const color = getClusterColor(properties.cluster_id);
         const radius = Math.min(Math.sqrt(properties.accident_count) * 30, 200);
-        
+
         return (
           <Circle
             key={`cluster-${properties.cluster_id}`}
@@ -111,9 +115,10 @@ function ClusterCenters({ clusterCenters, showClusters }) {
                 <div><b>Cluster #{properties.cluster_id}</b></div>
                 <div><b>Accidents:</b> {properties.accident_count}</div>
                 <div><b>Location:</b> {lat.toFixed(4)}, {lng.toFixed(4)}</div>
-                {properties.barangays && properties.barangays.length > 0 && (
-                  <div><b>Areas:</b> {properties.barangays.slice(0, 2).join(', ')}
-                    {properties.barangays.length > 2 ? '...' : ''}
+                {properties.barangays?.length > 0 && (
+                  <div>
+                    <b>Areas:</b> {properties.barangays.slice(0, 2).join(", ")}
+                    {properties.barangays.length > 2 ? "..." : ""}
                   </div>
                 )}
               </div>
@@ -125,13 +130,14 @@ function ClusterCenters({ clusterCenters, showClusters }) {
   );
 }
 
+// Accident markers
 function AccidentMarkers({ accidentPoints, showMarkers }) {
   if (!showMarkers || !accidentPoints) return null;
 
   return (
     <>
-      {accidentPoints.map((feature, idx) => {
-        const { geometry, properties } = feature;
+      {accidentPoints.map((f, idx) => {
+        const { geometry, properties } = f;
         const [lng, lat] = geometry.coordinates;
         const clusterColor = getClusterColor(properties.cluster);
         const isNoise = properties.cluster === -1;
@@ -151,12 +157,10 @@ function AccidentMarkers({ accidentPoints, showMarkers }) {
           >
             <Tooltip direction="top" offset={[0, -5]} opacity={1}>
               <div className="mapview-tooltip">
-                <div><b>Cluster:</b> {properties.cluster === -1 ? 'Noise' : `#${properties.cluster}`}</div>
+                <div><b>Cluster:</b> {isNoise ? "Noise" : `#${properties.cluster}`}</div>
                 <div><b>Type:</b> {properties.offensetype || "N/A"}</div>
                 <div><b>Severity:</b> {properties.severity || "N/A"}</div>
-                {properties.barangay && (
-                  <div><b>Area:</b> {properties.barangay}</div>
-                )}
+                {properties.barangay && <div><b>Area:</b> {properties.barangay}</div>}
               </div>
             </Tooltip>
           </CircleMarker>
@@ -166,6 +170,7 @@ function AccidentMarkers({ accidentPoints, showMarkers }) {
   );
 }
 
+// Main component
 export default function MapView() {
   const [accidentData, setAccidentData] = useState(null);
   const [showClusters, setShowClusters] = useState(true);
@@ -174,21 +179,19 @@ export default function MapView() {
   const [loading, setLoading] = useState(true);
 
   const { accidentPoints, clusterCenters, stats } = useMemo(() => {
-    if (!accidentData) {
-      return { accidentPoints: [], clusterCenters: [], stats: null };
-    }
+    if (!accidentData) return { accidentPoints: [], clusterCenters: [], stats: null };
 
-    const accidents = accidentData.features.filter(f => f.properties.type === "accident_point");
-    const clusters = accidentData.features.filter(f => f.properties.type === "cluster_center");
-    
+    const accidents = accidentData.features.filter((f) => f.properties.type === "accident_point");
+    const clusters = accidentData.features.filter((f) => f.properties.type === "cluster_center");
+
     return {
       accidentPoints: accidents,
       clusterCenters: clusters,
       stats: {
         totalAccidents: accidents.length,
         totalClusters: clusters.length,
-        noisePoints: accidents.filter(f => f.properties.cluster === -1).length
-      }
+        noisePoints: accidents.filter((f) => f.properties.cluster === -1).length,
+      },
     };
   }, [accidentData]);
 
@@ -196,28 +199,23 @@ export default function MapView() {
     async function fetchData() {
       setLoading(true);
       try {
-        const res = await fetch("https://crime-map-proto.onrender.com/data/accidents_clustered.geojson");
-        
-        if (!res.ok) {
-          throw new Error(`HTTP error! status: ${res.status}`);
-        }
-        
+        const res = await fetch(
+          "https://crime-map-proto.onrender.com/data/accidents_clustered.geojson"
+        );
+        if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
         const data = await res.json();
         setAccidentData(data);
-        console.log('Loaded clustered data:', data.features?.length, 'features');
-      } catch (error) {
-        console.error("Failed to load clustered GeoJSON:", error);
+        console.log("Loaded clustered data:", data.features?.length, "features");
+      } catch (err) {
+        console.error("Failed to load clustered GeoJSON:", err);
       } finally {
         setLoading(false);
       }
     }
-    
     fetchData();
   }, []);
 
-  const handleToggle = useCallback((setter) => {
-    return (e) => setter(e.target.checked);
-  }, []);
+  const handleToggle = useCallback((setter) => (e) => setter(e.target.checked), []);
 
   if (loading) {
     return (
@@ -239,17 +237,9 @@ export default function MapView() {
           <h6 className="page-title">Clustered Accident Heatmap</h6>
           <DateTime />
         </div>
-        
-        <div className="controls-panel" style={{ 
-          padding: '8px 12px', 
-          marginBottom: '8px', 
-          backgroundColor: '#f8f9fa',
-          borderRadius: '4px',
-          display: 'flex',
-          gap: '12px',
-          alignItems: 'center',
-          fontSize: '14px'
-        }}>
+
+        {/* Controls */}
+        <div className="controls-panel">
           <label>
             <input type="checkbox" checked={showHeatmap} onChange={handleToggle(setShowHeatmap)} /> Heatmap
           </label>
@@ -260,12 +250,13 @@ export default function MapView() {
             <input type="checkbox" checked={showMarkers} onChange={handleToggle(setShowMarkers)} /> Points
           </label>
           {stats && (
-            <div style={{ marginLeft: 'auto', fontSize: '12px', color: '#666' }}>
+            <div className="stats">
               {stats.totalAccidents} accidents • {stats.totalClusters} clusters • {stats.noisePoints} noise
             </div>
           )}
         </div>
 
+        {/* Map */}
         <div className="map-card">
           <div className="mapview-wrapper">
             <MapContainer
@@ -278,8 +269,8 @@ export default function MapView() {
               preferCanvas={true}
               updateWhenZooming={false}
               updateWhenIdle={true}
-              maxBounds={sanFernandoBounds}       // 🔒 Lock map to San Fernando
-              maxBoundsViscosity={1.0}            // 1 = hard lock, 0 = elastic
+              maxBounds={sanFernandoBounds}  // 🔒 Lock map to San Fernando
+              maxBoundsViscosity={1.0}       // 1 = hard lock
             >
               <LayersControl position="topright">
                 <LayersControl.BaseLayer checked name="Light">
