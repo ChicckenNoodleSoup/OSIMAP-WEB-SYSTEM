@@ -150,9 +150,9 @@ export default function AddRecord() {
         <div
           {...getRootProps()}
           className={`
-            relative border-2 border-dashed rounded-xl p-12 
-            flex flex-col items-center justify-center cursor-pointer 
-            transition-all duration-300 min-h-80 bg-white shadow-lg
+            relative border-2 border-dashed rounded-2xl 
+            p-16 flex flex-col items-center justify-center cursor-pointer 
+            transition-all duration-300 min-h-[320px] bg-white shadow-xl
             ${
               processingStage === "uploading" || processingStage === "processing"
                 ? "border-blue-400 bg-blue-50 cursor-not-allowed"
@@ -164,78 +164,72 @@ export default function AddRecord() {
                 ? "border-red-400 bg-red-50"
                 : isDragActive
                 ? "border-blue-400 bg-blue-50 scale-105"
-                : "border-gray-300 hover:border-blue-400 hover:bg-blue-50 hover:shadow-xl"
+                : "border-gray-300 hover:border-blue-400 hover:bg-blue-50 hover:shadow-2xl"
             }
           `}
         >
           <input {...getInputProps()} />
 
-          {/* Dynamic Icon */}
-          <div className="mb-6">
+          {/* Big Plus Icon in Circle */}
+          <div className="mb-6 flex items-center justify-center w-24 h-24 rounded-full border-2 border-dashed border-gray-300 bg-gray-50">
             {processingStage === "uploading" || processingStage === "processing" ? (
-              <div className="animate-spin w-20 h-20 border-4 border-blue-500 border-t-transparent rounded-full" />
+              <div className="animate-spin w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full" />
             ) : processingStage === "complete" ? (
-              <CheckCircle className="w-20 h-20 text-green-500" />
+              <CheckCircle className="w-12 h-12 text-green-500" />
             ) : processingStage === "error" ? (
-              <AlertCircle className="w-20 h-20 text-red-500" />
+              <AlertCircle className="w-12 h-12 text-red-500" />
             ) : (
-              <div
-                className={`p-4 rounded-full ${
-                  isDragActive ? "bg-blue-100" : "bg-gray-100"
+              <Plus
+                className={`w-12 h-12 ${
+                  isDragActive ? "text-blue-500" : "text-gray-400"
                 }`}
-              >
-                <Plus
-                  className={`w-12 h-12 ${
-                    isDragActive ? "text-blue-500" : "text-gray-400"
-                  }`}
-                />
-              </div>
+              />
             )}
           </div>
 
-          {/* Dynamic Text */}
+          {/* Instructions / Dynamic Text */}
           <div className="text-center">
             {processingStage === "uploading" || processingStage === "processing" ? (
-              <div>
+              <>
                 <p className="text-blue-600 font-semibold text-xl mb-2">Processing...</p>
                 <p className="text-blue-500 text-sm">Please wait while we handle your file</p>
-              </div>
+              </>
             ) : processingStage === "complete" ? (
-              <div>
+              <>
                 <p className="text-green-600 font-semibold text-xl mb-2">Upload Successful!</p>
                 <p className="text-green-500 text-sm">Ready for your next upload</p>
-              </div>
+              </>
             ) : processingStage === "error" ? (
-              <div>
+              <>
                 <p className="text-red-600 font-semibold text-xl mb-2">Upload Failed</p>
                 <p className="text-red-500 text-sm">Please try again or check your file format</p>
-              </div>
+              </>
             ) : isDragReject ? (
-              <div>
+              <>
                 <p className="text-red-600 font-semibold text-xl mb-2">Invalid File Type</p>
                 <p className="text-red-500 text-sm">Please upload only Excel files (.xlsx, .xls)</p>
-              </div>
+              </>
             ) : isDragActive ? (
-              <div>
+              <>
                 <p className="text-blue-600 font-semibold text-xl mb-2">Drop your file here</p>
                 <p className="text-blue-500 text-sm">Release to upload</p>
-              </div>
+              </>
             ) : (
-              <div>
+              <>
                 <p className="text-gray-700 font-semibold text-xl mb-2">
-                  Upload Excel File
+                  Drag & Drop your Excel file
                 </p>
                 <p className="text-gray-500 text-sm mb-4">
-                  Drag and drop your Excel file here, or click to browse
+                  or <span className="text-blue-600 font-medium">choose a file</span> to upload
                 </p>
                 <p className="text-xs text-gray-400">Supported formats: .xlsx, .xls</p>
-              </div>
+              </>
             )}
           </div>
 
-          {/* Upload Status */}
+          {/* Upload Status pinned at bottom */}
           {uploadStatus && (
-            <div className="mt-4 flex items-center space-x-3 px-4 py-2 rounded-lg bg-white/80">
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center space-x-3 px-4 py-2 rounded-lg bg-white/90 shadow">
               {(processingStage === "uploading" || processingStage === "processing") && (
                 <div className="animate-spin w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full" />
               )}
