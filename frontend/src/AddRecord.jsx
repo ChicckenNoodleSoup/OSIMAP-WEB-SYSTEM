@@ -4,8 +4,8 @@ import { Plus, Upload, Database, Map, CheckCircle, AlertCircle } from "lucide-re
 
 export default function AddRecord() {
   const [uploadStatus, setUploadStatus] = useState("");
-  const [processingStage, setProcessingStage] = useState(""); // "uploading", "processing", "complete", "error"
-  const [currentStep, setCurrentStep] = useState(0); // 0: idle, 1: uploading, 2: excel_to_supabase, 3: supabase_to_geojson, 4: complete
+  const [processingStage, setProcessingStage] = useState("");
+  const [currentStep, setCurrentStep] = useState(0);
 
   const resetStatus = () => {
     setUploadStatus("");
@@ -15,14 +15,13 @@ export default function AddRecord() {
 
   const onDrop = useCallback((acceptedFiles) => {
     if (acceptedFiles.length === 0) return;
-    
+
     resetStatus();
-    
+
     acceptedFiles.forEach((file) => {
       const formData = new FormData();
       formData.append("file", file);
 
-      // Start upload stage
       setProcessingStage("uploading");
       setCurrentStep(1);
       setUploadStatus("📤 Uploading file...");
@@ -34,13 +33,11 @@ export default function AddRecord() {
         .then((res) => res.json())
         .then((data) => {
           console.log("Backend response:", data);
-          
-          // Move to processing stage
+
           setProcessingStage("processing");
           setCurrentStep(2);
           setUploadStatus("📊 Processing data through pipeline...");
 
-          // Simulate the processing steps (since we can't get real-time feedback from backend)
           setTimeout(() => {
             setCurrentStep(3);
             setUploadStatus("🗺️ Converting to GeoJSON...");
@@ -67,7 +64,7 @@ export default function AddRecord() {
       "application/vnd.ms-excel": [".xls"],
     },
     maxFiles: 1,
-    disabled: processingStage === "uploading" || processingStage === "processing"
+    disabled: processingStage === "uploading" || processingStage === "processing",
   });
 
   const ProcessingSteps = () => {
@@ -146,10 +143,8 @@ export default function AddRecord() {
 
   return (
     <div className="min-h-screen w-full flex flex-col items-center justify-center p-6 bg-gray-50">
-      {/* Processing Steps Indicator */}
       {currentStep > 0 && <ProcessingSteps />}
 
-      {/* Main Upload Container */}
       <div className="w-full max-w-2xl">
         {/* Upload Rectangle */}
         <div
@@ -173,85 +168,90 @@ export default function AddRecord() {
             }
           `}
         >
-            <input {...getInputProps()} />
-            
-            {/* Dynamic Icon */}
-            <div className="mb-6">
-              {processingStage === "uploading" || processingStage === "processing" ? (
-                <div className="animate-spin w-20 h-20 border-4 border-blue-500 border-t-transparent rounded-full" />
-              ) : processingStage === "complete" ? (
-                <CheckCircle className="w-20 h-20 text-green-500" />
-              ) : processingStage === "error" ? (
-                <AlertCircle className="w-20 h-20 text-red-500" />
-              ) : (
-                <div className={`p-4 rounded-full ${isDragActive ? 'bg-blue-100' : 'bg-gray-100'}`}>
-                  <Plus className={`w-12 h-12 ${isDragActive ? 'text-blue-500' : 'text-gray-400'}`} />
-                </div>
-              )}
-            </div>
+          <input {...getInputProps()} />
 
-            {/* Dynamic Text */}
-            <div className="text-center">
-              {processingStage === "uploading" || processingStage === "processing" ? (
-                <div>
-                  <p className="text-blue-600 font-semibold text-xl mb-2">Processing...</p>
-                  <p className="text-blue-500 text-sm">Please wait while we handle your file</p>
-                </div>
-              ) : processingStage === "complete" ? (
-                <div>
-                  <p className="text-green-600 font-semibold text-xl mb-2">Upload Successful!</p>
-                  <p className="text-green-500 text-sm">Ready for your next upload</p>
-                </div>
-              ) : processingStage === "error" ? (
-                <div>
-                  <p className="text-red-600 font-semibold text-xl mb-2">Upload Failed</p>
-                  <p className="text-red-500 text-sm">Please try again or check your file format</p>
-                </div>
-              ) : isDragReject ? (
-                <div>
-                  <p className="text-red-600 font-semibold text-xl mb-2">Invalid File Type</p>
-                  <p className="text-red-500 text-sm">Please upload only Excel files (.xlsx, .xls)</p>
-                </div>
-              ) : isDragActive ? (
-                <div>
-                  <p className="text-blue-600 font-semibold text-xl mb-2">Drop your file here</p>
-                  <p className="text-blue-500 text-sm">Release to upload</p>
-                </div>
-              ) : (
-                <div>
-                  <p className="text-gray-700 font-semibold text-xl mb-2">
-                    Upload Excel File
-                  </p>
-                  <p className="text-gray-500 text-sm mb-4">
-                    Drag and drop your Excel file here, or click to browse
-                  </p>
-                  <p className="text-xs text-gray-400">
-                    Supported formats: .xlsx, .xls
-                  </p>
-                </div>
-              )}
-            </div>
-
-            {/* Upload Status */}
-            {uploadStatus && (
-              <div className="mt-4 flex items-center space-x-3 px-4 py-2 rounded-lg bg-white/80">
-                {(processingStage === "uploading" || processingStage === "processing") && (
-                  <div className="animate-spin w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full" />
-                )}
-                <p
-                  className={`text-sm font-medium ${
-                    processingStage === "complete"
-                      ? "text-green-600"
-                      : processingStage === "error"
-                      ? "text-red-600"
-                      : "text-blue-600"
+          {/* Dynamic Icon */}
+          <div className="mb-6">
+            {processingStage === "uploading" || processingStage === "processing" ? (
+              <div className="animate-spin w-20 h-20 border-4 border-blue-500 border-t-transparent rounded-full" />
+            ) : processingStage === "complete" ? (
+              <CheckCircle className="w-20 h-20 text-green-500" />
+            ) : processingStage === "error" ? (
+              <AlertCircle className="w-20 h-20 text-red-500" />
+            ) : (
+              <div
+                className={`p-4 rounded-full ${
+                  isDragActive ? "bg-blue-100" : "bg-gray-100"
+                }`}
+              >
+                <Plus
+                  className={`w-12 h-12 ${
+                    isDragActive ? "text-blue-500" : "text-gray-400"
                   }`}
-                >
-                  {uploadStatus}
-                </p>
+                />
               </div>
             )}
           </div>
+
+          {/* Dynamic Text */}
+          <div className="text-center">
+            {processingStage === "uploading" || processingStage === "processing" ? (
+              <div>
+                <p className="text-blue-600 font-semibold text-xl mb-2">Processing...</p>
+                <p className="text-blue-500 text-sm">Please wait while we handle your file</p>
+              </div>
+            ) : processingStage === "complete" ? (
+              <div>
+                <p className="text-green-600 font-semibold text-xl mb-2">Upload Successful!</p>
+                <p className="text-green-500 text-sm">Ready for your next upload</p>
+              </div>
+            ) : processingStage === "error" ? (
+              <div>
+                <p className="text-red-600 font-semibold text-xl mb-2">Upload Failed</p>
+                <p className="text-red-500 text-sm">Please try again or check your file format</p>
+              </div>
+            ) : isDragReject ? (
+              <div>
+                <p className="text-red-600 font-semibold text-xl mb-2">Invalid File Type</p>
+                <p className="text-red-500 text-sm">Please upload only Excel files (.xlsx, .xls)</p>
+              </div>
+            ) : isDragActive ? (
+              <div>
+                <p className="text-blue-600 font-semibold text-xl mb-2">Drop your file here</p>
+                <p className="text-blue-500 text-sm">Release to upload</p>
+              </div>
+            ) : (
+              <div>
+                <p className="text-gray-700 font-semibold text-xl mb-2">
+                  Upload Excel File
+                </p>
+                <p className="text-gray-500 text-sm mb-4">
+                  Drag and drop your Excel file here, or click to browse
+                </p>
+                <p className="text-xs text-gray-400">Supported formats: .xlsx, .xls</p>
+              </div>
+            )}
+          </div>
+
+          {/* Upload Status */}
+          {uploadStatus && (
+            <div className="mt-4 flex items-center space-x-3 px-4 py-2 rounded-lg bg-white/80">
+              {(processingStage === "uploading" || processingStage === "processing") && (
+                <div className="animate-spin w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full" />
+              )}
+              <p
+                className={`text-sm font-medium ${
+                  processingStage === "complete"
+                    ? "text-green-600"
+                    : processingStage === "error"
+                    ? "text-red-600"
+                    : "text-blue-600"
+                }`}
+              >
+                {uploadStatus}
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Reset button when complete or error */}
@@ -267,5 +267,6 @@ export default function AddRecord() {
           </div>
         )}
       </div>
+    </div>
   );
 }
