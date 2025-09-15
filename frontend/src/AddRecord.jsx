@@ -26,7 +26,7 @@ export default function AddRecord() {
       setCurrentStep(1);
       setUploadStatus("📤 Uploading file...");
 
-      fetch("http://localhost:5000/upload", {
+      fetch("https://crime-map-proto.onrender.com/upload", {
         method: "POST",
         body: formData,
       })
@@ -73,44 +73,44 @@ export default function AddRecord() {
   ];
 
   return (
-    <div className="min-h-screen w-full flex flex-col items-center justify-center bg-gray-50 px-4 py-10">
-      <div className="w-full max-w-3xl bg-white rounded-2xl shadow-lg border border-gray-200 p-10 text-center">
+    <div className="min-h-screen w-full flex flex-col items-center justify-center bg-gradient-to-b from-blue-900 to-teal-900 px-4 py-10 text-white">
+      <div className="w-full max-w-4xl text-center">
         {/* Drag & Drop Area */}
         <div
           {...getRootProps()}
-          className={`border-2 border-dashed rounded-xl p-12 cursor-pointer transition 
-            ${isDragReject ? "border-red-400 bg-red-50" : ""}
-            ${isDragActive ? "border-blue-400 bg-blue-50 scale-[1.02]" : "border-gray-300 hover:border-blue-400 hover:bg-blue-50"}`}
+          className={`w-full h-64 flex flex-col justify-center items-center border-2 border-dashed rounded-2xl cursor-pointer transition 
+            ${isDragReject ? "border-red-400 bg-red-900/30" : ""}
+            ${isDragActive ? "border-blue-400 bg-blue-900/30 scale-[1.02]" : "border-gray-400 bg-white/10 hover:bg-white/20"}`}
         >
           <input {...getInputProps()} />
 
           {/* Icon */}
           {processingStage === "uploading" || processingStage === "processing" ? (
-            <div className="animate-spin w-14 h-14 border-4 border-blue-500 border-t-transparent rounded-full mx-auto mb-6" />
+            <div className="animate-spin w-14 h-14 border-4 border-blue-400 border-t-transparent rounded-full mx-auto mb-6" />
           ) : processingStage === "complete" ? (
-            <CheckCircle className="w-14 h-14 text-green-500 mx-auto mb-6" />
+            <CheckCircle className="w-14 h-14 text-green-400 mx-auto mb-6" />
           ) : processingStage === "error" ? (
-            <AlertCircle className="w-14 h-14 text-red-500 mx-auto mb-6" />
+            <AlertCircle className="w-14 h-14 text-red-400 mx-auto mb-6" />
           ) : (
-            <Upload className="w-14 h-14 text-gray-400 mx-auto mb-6" />
+            <Upload className="w-14 h-14 text-gray-300 mx-auto mb-6" />
           )}
 
           {/* Text */}
-          <h2 className="text-xl font-semibold text-gray-700 mb-2">
+          <h2 className="text-2xl font-bold mb-2">
             {isDragReject
               ? "Invalid file type"
               : isDragActive
               ? "Drop your file here"
               : "Choose a file or drag & drop"}
           </h2>
-          <p className="text-sm text-gray-500 mb-3">
+          <p className="text-sm text-gray-300 mb-4">
             Supported formats: <span className="font-medium">.xlsx, .xls</span>
           </p>
 
           {/* Browse Button */}
           <button
             type="button"
-            className="mt-4 px-6 py-3 bg-blue-500 text-white rounded-lg shadow hover:bg-blue-600 transition"
+            className="px-6 py-3 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 transition"
           >
             Browse File
           </button>
@@ -118,9 +118,9 @@ export default function AddRecord() {
 
         {/* Status */}
         {uploadStatus && (
-          <div className="mt-6 px-6 py-3 rounded-lg bg-gray-100 text-sm font-medium text-gray-700">
+          <div className="mt-6 px-6 py-3 rounded-lg bg-white/10 text-sm font-medium">
             {processingStage === "error" ? (
-              <span className="text-red-500 flex items-center justify-center gap-2">
+              <span className="text-red-400 flex items-center justify-center gap-2">
                 <AlertCircle size={18} /> {uploadStatus}
               </span>
             ) : (
@@ -138,13 +138,13 @@ export default function AddRecord() {
               <div key={index} className="flex flex-col items-center w-full relative">
                 <div
                   className={`flex items-center justify-center w-12 h-12 rounded-full border-2 mb-2 
-                  ${isActive ? "bg-blue-500 border-blue-500 text-white" : "border-gray-300 text-gray-400"}`}
+                  ${isActive ? "bg-blue-500 border-blue-500 text-white" : "border-gray-400 text-gray-400"}`}
                 >
                   <Icon size={20} />
                 </div>
                 <p
                   className={`text-sm font-medium ${
-                    isActive ? "text-blue-600" : "text-gray-400"
+                    isActive ? "text-blue-400" : "text-gray-400"
                   }`}
                 >
                   {step.label}
@@ -152,7 +152,7 @@ export default function AddRecord() {
                 {index < steps.length - 1 && (
                   <div
                     className={`absolute top-6 left-full h-0.5 w-full transition-all
-                    ${isActive ? "bg-blue-500" : "bg-gray-300"}`}
+                    ${isActive ? "bg-blue-400" : "bg-gray-400"}`}
                   />
                 )}
               </div>
@@ -165,7 +165,7 @@ export default function AddRecord() {
           <div className="mt-8">
             <button
               onClick={resetStatus}
-              className="px-6 py-3 bg-gray-700 text-white rounded-lg shadow hover:bg-gray-800 transition"
+              className="px-6 py-3 bg-gray-800 text-white rounded-lg shadow hover:bg-gray-900 transition"
             >
               Upload Another File
             </button>
