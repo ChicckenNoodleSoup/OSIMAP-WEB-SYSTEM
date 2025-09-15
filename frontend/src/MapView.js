@@ -239,22 +239,44 @@ export default function MapView() {
         </div>
 
         {/* Controls */}
-        <div className="controls-panel">
-          <label>
-            <input type="checkbox" checked={showHeatmap} onChange={handleToggle(setShowHeatmap)} /> Heatmap
-          </label>
-          <label>
-            <input type="checkbox" checked={showClusters} onChange={handleToggle(setShowClusters)} /> Clusters
-          </label>
-          <label>
-            <input type="checkbox" checked={showMarkers} onChange={handleToggle(setShowMarkers)} /> Points
-          </label>
-          {stats && (
-            <div className="stats">
-              {stats.totalAccidents} accidents • {stats.totalClusters} clusters • {stats.noisePoints} noise
-            </div>
-          )}
+        <div 
+        className="controls-panel"
+        style={{
+        padding: "8px 12px",
+        marginBottom: "8px",
+        backgroundColor: "#f8f9fa",
+        border: "1px solid #ddd",
+        borderRadius: "6px",
+        display: "flex",
+        gap: "16px",
+        alignItems: "center",
+        fontSize: "14px",
+        boxShadow: "0 1px 3px rgba(0,0,0,0.1)"
+      }}
+    >
+      <label style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+        <input type="checkbox" checked={showHeatmap} onChange={handleToggle(setShowHeatmap)} /> Heatmap
+      </label>
+      <label style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+        <input type="checkbox" checked={showClusters} onChange={handleToggle(setShowClusters)} /> Clusters
+      </label>
+      <label style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+        <input type="checkbox" checked={showMarkers} onChange={handleToggle(setShowMarkers)} /> Points
+      </label>
+      {stats && (
+        <div 
+          className="stats"
+          style={{
+            marginLeft: "auto",
+            fontSize: "12px",
+            color: "#555",
+            fontStyle: "italic"
+          }}
+        >
+          {stats.totalAccidents} accidents • {stats.totalClusters} clusters • {stats.noisePoints} noise
         </div>
+      )}
+    </div>
 
         {/* Map */}
         <div className="map-card">
