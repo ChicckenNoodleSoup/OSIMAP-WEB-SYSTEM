@@ -251,7 +251,8 @@ export default function MapView() {
         gap: "16px",
         alignItems: "center",
         fontSize: "14px",
-        boxShadow: "0 1px 3px rgba(0,0,0,0.1)"
+        boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
+        color: "#000"
       }}
     >
       <label style={{ display: "flex", alignItems: "center", gap: "4px" }}>
