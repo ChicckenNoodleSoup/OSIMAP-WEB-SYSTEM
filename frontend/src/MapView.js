@@ -269,7 +269,7 @@ export default function MapView() {
           style={{
             marginLeft: "auto",
             fontSize: "12px",
-            color: "#555",
+            color: "#000000ff",
             fontStyle: "italic"
           }}
         >
