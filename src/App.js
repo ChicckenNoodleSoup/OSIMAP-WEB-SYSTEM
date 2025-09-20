@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import SignIn from './SignIn';
+import CreateAccount from './CreateAccount'; // 👈 import it
 import Sidebar from './Sidebar';
 import Dashboard from './Dashboard';
 import MapView from './MapView';
@@ -8,6 +9,7 @@ import CurrentRecords from './CurrentRecords';
 import AddRecord from './AddRecord';
 import HelpSupport from './HelpSupport';
 import Profile from './Profile';
+import ForgotPassword from './ForgotPassword';
 import './App.css';
 
 function ProtectedRoute({ isAuthenticated, children }) {
@@ -36,11 +38,21 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
+        {/* Public routes */}
         <Route
           path="/signin"
           element={<SignIn setIsAuthenticated={setIsAuthenticated} />}
         />
+        <Route
+          path="/create-account"
+          element={<CreateAccount />} // 👈 new public route
+        />
+        <Route
+          path="/forgot-password"
+          element={<ForgotPassword />} // 👈 new public route
+        />
 
+        {/* Protected routes */}
         <Route
           path="/*"
           element={

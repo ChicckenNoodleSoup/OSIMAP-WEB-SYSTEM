@@ -1,0 +1,173 @@
+/* Universal */
+* {
+  font-family: 'Poppins', sans-serif;
+  box-sizing: border-box;
+}
+
+.create-container {
+  position: relative;
+  height: 100vh;
+}
+
+.create-wrapper {
+  display: flex;
+  height: 100%;
+}
+
+.create-image-side {
+  flex: 0 0 50%;
+  position: relative;
+  overflow: hidden;
+}
+
+.create-bg-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.overlay-image {
+  position: absolute;
+  top: 35%;
+  left: 45%;
+  transform: translate(-50%, -50%);
+  width: 50%;
+  pointer-events: none;
+}
+
+/* Right side */
+.create-form-side {
+  flex: 0 0 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+}
+
+.frosted-right {
+  position: absolute;
+  top: 0;
+  left: -10%;
+  width: 75%;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.2);
+  border-top-left-radius: 2vw;
+  border-bottom-left-radius: 2vw;
+  z-index: 0;
+}
+
+.create-form-side::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -5%;
+  width: 105%;
+  height: 100%;
+  background: linear-gradient(to bottom, #000000, #0085FF);
+  border-top-left-radius: 2vw;
+  border-bottom-left-radius: 2vw;
+  z-index: 1;
+}
+
+/* Card */
+.create-card {
+  position: relative;
+  z-index: 2;
+  background: rgba(241, 239, 236, 0.05);
+  border-radius: 3vw;
+  padding: clamp(1rem, 4vw, 3rem);
+  width: 90%;
+  max-width: 30rem;
+  color: #f1efec;
+  box-shadow: 0 0.4rem 0.4rem rgba(0, 0, 0, 0.25);
+  font-weight: bold;
+}
+
+.create-card-logo {
+  width: 100%;
+  max-height: clamp(6rem, 15vh, 9rem);
+  object-fit: contain;
+  margin-bottom: 1rem;
+}
+
+h6 {
+  color: #F1EFEC;
+  font-size: clamp(0.8rem, 1.2vw, 1rem);
+  margin: 0.3em 0.7em;
+}
+
+/* Inputs */
+.create-card input {
+  width: 100%;
+  height: clamp(2.2rem, 5vh, 2.8rem);
+  padding: 0.8em 1em;
+  margin: 0.2em 0 1em;
+  border: none;
+  border-radius: 5rem;
+  background: rgba(241, 239, 236, 0.05);
+  color: #F1EFEC;
+  font-size: clamp(0.9rem, 1vw, 1rem);
+  font-weight: bold;
+  box-shadow: inset 0 0 0 0.15rem rgba(0, 0, 0, 0.05);
+}
+
+.create-card input::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+/* Buttons */
+.create-card button {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: clamp(2.2rem, 5vh, 2.8rem);
+  width: 100%;
+  padding: 0.8em;
+  border-radius: 5rem;
+  font-weight: bold;
+  font-size: clamp(0.9rem, 1vw, 1rem);
+  margin-top: 0.5rem;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+/* Primary */
+.create-card button[type="submit"] {
+  background: #0085FF;
+  color: #F1EFEC;
+  border: none;
+  box-shadow: 0 0.3rem 0.3rem rgba(0, 0, 0, 0.25);
+}
+
+.create-card button[type="submit"]:hover {
+  background: #1c86ee;
+}
+
+/* Secondary */
+.back-btn {
+  background: transparent;
+  color: #0085FF;
+  border: 2px solid #0085FF;
+}
+
+.back-btn:hover {
+  background: #F1EFEC;
+  color: #1c86ee;
+  border-color: #1c86ee;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .create-wrapper {
+    flex-direction: column;
+  }
+  .create-image-side {
+    display: none;
+  }
+  .create-form-side {
+    flex: 1 1 auto;
+  }
+  .frosted-right, .create-form-side::before {
+    display: none;
+  }
+}
