@@ -66,9 +66,10 @@ const runPythonScripts = () => {
   const script1 = path.join(process.cwd(), "cleaning2.py");
   const script2 = path.join(process.cwd(), "export_geojson.py");
   const script3 = path.join(process.cwd(), "cluster_hdbscan.py");
-  const cleanupScript = path.join(process.cwd(), "cleanup_files.py"); 
+  const cleanupScript = path.join(process.cwd(), "cleanup_files.py");
+  const uploadScript = path.join(process.cwd(), "mobile_cluster_fetch.py"); // <-- new one
 
-  console.log(" Starting Python script execution...");
+  console.log("Starting Python script execution...");
   console.log(`Step 1: Running ${script1}`);
 
   runSingleScript(script1, () => {
@@ -78,7 +79,10 @@ const runPythonScripts = () => {
       runSingleScript(script2, () => {
         console.log(`Step 4: Running ${script3}`);
         runSingleScript(script3, () => {
-          console.log(" All Python scripts completed successfully!");
+          console.log(`Step 5: Uploading clusters with ${uploadScript}`);
+          runSingleScript(uploadScript, () => {
+            console.log("🎉 All Python scripts completed successfully!");
+          });
         });
       });
     });
