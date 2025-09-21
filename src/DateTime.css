@@ -1,13 +1,67 @@
 .date-time {
-  color: white;
-  font-weight: 700; /* match h1 weight */
-  font-size: clamp(1rem, 2vw, 1.5rem); /* slightly smaller than title but scales */
+  color: #f1f1f1;
+  font-weight: 600;
+  font-size: clamp(0.85rem, 1.8vw, 1.2rem); /* slightly smaller */
   white-space: nowrap;
   text-align: right;
+  font-family: 'Poppins', sans-serif;
+  letter-spacing: 0.02em;
+
+  /* Frosted glass style */
+  background: rgba(255, 255, 255, 0.08); /* lighter semi-transparent */
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-radius: 12px; /* rounded edges */
+  padding: 0.3em 0.6em;
+
+  /* Shadow glow */
+  box-shadow: 0 4px 15px rgba(255, 255, 255, 0.1), 
+              0 0 20px rgba(255, 255, 255, 0.05);
+
+  /* Animation */
+  opacity: 0;
+  transform: translateY(-3px);
+  animation: fadeSlideIn 0.5s ease forwards, pulse 2s ease-in-out infinite alternate;
 }
 
+/* Fade in + slide up */
+@keyframes fadeSlideIn {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Gentle pulse effect */
+@keyframes pulse {
+  0% { background: rgba(255, 255, 255, 0.08); }
+  50% { background: rgba(255, 255, 255, 0.12); }
+  100% { background: rgba(255, 255, 255, 0.08); }
+}
+
+/* Animate seconds only */
+.second-char {
+  display: inline-block;
+  animation: nudge 1s linear infinite;
+}
+
+@keyframes nudge {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-2px); }
+}
+
+/* Hover effect */
+.date-time:hover {
+  transform: translateY(-2px);
+  background: rgba(255, 255, 255, 0.14);
+  box-shadow: 0 4px 20px rgba(255, 255, 255, 0.15),
+              0 0 25px rgba(255, 255, 255, 0.08);
+  transition: transform 0.2s ease, background 0.2s ease, box-shadow 0.3s ease;
+}
+
+/* Responsive font size */
 @media (max-width: 768px) {
   .date-time {
-    font-size: clamp(1rem, 2vw, 1.5rem); 
+    font-size: clamp(0.8rem, 2vw, 1rem);
   }
 }
