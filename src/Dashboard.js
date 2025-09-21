@@ -18,18 +18,22 @@ function Dashboard() {
         <div className="dashboard-column">
           <div className="dashboard-card card-large" onClick={() => navigate('/currentrecords')}>
             <h2>Current Records</h2>
-            <p>View all existing records</p>
+            
           </div>
 
           <div className="small-cards-row">
             <div className="dashboard-card card-small" onClick={() => navigate('/add-record')}>
               <h2>Add Record</h2>
-              <p>Quickly add a new record</p>
+              <div className="icon-container">
+                <img src="record-icon.png" alt="Record Icon" className="dashboard-icon" />
+              </div>
             </div>
 
             <div className="dashboard-card card-small" onClick={() => navigate('/helpsupport')}>
               <h2>Help & Support</h2>
-              <p>Get assistance and FAQs</p>
+              <div className="icon-container">
+                <img src="help-icon.png" alt="Help Icon" className="dashboard-icon" />
+              </div>
             </div>
           </div>
         </div>
@@ -38,12 +42,15 @@ function Dashboard() {
         <div className="dashboard-column">
           <div className="dashboard-card card-large card-map" onClick={() => navigate('/map')}>
             <h2>Map View</h2>
-            <p>See accident locations</p>
+            
           </div>
 
           <div className="dashboard-card card-medium" onClick={() => navigate('/profile')}>
-              <h2>User Profile</h2>
-              <p>Manage your account</p>
+            <h2>User Profile</h2>
+            <h3 className="username">John Doe</h3>
+            <div className="profile-info">
+              <img src="profile-icon.png" alt="Profile Icon" className="profile-icon" />
+            </div>
           </div>
         </div>
 
