@@ -156,45 +156,15 @@ h6 {
   padding: 0 1rem;
 }
 
-.remember-me {
-  display: flex;
-  align-items: center;
-  gap: 0.4em;
-  cursor: pointer;
-  user-select: none;
-  line-height: 1;
-}
-
-.checkbox-icon svg {
-  width: clamp(0.8rem, 1vw, 0.9rem);
-  height: auto;
-}
-
-.checkbox-icon svg rect {
-  fill: transparent;
-  stroke: #F1EFEC;
-  stroke-width: 2;
-  rx: 4;
-}
-
-.checkbox-icon svg path {
-  stroke: #F1EFEC;
-  stroke-width: 2;
-  fill: none;
-}
-
-.remember-text {
-  font-weight: normal;
-  font-size: clamp(0.7rem, 1vw, 0.8rem);
-  color: #F1EFEC;
-}
-
+/* keep the forgot link style */
 .forgot-link {
   text-decoration: none;
-  color: #F1EFEC;
+  color: #f1efecbc;
+  font-size: clamp(0.7rem, 1vw, 0.8rem);
 }
 
 .forgot-link:hover {
+  color: #1c86ee;
   text-decoration: underline;
 }
 
@@ -235,4 +205,25 @@ h6 {
   .frosted-right, .signin-form-side::before {
     display: none;
   }
+}
+/* Footer text below the card */
+.signin-footer {
+  margin-top: 1rem;
+  text-align: center;
+  font-size: clamp(0.85rem, 1vw, 0.95rem);
+  color: rgba(241, 239, 236, 0.7);
+}
+
+.signin-footer a {
+  color: #f1efecbc;
+  text-decoration: none;
+  margin-left: 0.25rem;
+  transition: color 0.3s ease, text-decoration 0.3s ease;
+  font-weight: normal;
+  font-size: clamp(0.7rem, 1vw, 0.8rem);
+}
+
+.signin-footer a:hover {
+  color: #1c86ee;
+  text-decoration: underline;
 }
