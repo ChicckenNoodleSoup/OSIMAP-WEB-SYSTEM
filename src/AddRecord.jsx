@@ -1,6 +1,16 @@
 import React, { useCallback, useState } from "react";
 import { useDropzone } from "react-dropzone";
-import { Plus, Upload, Database, Map, CheckCircle, AlertCircle } from "lucide-react";
+import {
+  Plus,
+  Upload,
+  Database,
+  Map,
+  CheckCircle,
+  AlertCircle,
+} from "lucide-react";
+import "./DateTime.css";
+import "./AddRecord.css";
+import { DateTime } from "./DateTime";
 
 export default function AddRecord() {
   const [uploadStatus, setUploadStatus] = useState("");
@@ -76,8 +86,8 @@ export default function AddRecord() {
     ];
 
     return (
-      <div className="w-full max-w-2xl mb-8">
-        <div className="flex items-center justify-between">
+      <div className="processing-steps">
+        <div className="processing-steps-row">
           {steps.map((step, index) => {
             const Icon = step.icon;
             const isActive = currentStep === step.id;
@@ -85,51 +95,37 @@ export default function AddRecord() {
             const isError = processingStage === "error" && currentStep === step.id;
 
             return (
-              <div key={step.id} className="flex items-center">
-                <div className="flex flex-col items-center">
+              <div key={step.id} className="processing-step">
+                <div className="step-icon-wrapper">
                   <div
-                    className={`w-12 h-12 rounded-full flex items-center justify-center border-2 transition-all duration-300 ${
-                      isError
-                        ? "border-red-500 bg-red-100"
-                        : isCompleted
-                        ? "border-green-500 bg-green-100"
-                        : isActive
-                        ? "border-blue-500 bg-blue-100 animate-pulse"
-                        : "border-gray-300 bg-gray-100"
-                    }`}
+                    className={`step-circle 
+                      ${isError ? "error" : ""} 
+                      ${isCompleted ? "completed" : ""} 
+                      ${isActive ? "active" : ""}`}
                   >
                     {isError ? (
-                      <AlertCircle className="w-6 h-6 text-red-500" />
+                      <AlertCircle className="icon error" />
                     ) : (
                       <Icon
-                        className={`w-6 h-6 ${
-                          isCompleted
-                            ? "text-green-500"
-                            : isActive
-                            ? "text-blue-500"
-                            : "text-gray-400"
-                        }`}
+                        className={`icon 
+                          ${isCompleted ? "completed" : ""} 
+                          ${isActive ? "active" : ""}`}
                       />
                     )}
                   </div>
                   <span
-                    className={`mt-2 text-sm font-medium ${
-                      isError
-                        ? "text-red-500"
-                        : isCompleted
-                        ? "text-green-600"
-                        : isActive
-                        ? "text-blue-600"
-                        : "text-gray-500"
-                    }`}
+                    className={`step-label 
+                      ${isError ? "error" : ""} 
+                      ${isCompleted ? "completed" : ""} 
+                      ${isActive ? "active" : ""}`}
                   >
                     {step.label}
                   </span>
                 </div>
                 {index < steps.length - 1 && (
                   <div
-                    className={`flex-1 h-1 mx-4 rounded transition-all duration-500 ${
-                      currentStep > step.id ? "bg-green-400" : "bg-gray-200"
+                    className={`step-connector ${
+                      currentStep > step.id ? "completed" : ""
                     }`}
                   />
                 )}
@@ -142,120 +138,100 @@ export default function AddRecord() {
   };
 
   return (
-    <div className="min-h-screen w-full flex flex-col items-center justify-center p-6 bg-gray-50">
-      {currentStep > 0 && <ProcessingSteps />}
+    <div className="dashboard">
+      {/* Page Header */}
+      <div className="page-header">
+        <h1 className="page-title">Add Record</h1>
+        <DateTime />
+      </div>
 
-      <div className="w-full max-w-2xl">
-        {/* Upload Rectangle */}
+      {/* Content Card Wrapper */}
+      <div className="add-record-card">
+        {currentStep > 0 && <ProcessingSteps />}
+
         <div
           {...getRootProps()}
-          className={`
-            relative border-2 border-dashed rounded-2xl 
-            p-16 flex flex-col items-center justify-center cursor-pointer 
-            transition-all duration-300 min-h-[320px] bg-white shadow-xl
-            ${
-              processingStage === "uploading" || processingStage === "processing"
-                ? "border-blue-400 bg-blue-50 cursor-not-allowed"
-                : processingStage === "complete"
-                ? "border-green-400 bg-green-50 hover:bg-green-100"
-                : processingStage === "error"
-                ? "border-red-400 bg-red-50 hover:bg-red-100"
-                : isDragReject
-                ? "border-red-400 bg-red-50"
-                : isDragActive
-                ? "border-blue-400 bg-blue-50 scale-105"
-                : "border-gray-300 hover:border-blue-400 hover:bg-blue-50 hover:shadow-2xl"
-            }
-          `}
+          className={`upload-card 
+            ${processingStage === "uploading" || processingStage === "processing"
+              ? "uploading"
+              : processingStage === "complete"
+              ? "complete"
+              : processingStage === "error"
+              ? "error"
+              : isDragReject
+              ? "reject"
+              : isDragActive
+              ? "active"
+              : ""}`}
         >
           <input {...getInputProps()} />
 
-          {/* Big Plus Icon in Circle */}
-          <div className="mb-6 flex items-center justify-center w-24 h-24 rounded-full border-2 border-dashed border-gray-300 bg-gray-50">
+          {/* Big Icon */}
+          <div className="upload-icon">
             {processingStage === "uploading" || processingStage === "processing" ? (
-              <div className="animate-spin w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full" />
+              <div className="spinner" />
             ) : processingStage === "complete" ? (
-              <CheckCircle className="w-12 h-12 text-green-500" />
+              <CheckCircle className="icon complete" />
             ) : processingStage === "error" ? (
-              <AlertCircle className="w-12 h-12 text-red-500" />
+              <AlertCircle className="icon error" />
             ) : (
-              <Plus
-                className={`w-12 h-12 ${
-                  isDragActive ? "text-blue-500" : "text-gray-400"
-                }`}
-              />
+              <Plus className={`icon ${isDragActive ? "active" : ""}`} />
             )}
           </div>
 
           {/* Instructions / Dynamic Text */}
-          <div className="text-center">
+          <div className="upload-text">
             {processingStage === "uploading" || processingStage === "processing" ? (
               <>
-                <p className="text-blue-600 font-semibold text-xl mb-2">Processing...</p>
-                <p className="text-blue-500 text-sm">Please wait while we handle your file</p>
+                <p className="title processing">Processing...</p>
+                <p className="subtitle processing">Please wait while we handle your file</p>
               </>
             ) : processingStage === "complete" ? (
               <>
-                <p className="text-green-600 font-semibold text-xl mb-2">Upload Successful!</p>
-                <p className="text-green-500 text-sm">Ready for your next upload</p>
+                <p className="title complete">Upload Successful!</p>
+                <p className="subtitle complete">Ready for your next upload</p>
               </>
             ) : processingStage === "error" ? (
               <>
-                <p className="text-red-600 font-semibold text-xl mb-2">Upload Failed</p>
-                <p className="text-red-500 text-sm">Please try again or check your file format</p>
+                <p className="title error">Upload Failed</p>
+                <p className="subtitle error">Please try again or check your file format</p>
               </>
             ) : isDragReject ? (
               <>
-                <p className="text-red-600 font-semibold text-xl mb-2">Invalid File Type</p>
-                <p className="text-red-500 text-sm">Please upload only Excel files (.xlsx, .xls)</p>
+                <p className="title error">Invalid File Type</p>
+                <p className="subtitle error">Please upload only Excel files (.xlsx, .xls)</p>
               </>
             ) : isDragActive ? (
               <>
-                <p className="text-blue-600 font-semibold text-xl mb-2">Drop your file here</p>
-                <p className="text-blue-500 text-sm">Release to upload</p>
+                <p className="title active">Drop your file here</p>
+                <p className="subtitle active">Release to upload</p>
               </>
             ) : (
               <>
-                <p className="text-gray-700 font-semibold text-xl mb-2">
-                  Drag & Drop your Excel file
+                <p className="title">Drag & Drop your Excel file</p>
+                <p className="subtitle">
+                  or <span className="highlight">choose a file</span> to upload
                 </p>
-                <p className="text-gray-500 text-sm mb-4">
-                  or <span className="text-blue-600 font-medium">choose a file</span> to upload
-                </p>
-                <p className="text-xs text-gray-400">Supported formats: .xlsx, .xls</p>
+                <p className="note">Supported formats: .xlsx, .xls</p>
               </>
             )}
           </div>
 
-          {/* Upload Status pinned at bottom */}
+          {/* Upload Status */}
           {uploadStatus && (
-            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center space-x-3 px-4 py-2 rounded-lg bg-white/90 shadow">
+            <div className="upload-status">
               {(processingStage === "uploading" || processingStage === "processing") && (
-                <div className="animate-spin w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full" />
+                <div className="spinner small" />
               )}
-              <p
-                className={`text-sm font-medium ${
-                  processingStage === "complete"
-                    ? "text-green-600"
-                    : processingStage === "error"
-                    ? "text-red-600"
-                    : "text-blue-600"
-                }`}
-              >
-                {uploadStatus}
-              </p>
+              <p className={`status-text ${processingStage}`}>{uploadStatus}</p>
             </div>
           )}
         </div>
 
-        {/* Reset button when complete or error */}
+        {/* Reset button */}
         {(processingStage === "complete" || processingStage === "error") && (
-          <div className="mt-6 text-center">
-            <button
-              onClick={resetStatus}
-              className="px-8 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 
-                         transition-colors font-medium shadow-lg hover:shadow-xl"
-            >
+          <div className="reset-btn-wrapper">
+            <button onClick={resetStatus} className="reset-btn">
               Upload Another File
             </button>
           </div>
