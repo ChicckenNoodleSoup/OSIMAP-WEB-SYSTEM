@@ -1,9 +1,21 @@
-import React from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";  
 import "./ForgotPassword.css"; 
 
 function ForgotPassword() {
   const navigate = useNavigate();  
+  const [sent, setSent] = useState(false); // track if reset link was sent
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    
+    // TODO: Call backend API to actually send reset link
+    console.log("Reset link sent!");
+
+    // Show success message
+    setSent(true);
+  };
+
 
   return (
     <div className="forgot-container">
@@ -25,10 +37,19 @@ function ForgotPassword() {
                 Enter your email address and we’ll send you instructions to reset your password.
                 </p>
 
-                <form>
-                <input type="email" placeholder="Enter your email" required />
-                <button type="submit">Send Reset Link</button>
-                </form>
+                  {!sent ? 
+                    (
+                      <form onSubmit={handleSubmit}>
+                        <input type="email" placeholder="Enter your email" required />
+                        <button type="submit">Send Reset Link</button>
+                      </form>
+                    ) : 
+                    (
+                      <p className="success-message">
+                        Reset link has been sent to your email.
+                      </p>
+                    )
+                }
 
                 <button
                 type="button"

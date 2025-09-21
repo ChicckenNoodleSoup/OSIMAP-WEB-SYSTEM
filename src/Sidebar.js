@@ -16,7 +16,7 @@ function Sidebar({ onLogout }) {
       <div className="sidebar-top">
         <div className="sidebar-logo">
           <img
-            src={collapsed ? "/osimap-logo.png" : "/signin-logo.png"}
+            src={collapsed ? "/osimap-logo.svg" : "/signin-logo.png"}
             alt="Logo"
             className="logo-img"
           />

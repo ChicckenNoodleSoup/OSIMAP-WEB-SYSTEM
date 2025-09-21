@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import './DateTime.css';
 
-export function DateTime() {   // <-- Named export
+export function DateTime() {
   const [currentTime, setCurrentTime] = useState(new Date());
 
   useEffect(() => {
@@ -14,9 +14,13 @@ export function DateTime() {   // <-- Named export
     hour: '2-digit', minute: '2-digit', second: '2-digit' 
   };
 
+  const formattedTime = currentTime.toLocaleString('en-US', options);
+
   return (
     <span className="date-time">
-      {currentTime.toLocaleString('en-US', options)}
+      {formattedTime.split('').map((char, index) => (
+        <span key={index}>{char}</span>
+      ))}
     </span>
   );
 }
