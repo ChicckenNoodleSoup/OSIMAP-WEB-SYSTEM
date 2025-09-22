@@ -147,8 +147,11 @@ export default function AddRecord() {
 
       {/* Content Card Wrapper */}
       <div className="add-record-card">
-        {currentStep > 0 && <ProcessingSteps />}
+        
+        {/* Always show steppers */}
+        <ProcessingSteps />
 
+        {/* Upload Card */}
         <div
           {...getRootProps()}
           className={`upload-card 
