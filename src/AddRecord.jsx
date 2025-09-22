@@ -139,11 +139,14 @@ export default function AddRecord() {
 
   return (
     <div className="dashboard">
-      {/* Page Header */}
-      <div className="page-header">
-        <h1 className="page-title">Add Record</h1>
-        <DateTime />
-      </div>
+
+            <div className="page-header">
+              <div className="page-title-container">
+                <img src="stopLight.svg" alt="Logo" className="page-logo" />
+                <h1 className="page-title">Add Record</h1>
+              </div>
+              <DateTime />
+            </div>
 
       {/* Content Card Wrapper */}
       <div className="add-record-card">

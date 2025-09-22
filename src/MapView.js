@@ -234,7 +234,10 @@ export default function MapView() {
     <div className="scroll-wrapper">
       <div className="mapview-container">
         <div className="page-header">
-          <h6 className="page-title">Clustered Accident Heatmap</h6>
+          <div className="page-title-container">
+            <img src="stopLight.svg" alt="Logo" className="page-logo" />
+            <h1 className="page-title">Accident Heatmap</h1>
+          </div>
           <DateTime />
         </div>
 

@@ -43,11 +43,87 @@
   flex-wrap: wrap;
 }
 
+/* ✅ Container */
+.page-title-container {
+  display: flex;
+  align-items: center;
+  gap: 6px; /* a little more breathing room */
+}
+
+/* ✅ Logo (soft wide glow to the right) */
+.page-logo {
+  width: 45px;
+  height: auto;
+  object-fit: contain;
+  animation: stoplightShared 12s infinite ease-in-out;
+
+  /* Softer, wider spread */
+  filter: 
+    drop-shadow(14px 4px 24px rgba(255, 45, 45, 0.45))
+    drop-shadow(28px 6px 40px rgba(255, 45, 45, 0.25));
+}
+
+/* ✅ Title (wider glow than logo, softer) */
+.page-title {
+  margin: 0;
+  font-size: clamp(1.5rem, 4vw, 2.5rem);
+  font-weight: 700;
+  color: white;
+  animation: stoplightShared 12s infinite ease-in-out;
+
+  /* Very soft + wide glow */
+  text-shadow: 
+    0 0 18px rgba(255, 45, 45, 0.5),
+    0 0 38px rgba(255, 45, 45, 0.35),
+    20px 4px 55px rgba(255, 45, 45, 0.2);
+}
+
+/* 🚦 Shared animation */
+@keyframes stoplightShared {
+  0% {
+    filter: 
+      drop-shadow(14px 4px 24px rgba(255, 45, 45, 0.45))
+      drop-shadow(28px 6px 40px rgba(255, 45, 45, 0.25));
+    text-shadow: 
+      0 0 18px rgba(255, 45, 45, 0.5),
+      0 0 38px rgba(255, 45, 45, 0.35),
+      20px 4px 55px rgba(255, 45, 45, 0.2);
+  }
+  33% {
+    filter: 
+      drop-shadow(14px 4px 24px rgba(255, 215, 0, 0.45))
+      drop-shadow(28px 6px 40px rgba(255, 215, 0, 0.25));
+    text-shadow: 
+      0 0 18px rgba(255, 215, 0, 0.5),
+      0 0 38px rgba(255, 215, 0, 0.35),
+      20px 4px 55px rgba(255, 215, 0, 0.2);
+  }
+  66% {
+    filter: 
+      drop-shadow(14px 4px 24px rgba(50, 205, 50, 0.45))
+      drop-shadow(28px 6px 40px rgba(50, 205, 50, 0.25));
+    text-shadow: 
+      0 0 18px rgba(50, 205, 50, 0.5),
+      0 0 38px rgba(50, 205, 50, 0.35),
+      20px 4px 55px rgba(50, 205, 50, 0.2);
+  }
+  100% {
+    filter: 
+      drop-shadow(14px 4px 24px rgba(255, 45, 45, 0.45))
+      drop-shadow(28px 6px 40px rgba(255, 45, 45, 0.25));
+    text-shadow: 
+      0 0 18px rgba(255, 45, 45, 0.5),
+      0 0 38px rgba(255, 45, 45, 0.35),
+      20px 4px 55px rgba(255, 45, 45, 0.2);
+  }
+}
+
+
 .page-title {
   color: white;
   margin: 0;
-  /* font-size: clamp(1.5rem, 4vw, 2.5rem);
-  font-weight: 700; */
+  font-size: clamp(1.5rem, 4vw, 2.5rem);
+  font-weight: 700;
 }
 
 /* Container for the map section */
