@@ -53,12 +53,8 @@
 
 .dashboard-card h2 {
   font-size: 20px;
-  margin-bottom: 10px;
-}
-
-.dashboard-card p {
-  font-size: 14px;
-  color: white;
+  margin-top: 0;
+  margin-bottom: 5px;
 }
 
 .dashboard-card:hover {
@@ -94,6 +90,44 @@
 
 .card-map {
   height: 400px;
+}
+
+.icon-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 20px;
+}
+
+.dashboard-icon {
+  width: 65px;
+  height: auto;
+}
+
+.dashboard-card.card-medium {
+  position: relative;
+}
+
+.profile-info {
+  position: absolute;
+  top: 50%;
+  right: 50px;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.username {
+  font-size: 20px;
+  color: white;
+  margin: 0;
+  text-align: center;
+}
+
+.profile-icon {
+  width: 60px;
+  height: auto;
 }
 
 /* 📱 Responsive Adjustments */
