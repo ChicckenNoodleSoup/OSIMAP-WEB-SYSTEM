@@ -1,0 +1,336 @@
+/* === Container & Layout === */
+.add-record-container {
+  flex: 1;
+  display: flex;
+  justify-content: center;  
+  align-items: center;     
+  padding: 1rem;
+  min-height: calc(100vh - 100px); 
+  box-sizing: border-box;
+}
+
+/* Card */
+.add-record-card {
+  background: rgba(20, 20, 20, 0.6);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-radius: 28px;
+  padding: 2rem;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35), 0 0 20px rgba(255, 255, 255, 0.05);
+  color: white;
+  transition: all 0.3s ease;
+
+  /* Size & responsiveness */
+  width: 100%;
+  max-width: 100%;     
+  height: 100%;         
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Mobile adjustments */
+@media (max-width: 768px) {
+  .add-record-card {
+    padding: 1rem;
+    border-radius: 20px;
+    max-width: 95%;
+    height: auto; 
+  }
+}
+
+/* === Upload Card === */
+.upload-card {
+  position: relative;
+  border: 2px dashed rgba(255, 255, 255, 0.15);
+  border-radius: 28px;
+  padding: 40px;
+  min-height: 320px;
+  width: 100%;
+  max-width: 650px;
+  background: rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(12px);
+  color: white;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.upload-card.active {
+  border-color: #0085ff;
+  background: rgba(0, 133, 255, 0.1);
+  transform: scale(1.02);
+}
+
+.upload-card.uploading {
+  border-color: #0085ff;
+  background: rgba(0, 133, 255, 0.15);
+  cursor: not-allowed;
+}
+
+.upload-card.complete {
+  border-color: #00ff80;
+  background: rgba(0, 255, 128, 0.15);
+}
+
+.upload-card.error,
+.upload-card.reject {
+  border-color: #ff4d4d;
+  background: rgba(255, 77, 77, 0.15);
+}
+
+/* === Upload Icon === */
+.upload-icon {
+  width: 100px;
+  height: 100px;
+  border: 2px dashed rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  margin: 0 auto 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.upload-icon .icon {
+  width: 50px;
+  height: 50px;
+  color: #aaa;
+}
+
+.upload-icon .icon.active {
+  color: #0085ff;
+}
+
+.upload-icon .icon.complete {
+  color: #00ff80;
+}
+
+.upload-icon .icon.error {
+  color: #ff4d4d;
+}
+
+/* === Spinner === */
+.spinner {
+  width: 50px;
+  height: 50px;
+  border: 4px solid #0085ff;
+  border-top: 4px solid transparent;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.spinner.small {
+  width: 18px;
+  height: 18px;
+  border-width: 2px;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* === Upload Text === */
+.upload-text .title {
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.upload-text .title.processing {
+  color: #0085ff;
+}
+
+.upload-text .title.complete {
+  color: #00ff80;
+}
+
+.upload-text .title.error {
+  color: #ff4d4d;
+}
+
+.upload-text .title.active {
+  color: #0085ff;
+}
+
+.upload-text .subtitle {
+  font-size: 14px;
+  opacity: 0.8;
+}
+
+.upload-text .subtitle.processing {
+  color: #0085ff;
+}
+
+.upload-text .subtitle.complete {
+  color: #00ff80;
+}
+
+.upload-text .subtitle.error {
+  color: #ff4d4d;
+}
+
+.upload-text .subtitle.active {
+  color: #0085ff;
+}
+
+.upload-text .note {
+  font-size: 12px;
+  opacity: 0.6;
+}
+
+.upload-text .highlight {
+  color: #0085ff;
+  font-weight: 500;
+}
+
+/* === Upload Status === */
+.upload-status {
+  position: absolute;
+  bottom: 15px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(0, 0, 0, 0.35);
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.status-text.uploading,
+.status-text.processing {
+  color: #0085ff;
+}
+
+.status-text.complete {
+  color: #00ff80;
+}
+
+.status-text.error {
+  color: #ff4d4d;
+}
+
+/* === Reset Button === */
+.reset-btn-wrapper {
+  margin-top: 15px;
+}
+
+.reset-btn {
+  background: #0085ff;
+  border: none;
+  color: white;
+  padding: 12px 28px;
+  border-radius: 28px;
+  cursor: pointer;
+  transition: all 0.3s;
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.reset-btn:hover {
+  background: #0070d1;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(0, 133, 255, 0.4);
+}
+
+/* === Processing Stepper === */
+.processing-steps {
+  margin: 40px 0;
+  width: 100%;
+  max-width: 1000px;
+}
+
+.processing-steps-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: relative;
+}
+
+.processing-step {
+  text-align: center;
+  flex: 1;
+  position: relative;
+}
+
+.step-circle {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  margin: 0 auto 8px auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  background: rgba(255, 255, 255, 0.08);
+  transition: all 0.3s;
+}
+
+/* Active step */
+.step-circle.active {
+  background: rgba(0, 133, 255, 0.9);
+  color: white;
+  animation: pulse-blue 1.6s infinite;
+}
+
+/* Completed step */
+.step-circle.completed {
+  background: rgba(0, 255, 128, 0.9);
+  color: white;
+}
+
+/* Error step */
+.step-circle.error {
+  background: rgba(255, 0, 0, 0.9);
+  color: white;
+}
+
+/* Step label states */
+.step-label {
+  font-size: 13px;
+  opacity: 0.9;
+}
+
+.step-label.active {
+  color: #0085ff;
+}
+
+.step-label.completed {
+  color: #00ff80;
+}
+
+.step-label.error {
+  color: #ff4d4d;
+}
+
+/* Connector line */
+.step-connector {
+  position: absolute;
+  top: 25px;
+  left: 50%;
+  width: 100%;
+  height: 2px;
+  background: rgba(255, 255, 255, 0.15);
+  z-index: -1;
+}
+
+.step-connector.completed {
+  background: rgba(0, 255, 128, 0.6);
+}
+
+/* Glow animations */
+@keyframes pulse-blue {
+  0% {
+    box-shadow: 0 0 0 0 rgba(0, 133, 255, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 12px rgba(0, 133, 255, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(0, 133, 255, 0);
+  }
+}

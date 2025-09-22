@@ -1,3 +1,4 @@
+/* Scroll wrapper */
 .scroll-wrapper {
   overflow-y: auto;
   height: 100vh;
@@ -46,8 +47,8 @@
 .page-title {
   color: white;
   margin: 0;
-  /* font-size: clamp(1.5rem, 4vw, 2.5rem);
-  font-weight: 700; */
+  font-size: clamp(1.5rem, 4vw, 2.5rem);
+  font-weight: 700;
 }
 
 /* Container for the map section */
@@ -70,12 +71,14 @@
   padding: 2%;
   flex: 1;
   min-height: 400px;
+  transition: all 0.5s ease-in-out;
 }
 
 /* Map wrapper inside the card */
 .mapview-wrapper {
   height: 600px;
   width: 100%;
+  transition: all 0.5s ease-in-out;
 }
 
 .mapview-map {
@@ -92,7 +95,40 @@
   border-radius: 28px;
 }
 
-/* 🔹 Responsiveness  */
+/* Controls panel */
+.controls-panel {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+  flex-wrap: wrap;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(12px);
+  border-radius: 28px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+  margin-top: -30px;
+  margin-bottom: -10px;
+  padding: 0.30rem;
+}
+
+.controls-panel label {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+  font-weight: 300;
+  margin-left: 7px;
+}
+
+/* Stats */
+.stats {
+  margin-left: auto;
+  font-size: 0.9rem;
+  color: #ddd;
+  margin-right: 7px;
+}
+
+/* 🔹 Responsiveness */
 @media (max-width: 1024px) {
   .mapview-container {
     padding: 2%;
@@ -135,4 +171,58 @@
   .mapview-wrapper {
     height: 70vh;
   }
+}
+
+/* 🔹 Fullscreen enhancements with glassmorphism */
+.fullscreen-active .mapview-wrapper {
+  position: fixed !important;
+  top: 20px;
+  left: 20px;
+  width: calc(100vw - 40px) !important;
+  height: calc(100vh - 40px) !important;
+  z-index: 9999;
+  border-radius: 28px;
+  padding: 20px !important;
+  margin: 0 !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(20px);
+  background: rgba(255, 255, 255, 0.08);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  transition: all 0.5s ease-in-out;
+}
+
+.fullscreen-active .map-card {
+  border-radius: 28px !important;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+  padding: 20px !important;
+  background: rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  transition: all 0.5s ease-in-out;
+}
+
+.fullscreen-active .controls-panel {
+  position: fixed;
+  top: 30px;
+  left: 30px;
+  z-index: 10000;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(12px);
+  padding: 12px 18px;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: white;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  transition: all 0.5s ease-in-out;
+}
+
+.fullscreen-active .controls-panel label {
+  color: white;
+}
+
+.fullscreen-active .mapview-tooltip {
+  font-size: 1rem;
+  transition: all 0.3s ease;
 }
