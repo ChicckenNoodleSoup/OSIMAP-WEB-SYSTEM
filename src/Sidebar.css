@@ -126,11 +126,26 @@
   color: white;
 }
 
+.menu-item {
+  position: relative;
+  overflow: hidden;
+}
+
 .menu-item:hover,
 .menu-item.active {
-  background: rgba(12, 9, 80, 0.35);
-  box-shadow: -10px 0 0 0 rgba(0, 133, 255, 1);
+  background: rgba(0, 133, 255, 0.1);
 }
+
+.menu-item:hover,
+.menu-item.active {
+  background: rgba(0, 133, 255, 0.15); /* soft blue overlay */
+  box-shadow: 0 0 12px rgba(0, 133, 255, 0.6); /* subtle glow */
+  border-radius: 12px;
+  transition: all 0.3s ease;
+}
+
+
+
 
 /* Bottom section */
 .sidebar-bottom {
@@ -196,4 +211,59 @@
   .menu-item img {
     width: 6vw;
   }
+}
+/* Sidebar hover effect */
+.sidebar:hover {
+  transform: scale(1.02); /* Slight grow */
+  box-shadow: 0 12px 32px rgba(0, 133, 255, 0.5); /* Glowing shadow */
+  background: linear-gradient(
+    135deg, 
+    rgba(0, 0, 0, 0.6), 
+    rgba(0, 133, 255, 0.6)
+  ); /* Slightly more vibrant gradient */
+  transition: all 0.4s ease;
+}
+
+/* Optional: animated gradient movement on hover */
+.sidebar::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(120deg, rgba(0,133,255,0.2), rgba(255,255,255,0.05), rgba(0,133,255,0.2));
+  border-radius: 28px;
+  z-index: 0;
+  opacity: 0;
+  transition: opacity 0.5s ease;
+}
+
+.sidebar:hover::before {
+  opacity: 1;
+  animation: diagonalSlide 6s linear infinite;
+}
+
+@keyframes diagonalSlide {
+  0% { background-position: -200% -200%; }
+  100% { background-position: 200% 200%; }
+}
+
+.sidebar::before {
+  content: '';
+  position: absolute;
+  top:0; left:0; right:0; bottom:0;
+  border-radius: 28px;
+  background: linear-gradient(135deg, rgba(0,133,255,0.1), rgba(255,255,255,0.05), rgba(0,133,255,0.1));
+  background-size: 200% 200%;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+
+/* Make content above pseudo-element */
+.sidebar > * {
+  position: relative;
+  z-index: 1;
 }

@@ -11,6 +11,7 @@ function Profile() {
         {/* Logo at the top */}
         <img src="/signin-logo.png" alt="Logo" className="profile-logo" />
 
+
         {/* Content Box (Tabs + Content together) */}
         <div className="profile-content">
           {/* Tabs inside content box */}
@@ -38,7 +39,7 @@ function Profile() {
           {/* Overview Tab */}
           {activeTab === "overview" && (
             <div className="tab-section">
-              <h3>Account Information</h3>
+              {/* <h3>Account Information</h3> */}
               <div className="profile-item">
                 <p className="profile-label">Full Name</p>
                 <p className="profile-value">John Doe</p>
@@ -61,7 +62,7 @@ function Profile() {
           {/* Security Tab */}
           {activeTab === "security" && (
             <div className="tab-section">
-              <h3>Security Settings</h3>
+              {/* <h3>Security Settings</h3> */}
               <form className="profile-form">
                 <input type="password" placeholder="New Password" />
                 <input type="password" placeholder="Confirm Password" />
@@ -83,7 +84,7 @@ function Profile() {
           {/* Activity Tab */}
           {activeTab === "activity" && (
             <div className="tab-section">
-              <h3>Recent Activity</h3>
+              {/* <h3>Recent Activity</h3> */}
               <ul className="activity-log">
                 <li>✔️ Logged in from IP 192.168.1.25 — Aug 18, 2025</li>
                 <li>⚙️ Changed password — Aug 10, 2025</li>
