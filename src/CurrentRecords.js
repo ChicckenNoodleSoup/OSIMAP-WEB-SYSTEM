@@ -137,35 +137,41 @@ function CurrentRecords() {
   return (
     <div className="scroll-wrapper">
       <div className="records-container">
+
         <div className="page-header">
           <div style={{display: 'flex', alignItems: 'center', gap: 12}}>
-            <h1 className="page-title">Current Records</h1>
+               <div className="page-title-container">
+                  <img src="stopLight.svg" alt="Logo" className="page-logo" />
+                  <h1 className="page-title">Current Records</h1>
+                </div>
 
             {/* Info button shows panel on hover/focus (no JS toggle) */}
             <button
               type="button"
-              className="info-btn"
+              className="cr-info-btn"
               aria-label="Edit instructions"
             >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden>
-                <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="0" />
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1" />
                 <text x="12" y="16" textAnchor="middle" fontSize="12" fill="currentColor" fontFamily="Poppins, sans-serif">i</text>
               </svg>
             </button>
+
+              {/* instructions panel moved inside page-header so CSS :hover can control visibility */}
+              <div className="cr-edit-instructions" role="status" aria-hidden="true">
+                <strong>💡 How to Edit Rows</strong>
+                <div> • Click a row to start editing.</div>
+                <div> • Change fields inline.</div>
+                <div> • Click outside or press Enter to save.</div>
+              </div>
+            </div>
+
+            <DateTime />
           </div>
 
-          <DateTime />
 
-          {/* instructions panel moved inside page-header so CSS :hover can control visibility */}
-          <div className="edit-instructions" role="status" aria-hidden="true">
-            <strong>💡 How to Edit Rows</strong>
-            <div> • Click a row to start editing.</div>
-            <div> • Change fields inline.</div>
-            <div> • Click outside or press Enter to save.</div>
-          </div>
-        </div>
 
-        <div className="search-actions">
+      <div className="search-actions">
           <div className="search-container">
             <svg
               className="search-icon"
