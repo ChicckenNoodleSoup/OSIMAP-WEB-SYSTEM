@@ -33,25 +33,31 @@ const sanFernandoBounds = [
 ];
 
 // Heatmap layer
-function ClusteredHeatmapLayer({ accidentData, showHeatmap }) {
+function ClusteredHeatmapLayer({ filteredData, showHeatmap }) {
   const map = useMap();
   const heatmapPoints = useMemo(() => {
-    if (!accidentData || !showHeatmap) return [];
-    return accidentData.features
-      .filter(f => f.properties.type === "accident_point")
+    if (!filteredData || !showHeatmap || !filteredData.accidentPoints) return [];
+    
+    console.log("Creating heatmap from", filteredData.accidentPoints.length, "points");
+    
+    return filteredData.accidentPoints
       .map(({ geometry, properties }) => {
         if (!geometry || !geometry.coordinates) return null;
         const [lng, lat] = geometry.coordinates;
-        if (typeof lat !== "number" || typeof lng !== "number") return null;
+        if (typeof lat !== "number" || typeof lng !== "number" || lat === 0 || lng === 0) return null;
+        
         const severityMap = { Critical: 1, High: 0.8, Medium: 0.6, Low: 0.4, Minor: 0.2 };
         const intensity = properties.severity ? severityMap[properties.severity] || 0.5 : 0.5;
         return [lat, lng, intensity];
       })
       .filter(Boolean);
-  }, [accidentData, showHeatmap]);
+  }, [filteredData, showHeatmap]);
 
   useEffect(() => {
     if (!showHeatmap || heatmapPoints.length === 0) return;
+    
+    console.log("Adding heatmap with", heatmapPoints.length, "points");
+    
     const heatLayer = L.heatLayer(heatmapPoints, {
       radius: 25,
       blur: 15,
@@ -122,6 +128,7 @@ function AccidentMarkers({ accidentPoints, showMarkers }) {
             <div><b>Type:</b> {properties.offensetype || "N/A"}</div>
             <div><b>Severity:</b> {properties.severity || "N/A"}</div>
             {properties.barangay && <div><b>Area:</b> {properties.barangay}</div>}
+            {properties.year && <div><b>Year:</b> {properties.year}</div>}
           </div>
         </Tooltip>
       </CircleMarker>
@@ -134,7 +141,6 @@ function SafeFullscreenControl() {
   const map = useMap();
 
   useEffect(() => {
-    // Wait for map to be fully initialized
     const timer = setTimeout(() => {
       if (!map || !L.control.fullscreen) return;
 
@@ -151,21 +157,17 @@ function SafeFullscreenControl() {
 
         const handleFsChange = () => {
           try {
-            // Safe check for fullscreen state
             const isFs = map && typeof map.isFullscreen === 'function' ? map.isFullscreen() : false;
             document.body.classList.toggle("fullscreen-active", isFs);
           } catch (error) {
             console.warn('Fullscreen state check failed:', error);
-            // Fallback: check document fullscreen state
             const isFs = !!(document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement);
             document.body.classList.toggle("fullscreen-active", isFs);
           }
         };
 
-        // Add event listeners with error handling
         map.on("fullscreenchange", handleFsChange);
         
-        // Also listen to document fullscreen events as fallback
         const documentEvents = ['fullscreenchange', 'webkitfullscreenchange', 'mozfullscreenchange', 'MSFullscreenChange'];
         documentEvents.forEach(event => {
           document.addEventListener(event, handleFsChange);
@@ -187,7 +189,7 @@ function SafeFullscreenControl() {
       } catch (error) {
         console.warn('Error initializing fullscreen control:', error);
       }
-    }, 100); // Small delay to ensure map is ready
+    }, 100);
 
     return () => clearTimeout(timer);
   }, [map]);
@@ -202,28 +204,125 @@ export default function MapView() {
   const [showHeatmap, setShowHeatmap] = useState(true);
   const [showMarkers, setShowMarkers] = useState(false);
   const [loading, setLoading] = useState(true);
+  
+  // New filter states
+  const [selectedYear, setSelectedYear] = useState("all");
+  const [selectedLocation, setSelectedLocation] = useState("all");
 
-  const { accidentPoints, clusterCenters, stats } = useMemo(() => {
+  // Extract unique years and locations from data
+  const { availableYears, availableLocations } = useMemo(() => {
+    if (!accidentData) return { availableYears: [], availableLocations: [] };
+    
+    // Filter all features, not just those with type "accident_point"
+    const accidents = accidentData.features.filter(f => 
+      f.properties && f.geometry && f.geometry.coordinates
+    );
+    
+    // Extract years with better handling
+    const years = [...new Set(
+      accidents.map(f => {
+        const year = f.properties.year;
+        // Convert to string and handle different formats
+        if (year !== null && year !== undefined && year !== '') {
+          return String(year).trim();
+        }
+        return null;
+      }).filter(Boolean)
+    )].sort();
+    
+    // Extract locations with better handling
+    const locations = [...new Set(
+      accidents.map(f => {
+        const barangay = f.properties.barangay;
+        if (barangay !== null && barangay !== undefined && barangay !== '') {
+          return String(barangay).trim();
+        }
+        return null;
+      }).filter(Boolean)
+    )].sort();
+    
+    console.log("Available years:", years);
+    console.log("Available locations:", locations);
+    console.log("Sample accident data:", accidents.slice(0, 3));
+    
+    return { availableYears: years, availableLocations: locations };
+  }, [accidentData]);
+
+  // Filter data based on selected year and location
+  const filteredData = useMemo(() => {
     if (!accidentData) return { accidentPoints: [], clusterCenters: [], stats: null };
-    const accidents = accidentData.features.filter(f => f.properties.type === "accident_point");
-    const clusters = accidentData.features.filter(f => f.properties.type === "cluster_center");
+    
+    // Get all features first
+    let accidents = accidentData.features.filter(f => 
+      f.properties && f.geometry && f.geometry.coordinates &&
+      f.properties.type !== "cluster_center" // Exclude cluster centers from accidents
+    );
+    let clusters = accidentData.features.filter(f => 
+      f.properties && f.properties.type === "cluster_center"
+    );
+    
+    console.log("Before filtering - Total accidents:", accidents.length);
+    console.log("Selected year:", selectedYear, "Selected location:", selectedLocation);
+    
+    // Apply year filter
+    if (selectedYear !== "all") {
+      accidents = accidents.filter(f => {
+        const year = f.properties.year;
+        const yearStr = year !== null && year !== undefined ? String(year).trim() : '';
+        const match = yearStr === selectedYear;
+        return match;
+      });
+      console.log("After year filter:", accidents.length);
+    }
+    
+    // Apply location filter
+    if (selectedLocation !== "all") {
+      accidents = accidents.filter(f => {
+        const barangay = f.properties.barangay;
+        const barangayStr = barangay !== null && barangay !== undefined ? String(barangay).trim() : '';
+        const match = barangayStr === selectedLocation;
+        return match;
+      });
+      console.log("After location filter:", accidents.length);
+    }
+    
+    console.log("Final filtered accidents:", accidents.length);
+    
     return {
       accidentPoints: accidents,
-      clusterCenters: clusters,
-      stats: { totalAccidents: accidents.length, totalClusters: clusters.length, noisePoints: accidents.filter(f => f.properties.cluster === -1).length },
+      clusterCenters: clusters, // Keep all clusters for now
+      stats: { 
+        totalAccidents: accidents.length, 
+        totalClusters: clusters.length, 
+        noisePoints: accidents.filter(f => f.properties.cluster === -1).length 
+      },
     };
-  }, [accidentData]);
+  }, [accidentData, selectedYear, selectedLocation]);
 
   useEffect(() => {
     async function fetchData() {
       setLoading(true);
       try {
-        const res = await fetch("http://localhost:5000/data/accidents_clustered.geojson");
-        if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+        // Try clustered data first, then fall back to regular accidents.geojson
+        let res = await fetch("http://localhost:5000/data/accidents_clustered.geojson");
+        if (!res.ok) {
+          console.warn("Clustered data not available, trying regular accidents.geojson");
+          res = await fetch("http://localhost:5000/data/accidents.geojson");
+          if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+        }
+        
         const data = await res.json();
+        console.log("Loaded GeoJSON data:", data);
+        console.log("Number of features:", data.features?.length);
+        
+        // Log sample of features to understand structure
+        if (data.features && data.features.length > 0) {
+          console.log("Sample features:", data.features.slice(0, 3));
+        }
+        
         setAccidentData(data);
       } catch (err) {
-        console.error("Failed to load clustered GeoJSON:", err);
+        console.error("Failed to load GeoJSON data:", err);
       } finally {
         setLoading(false);
       }
@@ -255,6 +354,39 @@ export default function MapView() {
           <DateTime />
         </div>
 
+        {/* New Filter Controls */}
+        <div className="filter-panel">
+          <div className="filter-group">
+            <label htmlFor="year-select" className="filter-label">Filter by Year:</label>
+            <select 
+              id="year-select"
+              className="filter-dropdown"
+              value={selectedYear} 
+              onChange={(e) => setSelectedYear(e.target.value)}
+            >
+              <option value="all">All Years</option>
+              {availableYears.map(year => (
+                <option key={year} value={year}>{year}</option>
+              ))}
+            </select>
+          </div>
+          
+          <div className="filter-group">
+            <label htmlFor="location-select" className="filter-label">Filter by Location:</label>
+            <select 
+              id="location-select"
+              className="filter-dropdown"
+              value={selectedLocation} 
+              onChange={(e) => setSelectedLocation(e.target.value)}
+            >
+              <option value="all">All Locations</option>
+              {availableLocations.map(location => (
+                <option key={location} value={location}>{location}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+
         <div className="controls-panel">
           <label>
             <input type="checkbox" checked={showHeatmap} onChange={handleToggle(setShowHeatmap)} /> Heatmap
@@ -265,7 +397,13 @@ export default function MapView() {
           <label>
             <input type="checkbox" checked={showMarkers} onChange={handleToggle(setShowMarkers)} /> Points
           </label>
-          {stats && <div className="stats">{stats.totalAccidents} accidents • {stats.totalClusters} clusters • {stats.noisePoints} noise</div>}
+          {filteredData.stats && (
+            <div className="stats">
+              {filteredData.stats.totalAccidents} accidents • {filteredData.stats.totalClusters} clusters • {filteredData.stats.noisePoints} noise
+              {selectedYear !== "all" && <span> • Year: {selectedYear}</span>}
+              {selectedLocation !== "all" && <span> • Location: {selectedLocation}</span>}
+            </div>
+          )}
         </div>
 
         <div className="map-card">
@@ -296,9 +434,9 @@ export default function MapView() {
               </LayersControl>
 
               <SafeFullscreenControl />
-              <ClusteredHeatmapLayer accidentData={accidentData} showHeatmap={showHeatmap} />
-              <ClusterCenters clusterCenters={clusterCenters} showClusters={showClusters} />
-              <AccidentMarkers accidentPoints={accidentPoints} showMarkers={showMarkers} />
+              <ClusteredHeatmapLayer filteredData={filteredData} showHeatmap={showHeatmap} />
+              <ClusterCenters clusterCenters={filteredData.clusterCenters} showClusters={showClusters} />
+              <AccidentMarkers accidentPoints={filteredData.accidentPoints} showMarkers={showMarkers} />
             </MapContainer>
           </div>
         </div>

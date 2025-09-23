@@ -44,14 +44,14 @@
   flex-wrap: wrap;
 }
 
-/* ✅ Container */
+/* Container */
 .page-title-container {
   display: flex;
   align-items: center;
   gap: 6px; /* a little more breathing room */
 }
 
-/* ✅ Logo (soft wide glow to the right) */
+/* Logo (soft wide glow to the right) */
 .page-logo {
   width: 45px;
   height: auto;
@@ -64,7 +64,7 @@
     drop-shadow(28px 6px 40px rgba(255, 45, 45, 0.25));
 }
 
-/* ✅ Title (wider glow than logo, softer) */
+/* Title (wider glow than logo, softer) */
 .page-title {
   margin: 0;
   font-size: clamp(1.5rem, 4vw, 2.5rem);
@@ -79,7 +79,7 @@
     20px 4px 55px rgba(255, 45, 45, 0.2);
 }
 
-/* 🚦 Shared animation */
+/* Shared animation */
 @keyframes stoplightShared {
   0% {
     filter: 
@@ -119,14 +119,6 @@
   }
 }
 
-
-.page-title {
-  color: white;
-  margin: 0;
-  font-size: clamp(1.5rem, 4vw, 2.5rem);
-  font-weight: 700;
-}
-
 /* Container for the map section */
 .mapview-container {
   max-width: 1200px;
@@ -135,6 +127,67 @@
   display: flex;
   flex-direction: column;
   gap: 20px;
+}
+
+/* Filter Panel Styles */
+.filter-panel {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+  flex-wrap: wrap;
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(12px);
+  border-radius: 28px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+  padding: 1rem 1.5rem;
+  margin-bottom: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.filter-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.filter-label {
+  color: #fff;
+  font-weight: 500;
+  font-size: 0.9rem;
+  white-space: nowrap;
+}
+
+.filter-dropdown {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 15px;
+  color: #fff;
+  padding: 8px 12px;
+  font-size: 0.9rem;
+  min-width: 140px; /* Increased from 120px */
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.filter-dropdown:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(0, 133, 255, 0.5);
+  box-shadow: 0 0 8px rgba(0, 133, 255, 0.3);
+}
+
+.filter-dropdown:focus {
+  outline: none;
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(0, 133, 255, 0.8);
+  box-shadow: 0 0 12px rgba(0, 133, 255, 0.5);
+}
+
+.filter-dropdown option {
+  background: rgba(30, 30, 30, 0.95);
+  color: #fff;
+  padding: 8px;
+  border: none;
 }
 
 /* Card styling */
@@ -204,7 +257,7 @@
   margin-right: 7px;
 }
 
-/* 🔹 Responsiveness */
+/* Responsiveness */
 @media (max-width: 1024px) {
   .mapview-container {
     padding: 2%;
@@ -224,6 +277,24 @@
   .mapview-wrapper {
     height: 400px; 
   }
+
+  /* Responsive adjustments for filters */
+  .filter-panel {
+    flex-direction: column;
+    gap: 15px;
+    align-items: stretch;
+  }
+  
+  .filter-group {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 5px;
+  }
+  
+  .filter-dropdown {
+    min-width: auto;
+    width: 100%;
+  }
 }
 
 @media (max-width: 480px) {
@@ -240,6 +311,19 @@
   .mapview-wrapper {
     height: 300px; 
   }
+
+  .filter-panel {
+    padding: 0.75rem 1rem;
+  }
+  
+  .filter-label {
+    font-size: 0.8rem;
+  }
+  
+  .filter-dropdown {
+    font-size: 0.8rem;
+    padding: 6px 10px;
+  }
 }
 
 /* For shorter screens (landscape laptops/tablets) */
@@ -249,7 +333,7 @@
   }
 }
 
-/* 🔹 Fullscreen enhancements with glassmorphism */
+/* Fullscreen enhancements with glassmorphism */
 .fullscreen-active .mapview-wrapper {
   position: fixed !important;
   top: 20px;
@@ -296,6 +380,25 @@
 
 .fullscreen-active .controls-panel label {
   color: white;
+}
+
+/* Fullscreen adjustments for filters */
+.fullscreen-active .filter-panel {
+  position: fixed;
+  top: 30px;
+  right: 30px;
+  left: auto;
+  z-index: 10001;
+  background: rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(15px);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  max-width: 400px;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.fullscreen-active .filter-group {
+  gap: 8px;
 }
 
 .fullscreen-active .mapview-tooltip {
