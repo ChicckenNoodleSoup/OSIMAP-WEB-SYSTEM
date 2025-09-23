@@ -40,18 +40,18 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1.5rem;
+  margin-bottom: 0.75rem;
   flex-wrap: wrap;
 }
 
-/* ✅ Container */
+/* Container */
 .page-title-container {
   display: flex;
   align-items: center;
   gap: 6px; /* a little more breathing room */
 }
 
-/* ✅ Logo (soft wide glow to the right) */
+/* Logo (soft wide glow to the right) */
 .page-logo {
   width: 45px;
   height: auto;
@@ -59,12 +59,12 @@
   animation: stoplightShared 12s infinite ease-in-out;
 
   /* Softer, wider spread */
-  filter: 
+  filter:
     drop-shadow(14px 4px 24px rgba(255, 45, 45, 0.45))
     drop-shadow(28px 6px 40px rgba(255, 45, 45, 0.25));
 }
 
-/* ✅ Title (wider glow than logo, softer) */
+/* Title (wider glow than logo, softer) */
 .page-title {
   margin: 0;
   font-size: clamp(1.5rem, 4vw, 2.5rem);
@@ -73,11 +73,13 @@
   animation: stoplightShared 12s infinite ease-in-out;
 
   /* Very soft + wide glow */
-  text-shadow: 
+  text-shadow:
     0 0 18px rgba(255, 45, 45, 0.5),
     0 0 38px rgba(255, 45, 45, 0.35),
     20px 4px 55px rgba(255, 45, 45, 0.2);
 }
+
+/* Shared animation */
 
 .legend-panel {
   background: white;
@@ -134,51 +136,44 @@
 }
 
 /* 🚦 Shared animation */
+
 @keyframes stoplightShared {
   0% {
-    filter: 
+    filter:
       drop-shadow(14px 4px 24px rgba(255, 45, 45, 0.45))
       drop-shadow(28px 6px 40px rgba(255, 45, 45, 0.25));
-    text-shadow: 
+    text-shadow:
       0 0 18px rgba(255, 45, 45, 0.5),
       0 0 38px rgba(255, 45, 45, 0.35),
       20px 4px 55px rgba(255, 45, 45, 0.2);
   }
   33% {
-    filter: 
+    filter:
       drop-shadow(14px 4px 24px rgba(255, 215, 0, 0.45))
       drop-shadow(28px 6px 40px rgba(255, 215, 0, 0.25));
-    text-shadow: 
+    text-shadow:
       0 0 18px rgba(255, 215, 0, 0.5),
       0 0 38px rgba(255, 215, 0, 0.35),
       20px 4px 55px rgba(255, 215, 0, 0.2);
   }
   66% {
-    filter: 
+    filter:
       drop-shadow(14px 4px 24px rgba(50, 205, 50, 0.45))
       drop-shadow(28px 6px 40px rgba(50, 205, 50, 0.25));
-    text-shadow: 
+    text-shadow:
       0 0 18px rgba(50, 205, 50, 0.5),
       0 0 38px rgba(50, 205, 50, 0.35),
       20px 4px 55px rgba(50, 205, 50, 0.2);
   }
   100% {
-    filter: 
+    filter:
       drop-shadow(14px 4px 24px rgba(255, 45, 45, 0.45))
       drop-shadow(28px 6px 40px rgba(255, 45, 45, 0.25));
-    text-shadow: 
+    text-shadow:
       0 0 18px rgba(255, 45, 45, 0.5),
       0 0 38px rgba(255, 45, 45, 0.35),
       20px 4px 55px rgba(255, 45, 45, 0.2);
   }
-}
-
-
-.page-title {
-  color: white;
-  margin: 0;
-  font-size: clamp(1.5rem, 4vw, 2.5rem);
-  font-weight: 700;
 }
 
 /* Container for the map section */
@@ -189,6 +184,68 @@
   display: flex;
   flex-direction: column;
   gap: 20px;
+}
+
+/* Filter Panel Styles */
+.filter-panel {
+  margin-top: -25px;
+  display: flex;
+  gap: 20px;
+  align-items: center;
+  flex-wrap: wrap;
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(12px);
+  border-radius: 28px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+  padding: 1rem 1.5rem;
+  margin-bottom: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.filter-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.filter-label {
+  color: #fff;
+  font-weight: 500;
+  font-size: 0.9rem;
+  white-space: nowrap;
+}
+
+.filter-dropdown {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 15px;
+  color: #fff;
+  padding: 8px 12px;
+  font-size: 0.9rem;
+  min-width: 140px; /* Increased from 120px */
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.filter-dropdown:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(0, 133, 255, 0.5);
+  box-shadow: 0 0 8px rgba(0, 133, 255, 0.3);
+}
+
+.filter-dropdown:focus {
+  outline: none;
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(0, 133, 255, 0.8);
+  box-shadow: 0 0 12px rgba(0, 133, 255, 0.5);
+}
+
+.filter-dropdown option {
+  background: rgba(30, 30, 30, 0.95);
+  color: #fff;
+  padding: 8px;
+  border: none;
 }
 
 /* Card styling */
@@ -258,7 +315,7 @@
   margin-right: 7px;
 }
 
-/* 🔹 Responsiveness */
+/* Responsiveness */
 @media (max-width: 1024px) {
   .mapview-container {
     padding: 2%;
@@ -276,7 +333,25 @@
   }
 
   .mapview-wrapper {
-    height: 400px; 
+    height: 400px;
+  }
+
+  /* Responsive adjustments for filters */
+  .filter-panel {
+    flex-direction: column;
+    gap: 15px;
+    align-items: stretch;
+  }
+
+  .filter-group {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 5px;
+  }
+
+  .filter-dropdown {
+    min-width: auto;
+    width: 100%;
   }
 }
 
@@ -292,7 +367,20 @@
   }
 
   .mapview-wrapper {
-    height: 300px; 
+    height: 300px;
+  }
+
+  .filter-panel {
+    padding: 0.75rem 1rem;
+  }
+
+  .filter-label {
+    font-size: 0.8rem;
+  }
+
+  .filter-dropdown {
+    font-size: 0.8rem;
+    padding: 6px 10px;
   }
 }
 
@@ -303,7 +391,7 @@
   }
 }
 
-/* 🔹 Fullscreen enhancements with glassmorphism */
+/* Fullscreen enhancements with glassmorphism */
 .fullscreen-active .mapview-wrapper {
   position: fixed !important;
   top: 20px;
@@ -352,7 +440,142 @@
   color: white;
 }
 
+/* Fullscreen adjustments for filters */
+.fullscreen-active .filter-panel {
+  position: fixed;
+  top: 30px;
+  right: 30px;
+  left: auto;
+  z-index: 10001;
+  background: rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(15px);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  max-width: 400px;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.fullscreen-active .filter-group {
+  gap: 8px;
+}
+
 .fullscreen-active .mapview-tooltip {
   font-size: 1rem;
   transition: all 0.3s ease;
+}
+
+/* Legend panel */
+.legend-panel {
+  background: white;
+  padding: 8px 12px;
+  border-radius: 6px;
+  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.3);
+  color: black;
+  font-size: 13px;
+  line-height: 18px;
+}
+
+.legend-title {
+  margin: 0 0 6px;
+  font-size: 14px;
+  font-weight: bold;
+  color: black;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 4px;
+  color: black;
+}
+
+.legend-color {
+  width: 15px;
+  height: 15px;
+  margin-right: 6px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+/* Specific colors */
+.legend-high {
+  background: red;
+}
+
+.legend-medium {
+  background: yellow;
+  border: 1px solid #aaa;
+}
+
+.legend-low {
+  background: green;
+}
+
+.legend-cluster {
+  background: blue;
+}
+
+.legend-noise {
+  background: gray;
+}
+/* ... (existing styles remain the same) ... */
+
+/* Additional legend styles for new functionality */
+.legend-container {
+  max-height: calc(100vh - 120px); /* Adjust based on your layout */
+  overflow-y: auto;
+  overflow-x: hidden;
+  position: relative; /* important for z-index */
+  z-index: 1000;
+}
+
+.legend-button {
+  cursor: pointer;
+  padding: 5px 10px;
+  background: white;
+  border-radius: 4px;
+  font-weight: bold;
+  text-align: center;
+  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.3);
+  margin-bottom: 5px;
+  color: black;
+}
+
+.legend-panel {
+  max-height: calc(100vh - 180px); /* Limit the panel height */
+  overflow-y: auto;
+  display: block; /* The JS will handle the show/hide with state */
+}
+
+.legend-cluster-item {
+  cursor: pointer;
+  padding: 3px 5px;
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+  white-space: nowrap; /* Prevent wrapping */
+  font-size: 12px;
+}
+
+.legend-cluster-item:hover {
+  background-color: #f0f0f0;
+}
+
+.legend-separator {
+  height: 1px;
+  background-color: #ccc;
+  margin: 8px 0;
+}
+
+.collapse-toggle {
+  float: right;
+  font-size: 11px;
+  font-weight: normal;
+  color: #007bff;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.cluster-list-container {
+  max-height: 200px; /* Optional: limit height of the cluster list */
+  overflow-y: auto;
 }
