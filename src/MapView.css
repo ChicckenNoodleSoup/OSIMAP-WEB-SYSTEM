@@ -40,7 +40,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1.5rem;
+  margin-bottom: 0.75rem;
   flex-wrap: wrap;
 }
 
@@ -131,6 +131,7 @@
 
 /* Filter Panel Styles */
 .filter-panel {
+  margin-top: -25px;
   display: flex;
   gap: 20px;
   align-items: center;
