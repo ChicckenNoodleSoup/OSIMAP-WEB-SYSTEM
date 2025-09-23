@@ -80,6 +80,63 @@
 }
 
 /* Shared animation */
+
+.legend-panel {
+  background: white;
+  padding: 8px 12px;
+  border-radius: 6px;
+  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.3);
+  color: black;
+  font-size: 13px;
+  line-height: 18px;
+}
+
+.legend-title {
+  margin: 0 0 6px;
+  font-size: 14px;
+  font-weight: bold;
+  color: black;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 4px;
+  color: black;
+}
+
+.legend-color {
+  width: 15px;
+  height: 15px;
+  margin-right: 6px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+/* Specific colors */
+.legend-high {
+  background: red;
+}
+
+.legend-medium {
+  background: yellow;
+  border: 1px solid #aaa;
+}
+
+.legend-low {
+  background: green;
+}
+
+.legend-cluster {
+  background: blue;
+}
+
+.legend-noise {
+  background: gray;
+}
+
+/* 🚦 Shared animation */
+
 @keyframes stoplightShared {
   0% {
     filter:
