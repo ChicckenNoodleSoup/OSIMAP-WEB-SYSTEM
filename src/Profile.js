@@ -110,7 +110,7 @@ function Profile() {
           {/* Tabs inside content box */}
           <div className="profile-tabs">
             <div
-              className={activeTab === "profile" ? "tab active" : "tab"}
+              className={activeTab === "overview" ? "tab active" : "tab"}
               onClick={() => handleTabChange("overview")}
             >
               Overview
