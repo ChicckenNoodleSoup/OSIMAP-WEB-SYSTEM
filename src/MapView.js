@@ -136,6 +136,7 @@ function AccidentMarkers({ accidentPoints, showMarkers }) {
   });
 }
 
+
 // Legend Control (fixed to prevent duplicates)
 function LegendControl({ clusterCenters }) {
   const map = useMap();
@@ -233,11 +234,70 @@ function LegendControl({ clusterCenters }) {
 
       L.DomEvent.disableScrollPropagation(container);
       L.DomEvent.disableClickPropagation(container);
-      
+
+// Legend Control
+function LegendControl() {
+  const map = useMap();
+
+  useEffect(() => {
+    if (!map) return;
+    const legend = L.control({ position: "bottomright" });
+
+    legend.onAdd = function () {
+      const container = L.DomUtil.create("div", "legend-container");
+
+      const button = L.DomUtil.create("div", "legend-button leaflet-bar", container);
+      button.innerHTML = "LEGEND";
+      Object.assign(button.style, {
+        cursor: "pointer",
+        padding: "5px 10px",
+        background: "white",
+        borderRadius: "4px",
+        fontWeight: "bold",
+        textAlign: "center",
+        boxShadow: "0 1px 5px rgba(0,0,0,0.3)",
+        marginBottom: "5px",
+        color: "black",
+      });
+
+      const panel = L.DomUtil.create("div", "legend-panel", container);
+      panel.style.display = "none";
+      Object.assign(panel.style, {
+        background: "white",
+        padding: "8px 12px",
+        borderRadius: "6px",
+        boxShadow: "0 1px 5px rgba(0,0,0,0.3)",
+        color: "black",
+      });
+
+      panel.innerHTML = `
+        <div class="legend-item">
+          <span class="legend-color legend-high"></span> High severity
+        </div>
+        <div class="legend-item">
+          <span class="legend-color legend-medium"></span> Medium severity
+        </div>
+        <div class="legend-item">
+          <span class="legend-color legend-low"></span> Low severity
+        </div>
+        <div class="legend-item">
+          <span class="legend-color legend-cluster"></span> Clusters
+        </div>
+        <div class="legend-item">
+          <span class="legend-color legend-noise"></span> Noise / Unclustered
+        </div>
+      `;
+
+      button.onclick = () => {
+        panel.style.display = panel.style.display === "none" ? "block" : "none";
+      };
+
+
       return container;
     };
 
     legend.addTo(map);
+
 
     return () => {
       if (map.hasLayer && map.hasLayer(legend)) {
@@ -246,17 +306,24 @@ function LegendControl({ clusterCenters }) {
     };
   }, [map, isPanelVisible, isClustersCollapsed, sortedClusters]);
 
+    return () => map.removeControl(legend);
+  }, [map]);
+
+
   return null;
 }
 
+
 // Fixed Fullscreen Control
+
+// Fullscreen Control
+
 function SafeFullscreenControl() {
   const map = useMap();
 
   useEffect(() => {
     const timer = setTimeout(() => {
       if (!map || !L.control.fullscreen) return;
-
       try {
         const control = L.control.fullscreen({
           position: "topright",
@@ -265,8 +332,8 @@ function SafeFullscreenControl() {
           forceSeparateButton: true,
           content: '⛶',
         });
-
         control.addTo(map);
+
 
         const handleFsChange = () => {
           try {
@@ -299,10 +366,12 @@ function SafeFullscreenControl() {
             console.warn('Error cleaning up fullscreen control:', error);
           }
         };
+
       } catch (error) {
         console.warn('Error initializing fullscreen control:', error);
       }
     }, 100);
+
 
     return () => clearTimeout(timer);
   }, [map]);
@@ -553,11 +622,18 @@ export default function MapView() {
               </LayersControl>
 
               <SafeFullscreenControl />
+
               <LegendControl clusterCenters={filteredData.clusterCenters} />
               
               <ClusteredHeatmapLayer filteredData={filteredData} showHeatmap={showHeatmap} />
               <ClusterCenters clusterCenters={filteredData.clusterCenters} showClusters={showClusters} />
               <AccidentMarkers accidentPoints={filteredData.accidentPoints} showMarkers={showMarkers} />
+
+              <LegendControl /> 
+              <ClusteredHeatmapLayer accidentData={accidentData} showHeatmap={showHeatmap} />
+              <ClusterCenters clusterCenters={clusterCenters} showClusters={showClusters} />
+              <AccidentMarkers accidentPoints={accidentPoints} showMarkers={showMarkers} />
+
             </MapContainer>
           </div>
         </div>
