@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useUser } from './UserContext'; // Only new import added
 import './Dashboard.css';
 import { DateTime } from './DateTime';
 import { createClient } from '@supabase/supabase-js';
@@ -10,6 +11,7 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 function Dashboard() {
   const navigate = useNavigate();
+  const { user } = useUser(); // Only new line added here
   const currentYearDefault = new Date().getFullYear();
   const [year, setYear] = useState(currentYearDefault);
   const [count, setCount] = useState(null);
@@ -185,7 +187,7 @@ function Dashboard() {
 
           {/* Bottom row: User Profile + Add Record (side by side) */}
           <div className="bottom-cards-row">
-            {/* User Profile */}
+            {/* User Profile - ONLY THIS SECTION WAS MODIFIED */}
             <div
               className="dashboard-card card-medium user-profile"
               onClick={() => navigate('/profile')}
@@ -193,13 +195,14 @@ function Dashboard() {
               <h2>🧑‍✈️ User Profile</h2>
 
               <div className="profile-details">
-                <div className="username">PMSgt. Dela Cruz</div>
+                <div className="username">{user.fullName}</div>
                 <div className="profile-info">
-                  <div>CSFP Police Station</div>
-                  <div>Admin</div>
+                  <div>{user.station}</div>
+                  <div>{user.role}</div>
                 </div>
               </div>
             </div>
+            {/* END OF MODIFIED SECTION */}
 
             {/* Add Record */}
             <div

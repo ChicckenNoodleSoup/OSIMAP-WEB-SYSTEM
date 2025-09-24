@@ -4,8 +4,6 @@
   height: 100vh;
   background-color: transparent;
   padding: 1rem;
-
-  /* Firefox scrollbar */
   scrollbar-width: thin;
   scrollbar-color: rgba(255, 255, 255, 0.3) rgba(241, 239, 236, 0.05);
 }
@@ -48,7 +46,7 @@
 .page-title-container {
   display: flex;
   align-items: center;
-  gap: 6px; /* a little more breathing room */
+  gap: 6px;
 }
 
 /* Logo (soft wide glow to the right) */
@@ -57,8 +55,6 @@
   height: auto;
   object-fit: contain;
   animation: stoplightShared 12s infinite ease-in-out;
-
-  /* Softer, wider spread */
   filter:
     drop-shadow(14px 4px 24px rgba(255, 45, 45, 0.45))
     drop-shadow(28px 6px 40px rgba(255, 45, 45, 0.25));
@@ -71,8 +67,6 @@
   font-weight: 700;
   color: white;
   animation: stoplightShared 12s infinite ease-in-out;
-
-  /* Very soft + wide glow */
   text-shadow:
     0 0 18px rgba(255, 45, 45, 0.5),
     0 0 38px rgba(255, 45, 45, 0.35),
@@ -186,26 +180,25 @@
   gap: 20px;
 }
 
-/* Filter Panel Styles */
-.filter-panel {
-  margin-top: -25px;
+/* Combined filter and control bar */
+.control-filter-bar {
   display: flex;
-  gap: 20px;
-  align-items: center;
   flex-wrap: wrap;
+  gap: 15px;
+  align-items: center;
   background: rgba(255, 255, 255, 0.08);
   backdrop-filter: blur(12px);
   border-radius: 28px;
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
-  padding: 1rem 1.5rem;
-  margin-bottom: 1rem;
+  padding: 0.75rem 1.5rem;
   border: 1px solid rgba(255, 255, 255, 0.1);
+  margin-top: -25px;
 }
 
 .filter-group {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
 }
 
 .filter-label {
@@ -221,9 +214,9 @@
   border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 15px;
   color: #fff;
-  padding: 8px 12px;
+  padding: 6px 10px;
   font-size: 0.9rem;
-  min-width: 140px; /* Increased from 120px */
+  min-width: 120px;
   cursor: pointer;
   transition: all 0.3s ease;
 }
@@ -293,7 +286,6 @@
   backdrop-filter: blur(12px);
   border-radius: 28px;
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
-  margin-top: -30px;
   margin-bottom: -10px;
   padding: 0.30rem;
 }
@@ -335,14 +327,15 @@
   .mapview-wrapper {
     height: 400px;
   }
-
-  /* Responsive adjustments for filters */
-  .filter-panel {
+  
+  /* Filter and controls in two lines for mobile */
+  .control-filter-bar {
     flex-direction: column;
-    gap: 15px;
     align-items: stretch;
+    gap: 15px;
+    padding: 1rem;
   }
-
+  
   .filter-group {
     flex-direction: column;
     align-items: stretch;
@@ -352,6 +345,18 @@
   .filter-dropdown {
     min-width: auto;
     width: 100%;
+  }
+
+  .controls-panel {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    padding: 10px;
+  }
+  
+  .stats {
+    margin: 0;
+    text-align: center;
   }
 }
 
@@ -368,19 +373,6 @@
 
   .mapview-wrapper {
     height: 300px;
-  }
-
-  .filter-panel {
-    padding: 0.75rem 1rem;
-  }
-
-  .filter-label {
-    font-size: 0.8rem;
-  }
-
-  .filter-dropdown {
-    font-size: 0.8rem;
-    padding: 6px 10px;
   }
 }
 
@@ -419,6 +411,25 @@
   transition: all 0.5s ease-in-out;
 }
 
+.fullscreen-active .control-filter-bar {
+  position: fixed;
+  top: 30px;
+  right: 30px;
+  left: auto;
+  z-index: 10001;
+  background: rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(15px);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  max-width: 600px;
+  flex-direction: row;
+  gap: 10px;
+}
+
+.fullscreen-active .filter-group {
+  flex-direction: row;
+  gap: 8px;
+}
+
 .fullscreen-active .controls-panel {
   position: fixed;
   top: 30px;
@@ -438,25 +449,6 @@
 
 .fullscreen-active .controls-panel label {
   color: white;
-}
-
-/* Fullscreen adjustments for filters */
-.fullscreen-active .filter-panel {
-  position: fixed;
-  top: 30px;
-  right: 30px;
-  left: auto;
-  z-index: 10001;
-  background: rgba(255, 255, 255, 0.12);
-  backdrop-filter: blur(15px);
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  max-width: 400px;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.fullscreen-active .filter-group {
-  gap: 8px;
 }
 
 .fullscreen-active .mapview-tooltip {
@@ -518,14 +510,13 @@
 .legend-noise {
   background: gray;
 }
-/* ... (existing styles remain the same) ... */
 
 /* Additional legend styles for new functionality */
 .legend-container {
-  max-height: calc(100vh - 120px); /* Adjust based on your layout */
+  max-height: calc(100vh - 120px);
   overflow-y: auto;
   overflow-x: hidden;
-  position: relative; /* important for z-index */
+  position: relative;
   z-index: 1000;
 }
 
@@ -542,9 +533,9 @@
 }
 
 .legend-panel {
-  max-height: calc(100vh - 180px); /* Limit the panel height */
+  max-height: calc(100vh - 180px);
   overflow-y: auto;
-  display: block; /* The JS will handle the show/hide with state */
+  display: block;
 }
 
 .legend-cluster-item {
@@ -552,7 +543,7 @@
   padding: 3px 5px;
   border-radius: 4px;
   transition: background-color 0.2s ease;
-  white-space: nowrap; /* Prevent wrapping */
+  white-space: nowrap;
   font-size: 12px;
 }
 
@@ -576,6 +567,6 @@
 }
 
 .cluster-list-container {
-  max-height: 200px; /* Optional: limit height of the cluster list */
+  max-height: 200px;
   overflow-y: auto;
 }

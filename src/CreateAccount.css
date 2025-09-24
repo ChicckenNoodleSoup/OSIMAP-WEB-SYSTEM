@@ -171,3 +171,38 @@ h6 {
     display: none;
   }
 }
+.confirmation-message {
+  color: #4ECDC4; /* A color that stands out from the dark background */
+  font-size: clamp(0.9rem, 1.1vw, 1.1rem);
+  font-weight: bold;
+  text-align: center;
+  margin-bottom: 1em;
+  padding: 0.5em;
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 5px;
+}
+.success-message {
+  padding: 1.5rem 1rem;
+  border-radius: 1rem;
+  background: rgba(0, 255, 128, 0.15); /* soft green tint */
+  color: #7CFC00; /* bright green text */
+  font-weight: 500;
+  font-size: clamp(0.9rem, 1.2vw, 1.2rem);
+  line-height: 1.5;
+  border: 1px solid rgba(0, 255, 128, 0.3);
+  text-align: center;
+  animation: fadeIn 0.5s ease-in-out;
+  margin-bottom: 2rem;
+}
+
+.error-message {
+  color: #ff6b6b; /* a red color for errors */
+  font-size: clamp(0.85rem, 1vw, 0.95rem);
+  text-align: center;
+  margin: 0.5rem 0 1rem;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
