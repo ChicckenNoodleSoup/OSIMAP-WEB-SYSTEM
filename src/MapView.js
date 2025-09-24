@@ -6,15 +6,15 @@ import {
   useMap,
   CircleMarker,
   Tooltip,
-  Circle,
+  Circle
 } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
-import L from "leaflet";
 import "leaflet.heat";
 import "leaflet-fullscreen";
 import "leaflet-fullscreen/dist/leaflet.fullscreen.css";
 import "./MapView.css";
 import { DateTime } from "./DateTime";
+import L from "leaflet";
 
 // Cluster colors
 const getClusterColor = (clusterId) => {
@@ -26,10 +26,10 @@ const getClusterColor = (clusterId) => {
   return clusterId === -1 ? "#95A5A6" : colors[clusterId % colors.length];
 };
 
-// San Fernando bounding box
+// Updated San Fernando bounding box to include more area
 const sanFernandoBounds = [
-  [14.9666, 120.5874],
-  [15.0858, 120.7722],
+  [14.90, 120.50],
+  [15.16, 120.80],
 ];
 
 // Heatmap layer
@@ -160,8 +160,6 @@ function LegendControl({ clusterCenters }) {
     const legend = L.control({ position: "bottomright" });
 
     legend.onAdd = function (map) {
-      // CORRECTED: The third argument to L.DomUtil.create is the parent element.
-      // We create the container first and then set its ID.
       const container = L.DomUtil.create("div", "legend-container leaflet-control-layers leaflet-control");
       container.id = legendId;
 
@@ -320,88 +318,58 @@ export default function MapView() {
   const [showMarkers, setShowMarkers] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  // New filter states
+  // Filter states
   const [selectedYear, setSelectedYear] = useState("all");
   const [selectedLocation, setSelectedLocation] = useState("all");
+  const [selectedOffenseType, setSelectedOffenseType] = useState("all");
+  const [selectedSeverity, setSelectedSeverity] = useState("all");
 
-  // Extract unique years and locations from data
-  const { availableYears, availableLocations } = useMemo(() => {
-    if (!accidentData) return { availableYears: [], availableLocations: [] };
+  // Extract unique years, locations, offense types, and severities
+  const { availableYears, availableLocations, availableOffenseTypes, availableSeverities } = useMemo(() => {
+    if (!accidentData) return { availableYears: [], availableLocations: [], availableOffenseTypes: [], availableSeverities: [] };
 
-    // Filter all features, not just those with type "accident_point"
     const accidents = accidentData.features.filter(f =>
       f.properties && f.geometry && f.geometry.coordinates
     );
 
-    // Extract years with better handling
-    const years = [...new Set(
-      accidents.map(f => {
-        const year = f.properties.year;
-        // Convert to string and handle different formats
-        if (year !== null && year !== undefined && year !== '') {
-          return String(year).trim();
-        }
-        return null;
-      }).filter(Boolean)
-    )].sort();
+    const getUniqueAndCleanValues = (data, property) => {
+      const values = data
+        .map(f => f.properties[property])
+        .filter(value => value !== null && value !== undefined && String(value).trim() !== '');
+      
+      return [...new Set(values)].sort();
+    };
 
-    // Extract locations with better handling
-    const locations = [...new Set(
-      accidents.map(f => {
-        const barangay = f.properties.barangay;
-        if (barangay !== null && barangay !== undefined && barangay !== '') {
-          return String(barangay).trim();
-        }
-        return null;
-      }).filter(Boolean)
-    )].sort();
+    const years = getUniqueAndCleanValues(accidents, 'year');
+    const locations = getUniqueAndCleanValues(accidents, 'barangay');
+    const offenseTypes = getUniqueAndCleanValues(accidents, 'offensetype');
+    const severities = getUniqueAndCleanValues(accidents, 'severity');
 
-    console.log("Available years:", years);
-    console.log("Available locations:", locations);
-    console.log("Sample accident data:", accidents.slice(0, 3));
-
-    return { availableYears: years, availableLocations: locations };
+    return { availableYears: years, availableLocations: locations, availableOffenseTypes: offenseTypes, availableSeverities: severities };
   }, [accidentData]);
 
-  // Filter data based on selected year and location
+  // Filter data based on selected filters
   const filteredData = useMemo(() => {
     if (!accidentData) return { accidentPoints: [], clusterCenters: [], stats: null };
 
-    // Get all features first
     let accidents = accidentData.features.filter(f =>
       f.properties && f.geometry && f.geometry.coordinates &&
-      f.properties.type !== "cluster_center" // Exclude cluster centers from accidents
+      f.properties.type !== "cluster_center"
     );
     let clusters = accidentData.features.filter(f =>
       f.properties && f.properties.type === "cluster_center"
     );
 
-    console.log("Before filtering - Total accidents:", accidents.length);
-    console.log("Selected year:", selectedYear, "Selected location:", selectedLocation);
+    // Apply filters
+    accidents = accidents.filter(f => {
+      const { year, barangay, offensetype, severity } = f.properties;
+      const yearMatch = selectedYear === "all" || String(year).trim() === selectedYear;
+      const locationMatch = selectedLocation === "all" || String(barangay).trim() === selectedLocation;
+      const offenseMatch = selectedOffenseType === "all" || String(offensetype).trim() === selectedOffenseType;
+      const severityMatch = selectedSeverity === "all" || String(severity).trim() === selectedSeverity;
 
-    // Apply year filter
-    if (selectedYear !== "all") {
-      accidents = accidents.filter(f => {
-        const year = f.properties.year;
-        const yearStr = year !== null && year !== undefined ? String(year).trim() : '';
-        const match = yearStr === selectedYear;
-        return match;
-      });
-      console.log("After year filter:", accidents.length);
-    }
-
-    // Apply location filter
-    if (selectedLocation !== "all") {
-      accidents = accidents.filter(f => {
-        const barangay = f.properties.barangay;
-        const barangayStr = barangay !== null && barangay !== undefined ? String(barangay).trim() : '';
-        const match = barangayStr === selectedLocation;
-        return match;
-      });
-      console.log("After location filter:", accidents.length);
-    }
-
-    console.log("Final filtered accidents:", accidents.length);
+      return yearMatch && locationMatch && offenseMatch && severityMatch;
+    });
 
     // Filter clusters to only show those that contain at least one of the currently filtered accidents
     const visibleClusterIds = new Set(accidents.map(a => a.properties.cluster));
@@ -428,7 +396,7 @@ export default function MapView() {
         noisePoints: accidents.filter(f => f.properties.cluster === -1).length
       },
     };
-  }, [accidentData, selectedYear, selectedLocation]);
+  }, [accidentData, selectedYear, selectedLocation, selectedOffenseType, selectedSeverity]);
 
   useEffect(() => {
     async function fetchData() {
@@ -442,13 +410,6 @@ export default function MapView() {
         }
 
         const data = await res.json();
-        console.log("Loaded GeoJSON data:", data);
-        console.log("Number of features:", data.features?.length);
-
-        if (data.features && data.features.length > 0) {
-          console.log("Sample features:", data.features.slice(0, 3));
-        }
-
         setAccidentData(data);
       } catch (err) {
         console.error("Failed to load GeoJSON data:", err);
@@ -456,6 +417,7 @@ export default function MapView() {
         setLoading(false);
       }
     }
+
     fetchData();
   }, []);
 
@@ -483,10 +445,10 @@ export default function MapView() {
           <DateTime />
         </div>
 
-        {/* New Filter Controls */}
-        <div className="filter-panel">
+        {/* All filters and controls on one line */}
+        <div className="control-filter-bar">
           <div className="filter-group">
-            <label htmlFor="year-select" className="filter-label">Filter by Year:</label>
+            <label htmlFor="year-select" className="filter-label">Year:</label>
             <select
               id="year-select"
               className="filter-dropdown"
@@ -501,7 +463,7 @@ export default function MapView() {
           </div>
 
           <div className="filter-group">
-            <label htmlFor="location-select" className="filter-label">Filter by Location:</label>
+            <label htmlFor="location-select" className="filter-label">Location:</label>
             <select
               id="location-select"
               className="filter-dropdown"
@@ -511,6 +473,36 @@ export default function MapView() {
               <option value="all">All Locations</option>
               {availableLocations.map(location => (
                 <option key={location} value={location}>{location}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="filter-group">
+            <label htmlFor="offense-select" className="filter-label">Offense:</label>
+            <select
+              id="offense-select"
+              className="filter-dropdown"
+              value={selectedOffenseType}
+              onChange={(e) => setSelectedOffenseType(e.target.value)}
+            >
+              <option value="all">All Offenses</option>
+              {availableOffenseTypes.map(offense => (
+                <option key={offense} value={offense}>{offense}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="filter-group">
+            <label htmlFor="severity-select" className="filter-label">Severity:</label>
+            <select
+              id="severity-select"
+              className="filter-dropdown"
+              value={selectedSeverity}
+              onChange={(e) => setSelectedSeverity(e.target.value)}
+            >
+              <option value="all">All Severities</option>
+              {availableSeverities.map(severity => (
+                <option key={severity} value={severity}>{severity}</option>
               ))}
             </select>
           </div>
@@ -529,8 +521,6 @@ export default function MapView() {
           {filteredData.stats && (
             <div className="stats">
               {filteredData.stats.totalAccidents} accidents • {filteredData.stats.totalClusters} clusters • {filteredData.stats.noisePoints} noise
-              {selectedYear !== "all" && <span> • Year: {selectedYear}</span>}
-              {selectedLocation !== "all" && <span> • Location: {selectedLocation}</span>}
             </div>
           )}
         </div>
@@ -564,6 +554,7 @@ export default function MapView() {
 
               <SafeFullscreenControl />
               <LegendControl clusterCenters={filteredData.clusterCenters} />
+              
               <ClusteredHeatmapLayer filteredData={filteredData} showHeatmap={showHeatmap} />
               <ClusterCenters clusterCenters={filteredData.clusterCenters} showClusters={showClusters} />
               <AccidentMarkers accidentPoints={filteredData.accidentPoints} showMarkers={showMarkers} />

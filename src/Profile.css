@@ -1,278 +1,253 @@
-/* === Wrapper === */
+
 .profile-scroll-wrapper {
-  display: flex;
-  flex-direction: column;
-  min-height: 100vh;
   overflow-y: auto;
-  box-sizing: border-box;
-}
-
-/* === Container === */
-.profile-container {
+  height: 100vh;
   display: flex;
-  flex-direction: column;
+  justify-content: center;
   align-items: center;
-  width: 100%;
-  gap: 12px;
-  padding: 0 2% 2% 2%;
+  padding: 1.5rem;
 }
 
-.profile-logo {
-  max-width: 300px;
-  height: auto;
-}
-
-/* === Content Box === */
-.profile-content {
-  background: rgba(255, 255, 255, 0.06);
-  padding: 50px;
-  border-radius: 28px;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
-  backdrop-filter: blur(12px);
-  color: #fff;
+/* Glass container */
+.profile-container {
   width: 100%;
-  max-width: 1200px;
+  max-width: 900px;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(15px) saturate(150%);
+  -webkit-backdrop-filter: blur(15px) saturate(150%);
+  border-radius: 20px;
+  padding: 1.5rem;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.25);
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  margin-top: -2rem;
 }
 
-/* === Tabs === */
+/* Logo */
+.profile-logo {
+  display: block;
+  margin: 0 auto -2rem;
+  width: 350px;
+  height: 200px;
+  margin-top: -2rem;
+}
+
+/* Content Box */
+.profile-content {
+  flex-grow: 1;
+  padding-bottom: 1rem;
+}
+
+/* Tabs */
 .profile-tabs {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  width: 100%;
-  background: rgba(255, 255, 255, 0.08);
-  overflow: hidden; 
-  border-radius: 16px 16px 0 0;
+  justify-content: center;
+  gap: 0.7rem;
+  margin-bottom: 0.5rem;
 }
 
 .tab {
-  flex: 1;
-  text-align: center;
-  padding: 14px 0;
-  color: #F1EFEC;
   cursor: pointer;
-  font-size: 0.95rem;
+  padding: 0.5rem 1rem;
+  border-radius: 12px;
   font-weight: 500;
+  font-size: 0.9rem;
+  color: #f1f1f1;
+  background: rgba(255, 255, 255, 0.08);
   transition: all 0.3s ease;
-  border-right: 1px solid rgba(255, 255, 255, 0.1); 
-}
-
-.tab:last-child {
-  border-right: none; 
-}
-
-.tab.active {
-  color: #F1EFEC;
-  box-shadow: inset 0 -5px 0 #0085ff, 0 4px 12px rgba(0, 133, 255, 0.3);
 }
 
 .tab:hover {
-  box-shadow: inset 0 -5px 0 #0085ff, 0 4px 12px rgba(0, 133, 255, 0.3);
-  color: #F1EFEC;
-}
-
-/* === Tab Section === */
-.tab-section {
-  max-height: calc(100vh - 380px); 
-  overflow-y: auto; 
-  padding-right: 8px; 
-}
-
-.tab-section::-webkit-scrollbar {
-  width: 8px;
-}
-
-.tab-section::-webkit-scrollbar-thumb {
   background: rgba(255, 255, 255, 0.2);
-  border-radius: 8px;
 }
 
-.tab-section::-webkit-scrollbar-thumb:hover {
+.tab.active {
   background: rgba(255, 255, 255, 0.35);
-}
-
-.tab-section h3 {
-  font-size: 1rem;
+  color: #fff;
   font-weight: 600;
-  margin-bottom: 22px;
-  color: #F1EFEC;
-  border-left: 3px solid #F1EFEC;
-  padding-left: 12px;
 }
 
-/* === Profile Item Rows === */
+/* Section wrapper */
+.tab-section {
+  padding: 0.5rem 0;
+  margin-left: 0.5rem;
+}
+
+.tab-title {
+  color: #fff;
+  font-size: 1.1rem;
+  font-weight: 800;
+  margin-bottom: 1rem;
+}
+
+/* Message box */
+.profile-message {
+  padding: 0.6rem 1rem;
+  margin-bottom: 1rem;
+  border-radius: 10px;
+  font-size: 0.85rem;
+  text-align: center;
+  font-weight: 500;
+  backdrop-filter: blur(10px);
+}
+
+.profile-message.success {
+  background: rgba(46, 204, 113, 0.25);
+  color: #2ecc71;
+}
+
+.profile-message.error {
+  background: rgba(231, 76, 60, 0.25);
+  color: #e74c3c;
+}
+
+/* Profile items */
 .profile-item {
+  margin-bottom: 0.5rem;
+  text-align: left;
+  padding: 0.05rem 0.8rem;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.08);
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  padding: 6.5px 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  transition: background 0.2s ease, padding 0.2s ease;
-}
-
-.profile-item:last-child {
-  border-bottom: none;
 }
 
 .profile-label {
-  font-size: 0.95rem;
-  color: #f1efecbc;
+  font-size: 1rem;
+  color: #F1EFEC;
+  margin-bottom: 0.1rem;
   font-weight: 500;
+
 }
 
 .profile-value {
-  font-size: 1rem;
-  font-weight: 600;
-  color: #f1efec;
-}
-
-/* === Activity Log === */
-.activity-log {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.activity-log li {
-  padding: 10px 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   font-size: 0.95rem;
+  color: #f1efecbc;
+  margin-left: 0.2rem;
+  text-align: right;
 }
 
-.activity-log li:last-child {
-  border-bottom: none;
-}
-
-/* === Security Form === */
-.profile-form {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  max-width: 50%;
-  margin: 0 auto;
-}
-
-.profile-form input {
-  padding: 12px;
-  border-radius: 16px;
-  border: none;
+/* Editable inputs */
+.profile-edit-input,
+.profile-edit-select {
+  width: 80%;
+  padding: 0.5rem 0.8rem;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
   outline: none;
-  font-size: 1rem;
-  background: rgba(241, 239, 236, 0.1);
-  color: #f1efec;
+  font-size: 0.95rem;
+  transition: 0.3s;
+  display: flex;
+  justify-content: space-between;
+  text-align: right;
 }
 
-.profile-form input::placeholder {
-  color: #ccc;
+.profile-edit-input:focus,
+.profile-edit-select:focus {
+  border-color: #00aaff;
+  background: rgba(255, 255, 255, 0.25);
+}
+
+/* Buttons at the bottom */
+.profile-footer-buttons {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  margin-top: 0rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding-top: 1rem;
+}
+
+.edit-buttons {
+  display: flex;
+  gap: 0.8rem;
+}
+
+/* Base button styles */
+.edit-btn,
+.save-btn,
+.cancel-btn,
+.profile-btn {
+  cursor: pointer;
+  padding: 0.5rem 1rem;
+  border-radius: 10px;
+  border: none;
+  font-weight: 500;
+  font-size: 0.9rem;
+  transition: all 0.3s ease;
+}
+
+/* Specific button styles */
+.edit-btn {
+  background: rgba(0, 123, 255, 0.25);
+  color: #fff;
+}
+.edit-btn:hover {
+  background: rgba(0, 123, 255, 0.4);
+}
+
+.save-btn {
+  background: rgba(46, 204, 113, 0.25);
+  color: #2ecc71;
+}
+
+.cancel-btn {
+  background: rgba(231, 76, 60, 0.25);
+  color: #e74c3c;
+}
+
+.save-btn:hover {
+  background: rgba(46, 204, 113, 0.4);
+}
+
+.cancel-btn:hover {
+  background: rgba(231, 76, 60, 0.4);
+}
+
+.profile-btn.secondary-btn {
+  background: rgba(231, 76, 60, 0.25);
+  color: #e74c3c;
+}
+
+.profile-btn.primary-btn {
+  background: rgba(46, 204, 113, 0.25);
+  color: #2ecc71;
+}
+
+/* Password form inputs */
+.profile-form input[type="password"] {
+  width: 100%;
+  margin-bottom: 0.8rem;
 }
 
 .checkbox-label {
-  font-size: 0.95rem;
-  color: #ccc;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 0.6rem;
+  margin: 0.5rem 0 1rem;
+  color: #f1f1f1;
+  font-size: 0.9rem;
 }
 
 .form-buttons {
   display: flex;
-  gap: 12px;
-  margin-top: 10px;
+  justify-content: flex-end;
+  gap: 0.8rem;
 }
 
-.profile-btn {
-  flex: 1;
-  padding: 12px 18px;
-  border: none;
-  border-radius: 28px;
-  font-size: 1rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+/* Activity log */
+.activity-log {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  color: #fff;
 }
 
-.profile-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
+.activity-log li {
+  margin-bottom: 0.6rem;
+  padding: 0.5rem 0.8rem;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.08);
 }
-
-.primary-btn {
-  background: transparent;
-  color: #f1efec;
-  border: 1px solid #f1efec;
-}
-
-.secondary-btn {
-  background: #0085ff;
-  color: #f1efec;
-}
-
-/* === Responsive === */
-@media (max-width: 1024px) {
-  .profile-content {
-    padding: 20px;
-  }
-
-  .tab-section {
-    max-height: calc(100vh - 250px);
-  }
-}
-
-@media (max-width: 768px) {
-  .profile-form {
-    max-width: 90%;
-  }
-
-  .profile-item {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 6px;
-    padding: 12px 0;
-  }
-
-  .profile-tabs {
-    flex-direction: column;
-  }
-
-  .tab {
-    width: 100%;
-    border-right: none;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  }
-
-  .tab:last-child {
-    border-bottom: none;
-  }
-
-  .profile-value {
-    font-size: 0.95rem;
-    color: #eaeaea;
-  }
-
-  .tab-section {
-    max-height: none;
-    padding-right: 0;
-  }
-}
-
-@media (max-width: 480px) {
-  .profile-content {
-    padding: 16px;
-    border-radius: 18px;
-  }
-
-  .profile-form input {
-    font-size: 0.9rem;
-    padding: 10px;
-  }
-
-  .profile-btn {
-    font-size: 0.9rem;
-    padding: 10px 14px;
-  }
-}
-
-

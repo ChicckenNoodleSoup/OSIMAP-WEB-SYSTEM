@@ -7,24 +7,29 @@ function CreateAccount() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [isSubmitted, setIsSubmitted] = useState(false); // New state to track submission
+  const [message, setMessage] = useState('');
   const navigate = useNavigate();
 
   const handleSubmit = (e) => {
     e.preventDefault();
 
     if (!username || !email || !password || !confirmPassword) {
-      alert('Please fill out all fields.');
+      setMessage('Please fill out all fields.');
+      setIsSubmitted(false); // Ensure we don't show success if there's an error
       return;
     }
 
     if (password !== confirmPassword) {
-      alert('Passwords do not match.');
+      setMessage('Passwords do not match.');
+      setIsSubmitted(false); // Ensure we don't show success if there's an error
       return;
     }
 
     // TODO: Replace with backend call (Supabase, API, etc.)
-    alert(`Account created for ${username}`);
-    navigate('/signin');
+    // On success:
+    setMessage('A confirmation email has been sent to the system administrator. You will be notified via email once your account is accepted.');
+    setIsSubmitted(true); // Set state to show the success message
   };
 
   return (
@@ -41,41 +46,59 @@ function CreateAccount() {
           <div className="frosted-right"></div>
           <div className="create-card">
             <img src="/signin-icon.png" alt="Card Logo" className="create-card-logo" />
+            
+            {/* Conditional Rendering: Show message or form */}
+            {isSubmitted ? (
+              <p className="success-message">{message}</p>
+            ) : (
+              <form onSubmit={handleSubmit}>
+                <h6>Username</h6>
+                <input
+                  type="text"
+                  placeholder="Enter Username"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                />
 
-            <form onSubmit={handleSubmit}>
-              <h6>Username</h6>
-              <input
-                type="text"
-                placeholder="Enter Username"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-              />
+                <h6>Email</h6>
+                <input
+                  type="email"
+                  placeholder="Enter Email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                />
 
-              <h6>Email</h6>
-              <input
-                type="email"
-                placeholder="Enter Email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
+                <h6>Password</h6>
+                <input
+                  type="password"
+                  placeholder="Enter Password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
 
-              <h6>Password</h6>
-              <input
-                type="password"
-                placeholder="Enter Password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
+                <h6>Confirm Password</h6>
+                <input
+                  type="password"
+                  placeholder="Confirm Password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                />
+                
+                {/* Show error message here if it exists */}
+                {message && <p className="error-message">{message}</p>}
 
-              <h6>Confirm Password</h6>
-              <input
-                type="password"
-                placeholder="Confirm Password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-              />
+                <button type="submit">Create Account</button>
+                <button
+                  type="button"
+                  className="back-btn"
+                  onClick={() => navigate('/signin')}
+                >
+                  Back to Login
+                </button>
+              </form>
+            )}
 
-              <button type="submit">Create Account</button>
+            {isSubmitted && (
               <button
                 type="button"
                 className="back-btn"
@@ -83,7 +106,7 @@ function CreateAccount() {
               >
                 Back to Login
               </button>
-            </form>
+            )}
           </div>
         </div>
       </div>
