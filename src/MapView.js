@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState, useMemo, useCallback } from "react";
+import React, { useEffect, useState, useMemo, useCallback } from "react";
 import {
   MapContainer,
   TileLayer,
@@ -250,38 +250,69 @@ function LegendControl({ clusterCenters }) {
   return null;
 }
 
-
 // Fixed Fullscreen Control
 function SafeFullscreenControl() {
   const map = useMap();
 
   useEffect(() => {
+    // Wait for map to be fully initialized
     const timer = setTimeout(() => {
       if (!map || !L.control.fullscreen) return;
+
       try {
         const control = L.control.fullscreen({
           position: "topright",
-          title: "Fullscreen",
-          titleCancel: "Exit Fullscreen",
+          title: {
+            'false': 'View Fullscreen',
+            'true': 'Exit Fullscreen'
+          },
+          titleCancel: 'Exit Fullscreen',
           forceSeparateButton: true,
-          content: '⛶',
+          pseudoFullscreen: false,
         });
-        control.addTo(map);
 
+        control.addTo(map);
+        
+        // Manually set the title attribute after adding to map
+        setTimeout(() => {
+          const button = document.querySelector('.leaflet-control-fullscreen-button');
+          if (button) {
+            button.setAttribute('title', 'View Fullscreen');
+            button.setAttribute('aria-label', 'View Fullscreen');
+          }
+        }, 50);
 
         const handleFsChange = () => {
           try {
+            // Safe check for fullscreen state
             const isFs = map && typeof map.isFullscreen === 'function' ? map.isFullscreen() : false;
             document.body.classList.toggle("fullscreen-active", isFs);
+            
+            // Update button title based on fullscreen state
+            const button = document.querySelector('.leaflet-control-fullscreen-button');
+            if (button) {
+              button.setAttribute('title', isFs ? 'Exit Fullscreen' : 'View Fullscreen');
+              button.setAttribute('aria-label', isFs ? 'Exit Fullscreen' : 'View Fullscreen');
+            }
           } catch (error) {
             console.warn('Fullscreen state check failed:', error);
+            // Fallback: check document fullscreen state
             const isFs = !!(document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement);
             document.body.classList.toggle("fullscreen-active", isFs);
+            
+            // Update button title based on fullscreen state
+            const button = document.querySelector('.leaflet-control-fullscreen-button');
+            if (button) {
+              button.setAttribute('title', isFs ? 'Exit Fullscreen' : 'View Fullscreen');
+              button.setAttribute('aria-label', isFs ? 'Exit Fullscreen' : 'View Fullscreen');
+            }
           }
         };
 
+        // Add event listeners with error handling
         map.on("fullscreenchange", handleFsChange);
-
+        
+        // Also listen to document fullscreen events as fallback
         const documentEvents = ['fullscreenchange', 'webkitfullscreenchange', 'mozfullscreenchange', 'MSFullscreenChange'];
         documentEvents.forEach(event => {
           document.addEventListener(event, handleFsChange);
@@ -300,11 +331,10 @@ function SafeFullscreenControl() {
             console.warn('Error cleaning up fullscreen control:', error);
           }
         };
-
       } catch (error) {
         console.warn('Error initializing fullscreen control:', error);
       }
-    }, 100);
+    }, 100); // Small delay to ensure map is ready
 
     return () => clearTimeout(timer);
   }, [map]);
@@ -510,7 +540,7 @@ export default function MapView() {
           </div>
         </div>
 
-        <div className="controls-panel">
+          <div className="controls-panel">
           <label>
             <input type="checkbox" checked={showHeatmap} onChange={handleToggle(setShowHeatmap)} /> Heatmap
           </label>
@@ -526,7 +556,7 @@ export default function MapView() {
             </div>
           )}
         </div>
-
+        
         <div className="map-card">
           <div className="mapview-wrapper">
             <MapContainer
