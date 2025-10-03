@@ -11,7 +11,7 @@
 
 /* Card */
 .add-record-card {
-  background: rgba(20, 20, 20, 0.6);
+  background: rgba(255, 255, 255, 0.06);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   border-radius: 28px;
