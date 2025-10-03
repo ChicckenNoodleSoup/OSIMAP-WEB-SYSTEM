@@ -12,7 +12,7 @@ function HelpSupport() {
 
       {/* Help card below */}
       <div className="help-card">
-        <h1 className="help-title">Help & Support Page</h1>
+        <h1 className="help-title">Developer Support Page</h1>
 
         <div className="text-column-container">
           {/* Column One */}

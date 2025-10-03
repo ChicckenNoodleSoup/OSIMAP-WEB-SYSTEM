@@ -8,6 +8,7 @@ import MapView from './MapView';
 import CurrentRecords from './CurrentRecords';
 import AddRecord from './AddRecord';
 import HelpSupport from './HelpSupport';
+import Print from './Print';
 import Profile from './Profile';
 import ForgotPassword from './ForgotPassword';
 import { UserProvider } from './UserContext';
@@ -71,6 +72,7 @@ function App() {
                         <Route path="/currentrecords" element={<CurrentRecords />} />
                         <Route path="/add-record" element={<AddRecord />} />
                         <Route path="/helpsupport" element={<HelpSupport />} />
+                        <Route path="/print" element={<Print />} />
                         <Route path="/profile" element={<Profile />} />
                         <Route path="*" element={<div>Page Not Found</div>} />
                       </Routes>

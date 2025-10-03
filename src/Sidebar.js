@@ -63,8 +63,17 @@ function Sidebar({ onLogout }) {
               onClick={() => navigate('/helpsupport')}
             >
               <img src="/help-icon.png" alt="Help" />
-              <span>Help & Support</span>
+              <span>Developer Support</span>
             </div>
+
+            <div
+              className={`menu-item ${isActive('/print') ? 'active' : ''}`}
+              onClick={() => navigate('/print')}
+            >
+              <img src="/help-icon.png" alt="Help" />
+              <span>Print Records</span>
+            </div>
+
           </div>
         )}
       </div>
