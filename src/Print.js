@@ -399,14 +399,19 @@ function Print() {
         .print-only { display: none !important; }
 
         @media print {
+          /* Hide everything except the print-only section */
           body * {
             visibility: hidden !important;
           }
-          .print-only, .print-only * {
+          .print-only,
+          .print-only * {
             visibility: visible !important;
           }
-
-          html, body, #root, .min-h-screen {
+        
+          html,
+          body,
+          #root,
+          .min-h-screen {
             background: #fff !important;
             background-image: none !important;
             background-color: #fff !important;
@@ -419,7 +424,7 @@ function Print() {
             print-color-adjust: exact !important;
             color-adjust: exact !important;
           }
-
+        
           * {
             background: transparent !important;
             background-image: none !important;
@@ -430,10 +435,10 @@ function Print() {
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
           }
-
+        
           .print-only {
             padding: 1cm !important;
-            position: absolute !important;
+            position: absolute !important; /* Default: Chrome/Edge isolation */
             left: 0 !important;
             top: 0 !important;
             width: 100% !important;
@@ -442,31 +447,51 @@ function Print() {
             background: #fff !important;
             z-index: 999999 !important;
             display: block !important;
-            background: #fff !important;
             background-color: #fff !important;
             color: #000 !important;
+            page-break-before: avoid !important;
+            page-break-after: avoid !important;
+            page-break-inside: auto !important;
           }
-
-          .no-print { display: none !important; }
-
+        
+          .no-print {
+            display: none !important;
+          }
+        
           img.bg-image {
             display: none !important;
             visibility: hidden !important;
             opacity: 0 !important;
           }
-
+        
           /* allow content to break across pages */
-          .print-section, section, table, div {
+          .print-section,
+          section,
+          table,
+          div {
             page-break-inside: auto !important;
             break-inside: auto !important;
           }
-
+        
           @page {
             size: A4;
             margin: 1cm;
             background: #fff !important;
           }
+        
+          /* Firefox-specific patch */
+          @-moz-document url-prefix() {
+            .print-only {
+              position: static !important; /* Prevent blank pages */
+              width: 100% !important;
+              margin: 0 auto !important;
+            }
+            body {
+              overflow: visible !important;
+            }
+          }
         }
+        
       `}</style>
     </div>
   );
