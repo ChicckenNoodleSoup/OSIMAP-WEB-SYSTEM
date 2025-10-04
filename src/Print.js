@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
+import './Print.css';
 import { createClient } from '@supabase/supabase-js';
+import { DateTime } from './DateTime';
 
 const supabase = createClient(
   process.env.REACT_APP_SUPABASE_URL,
   process.env.REACT_APP_SUPABASE_KEY
-);
+); 
 
 const fetchAllRecords = async (tableName, orderField = 'id', filters = {}) => {
   const pageSize = 1000;
@@ -135,14 +137,44 @@ function Print() {
   const sortedMonths = Object.entries(stats.monthlyCounts)
     .sort((a, b) => a[0].localeCompare(b[0]));
 
-  if (loading) return <div className="p-8">Loading data...</div>;
+  if (loading) {
+    // If filters are applied show spinner, otherwise simple loading text
+    return (
+      <div className="p-8">
+        {filtersApplied ? (
+          <div className="loading-center">
+            <div className="spinner" aria-label="Loading" />
+          </div>
+        ) : (
+          <div>Loading data...</div>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <div className="page-header">
+        <div className="page-title-container">
+          <img src="stopLight.svg" alt="Logo" className="page-logo" />
+          <h1 className="page-title">Print Records</h1>
+
+          <button type="button" className="cr-info-btn" aria-label="Print Info">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1" />
+              <text x="12" y="16" textAnchor="middle" fontSize="12" fill="currentColor" fontFamily="Poppins, sans-serif">i</text>
+            </svg>
+          </button>
+        </div>
+
+        <DateTime />
+      </div>
       {/* Filter Section */}
-      <div className="no-print bg-white shadow-md p-6 mb-6">
-        <h2 className="text-2xl font-bold mb-4">Report Filters</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="no-print">
+        <div className="frosted-container">
+          <div className="dashboard-card p-6 mb-6">
+            <h2 className="text-2xl font-bold mb-4">Report Filters</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <div>
             <label className="block text-sm font-medium mb-2">Start Date</label>
             <input
@@ -154,7 +186,7 @@ function Print() {
               }}
               min="2000-01-01"
               max={today}
-              className="w-full px-3 py-2 border rounded"
+              className="filter-input"
             />
           </div>
           <div>
@@ -168,7 +200,7 @@ function Print() {
               }}
               min="2000-01-01"
               max={today}
-              className="w-full px-3 py-2 border rounded"
+              className="filter-input"
             />
           </div>
           <div>
@@ -179,7 +211,7 @@ function Print() {
                 setPendingBarangay(e.target.value);
                 setFiltersApplied(false);
               }}
-              className="w-full px-3 py-2 border rounded"
+              className="filter-input"
             >
               <option value="">All Barangays</option>
               {barangayList.map(b => (
@@ -195,7 +227,7 @@ function Print() {
                 setSelectedSeverity(e.target.value);
                 setFiltersApplied(false);
               }}
-              className="w-full px-3 py-2 border rounded"
+              className="filter-input"
             >
               <option value="">All Severities</option>
               <option value="Critical">Critical</option>
@@ -205,38 +237,43 @@ function Print() {
               <option value="Minor">Minor</option>
             </select>
           </div>
+            </div>
+            <div className="mt-4">
+              <button
+                onClick={() => {
+                  setStartDate(pendingStartDate);
+                  setEndDate(pendingEndDate);
+                  setSelectedBarangay(pendingBarangay);
+                  setFiltersApplied(true);
+                }}
+                className="apply-btn px-6 py-2 rounded hover:opacity-95 mr-4"
+              >
+                Apply Filters
+              </button>
+
+              <button
+                onClick={handlePrint}
+                disabled={!filtersApplied}
+                className={`print-btn mt-0 px-6 py-2 rounded 
+                  ${filtersApplied ? '' : 'opacity-50 cursor-not-allowed'}`}
+              >
+                Print Report
+              </button>
+
+              {!filtersApplied && (
+                <p className="helper-text mt-2">
+                  Please apply filters before printing the report.
+                </p>
+              )}
+            </div>
+          </div>
         </div>
-
-        <button
-          onClick={() => {
-            setStartDate(pendingStartDate);
-            setEndDate(pendingEndDate);
-            setSelectedBarangay(pendingBarangay);
-            setFiltersApplied(true);
-          }}
-          className="mt-4 bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700 mr-4"
-        >
-          Apply Filters
-        </button>
-
-        <button
-          onClick={handlePrint}
-          disabled={!filtersApplied}
-          className={`mt-4 px-6 py-2 rounded 
-            ${filtersApplied ? 'bg-blue-600 hover:bg-blue-700 text-white' : 'bg-gray-400 text-gray-700 cursor-not-allowed'}`}
-        >
-          Print Report
-        </button>
-
-        {!filtersApplied && (
-          <p className="text-sm text-gray-500 mt-2">
-            Please apply filters before printing the report.
-          </p>
-        )}
       </div>
 
       {/* Printable Report Section */}
-      <div className="print-only max-w-6xl mx-auto bg-white shadow-lg p-8 print:shadow-none print:p-0">
+      <div className="print-only">
+        <div className="frosted-container">
+          <div className="max-w-6xl mx-auto bg-white shadow-lg p-8 print:shadow-none print:p-0">
         {/* Header */}
         <div className="border-b-2 border-gray-800 pb-4 mb-6 text-center">
           <h1 className="text-3xl font-bold mb-2">Road Traffic Accident Report</h1>
@@ -248,7 +285,9 @@ function Print() {
           </p>
           {selectedBarangay && <p>Barangay: {selectedBarangay}</p>}
           {selectedSeverity && <p>Severity Filter: {selectedSeverity}</p>}
+          </div>
         </div>
+      </div>
 
         {/* Summary */}
         <section className="mb-8">
