@@ -47,15 +47,23 @@ function Print() {
   const [accidents, setAccidents] = useState([]);
   const [clusters, setClusters] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [filtersApplied, setFiltersApplied] = useState(false);
+
   
   // Filter states
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [selectedBarangay, setSelectedBarangay] = useState('');
+  const [pendingStartDate, setPendingStartDate] = useState('');
+  const [pendingEndDate, setPendingEndDate] = useState('');
+  const [pendingBarangay, setPendingBarangay] = useState('');
+
   const [selectedSeverity, setSelectedSeverity] = useState('');
   const [barangayList, setBarangayList] = useState([]);
   const [minDate, setMinDate] = useState('');
   const [maxDate, setMaxDate] = useState('');
+  const today = new Date().toISOString().split('T')[0];
+
 
   useEffect(() => {
     fetchData();
@@ -65,44 +73,42 @@ function Print() {
   const fetchData = async () => {
     setLoading(true);
     try {
-      // Build filters for barangay only (NOT date)
       const filters = {};
       if (selectedBarangay) filters.barangay = selectedBarangay;
 
-      // Fetch all rows in chunks
-      let accidentData = await fetchAllRecords('road_traffic_accident', 'datecommitted', filters);
+      let accidentData = await fetchAllRecords('road_traffic_accident', 'datecommitted');
 
-      // ⚠️ Calculate min/max BEFORE applying date filters
-      if (accidentData.length > 0) {
-        const dates = accidentData.map(a => a.datecommitted).sort();
-        setMinDate(dates[0]);
-        setMaxDate(dates[dates.length - 1]);
+      //  Generate barangay list from FULL data
+      const allBarangays = [...new Set(accidentData.map(a => a.barangay))].sort();
+      setBarangayList(allBarangays);
+
+      //  Now apply filters AFTER
+      if (selectedBarangay) {
+        accidentData = accidentData.filter(a => a.barangay === selectedBarangay);
+      }
+      if (startDate) {
+        accidentData = accidentData.filter(a => a.datecommitted >= startDate);
+      }
+      if (endDate) {
+        accidentData = accidentData.filter(a => a.datecommitted <= endDate);
       }
 
-      // NOW apply date filters client-side
-      if (startDate) accidentData = accidentData.filter(a => a.datecommitted >= startDate);
-      if (endDate) accidentData = accidentData.filter(a => a.datecommitted <= endDate);
-
+      //  Set filtered accidents
       setAccidents(accidentData);
-  
-      // Fetch clusters (single query)
+
+      setPendingStartDate(startDate);
+      setPendingEndDate(endDate);
+      setPendingBarangay(selectedBarangay);
+
+      // Load clusters
       const { data: clusterData, error: clusterError } = await supabase
         .from('Cluster_Centers')
         .select('*')
         .order('danger_score', { ascending: false });
       if (clusterError) throw clusterError;
+
       setClusters(clusterData || []);
-  
-      // Barangay list
-      const uniqueBarangays = [...new Set(accidentData.map(a => a.barangay))].sort();
-      setBarangayList(uniqueBarangays);
-  
-      // Min/max date
-      if (accidentData.length > 0) {
-        const dates = accidentData.map(a => a.datecommitted).sort();
-        setMinDate(dates[0]);
-        setMaxDate(dates[dates.length - 1]);
-      }
+
     } catch (error) {
       console.error('Error fetching data:', error);
     }
@@ -193,29 +199,42 @@ function Print() {
             <label className="block text-sm font-medium mb-2">Start Date</label>
             <input
               type="date"
-              value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
-              min={minDate}
-              max={maxDate}
+              value={pendingStartDate}
+              onChange={(e) => {
+                setPendingStartDate(e.target.value); // or respective setter
+                setFiltersApplied(false); // disable print button on change
+              }}              
+              min="2000-01-01"
+              max={today}
               className="w-full px-3 py-2 border rounded"
             />
+
+
           </div>
           <div>
             <label className="block text-sm font-medium mb-2">End Date</label>
             <input
               type="date"
-              value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
-              min={minDate}
-              max={maxDate}
+              value={pendingEndDate}
+              onChange={(e) => {
+                setPendingEndDate(e.target.value); // or respective setter
+                setFiltersApplied(false); // disable print button on change
+              }}
+              min="2000-01-01"
+              max={today}              
               className="w-full px-3 py-2 border rounded"
             />
+
+
           </div>
           <div>
             <label className="block text-sm font-medium mb-2">Barangay</label>
             <select
-              value={selectedBarangay}
-              onChange={(e) => setSelectedBarangay(e.target.value)}
+              value={pendingBarangay}
+              onChange={(e) => {
+                setPendingBarangay(e.target.value);
+                setFiltersApplied(false);
+              }}              
               className="w-full px-3 py-2 border rounded"
             >
               <option value="">All Barangays</option>
@@ -223,12 +242,16 @@ function Print() {
                 <option key={b} value={b}>{b}</option>
               ))}
             </select>
+
           </div>
           <div>
             <label className="block text-sm font-medium mb-2">Severity</label>
             <select
               value={selectedSeverity}
-              onChange={(e) => setSelectedSeverity(e.target.value)}
+              onChange={(e) => {
+                setSelectedSeverity(e.target.value);
+                setFiltersApplied(false);
+              }}              
               className="w-full px-3 py-2 border rounded"
             >
               <option value="">All Severities</option>
@@ -240,12 +263,34 @@ function Print() {
             </select>
           </div>
         </div>
+
+        <button
+          onClick={() => {
+            setStartDate(pendingStartDate);
+            setEndDate(pendingEndDate);
+            setSelectedBarangay(pendingBarangay);
+            setFiltersApplied(true); // Mark filters as applied
+          }}          
+          className="mt-4 bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700 mr-4"
+        >
+          Apply Filters
+        </button>
+
+
         <button
           onClick={handlePrint}
-          className="mt-4 bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700"
+          disabled={!filtersApplied}
+          className={`mt-4 px-6 py-2 rounded 
+            ${filtersApplied ? 'bg-blue-600 hover:bg-blue-700 text-white' : 'bg-gray-400 text-gray-700 cursor-not-allowed'}`}
         >
           Print Report
         </button>
+
+        {!filtersApplied && (
+          <p className="text-sm text-gray-500 mt-2">Please apply filters before printing the report.</p>
+        )}
+
+
       </div>
 
       {/* Printable Report Section - HIDDEN on screen, visible only when printing */}
