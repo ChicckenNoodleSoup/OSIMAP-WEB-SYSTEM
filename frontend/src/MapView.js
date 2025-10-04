@@ -400,28 +400,23 @@ export default function MapView() {
     };
   }, [accidentData, selectedYear, selectedLocation, selectedOffenseType, selectedSeverity]);
 
-  useEffect(() => {
-    async function fetchData() {
-      setLoading(true);
-      try {
-        let res = await fetch("https://crime-map-proto.onrender.com/data/accidents_clustered.geojson");
-        if (!res.ok) {
-          console.warn("Clustered data not available, trying regular accidents.geojson");
-          res = await fetch("https://crime-map-proto.onrender.com/data/accidents.geojson");
-          if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-        }
-
-        const data = await res.json();
-        setAccidentData(data);
-      } catch (err) {
-        console.error("Failed to load GeoJSON data:", err);
-      } finally {
-        setLoading(false);
-      }
+ useEffect(() => {
+  async function fetchData() {
+    setLoading(true);
+    try {
+      let res = await fetch("https://crime-map-proto.onrender.com/data/accidents_clustered.geojson");
+      if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+      const data = await res.json();
+      console.log("Fetched GeoJSON:", data.features?.length, "points");
+      setAccidentData(data);
+    } catch (err) {
+      console.error("Failed to load GeoJSON data:", err);
+    } finally {
+      setLoading(false);
     }
-
-    fetchData();
-  }, []);
+  }
+  fetchData();
+}, []);
 
   const handleToggle = useCallback((setter) => (e) => setter(e.target.checked), []);
 
