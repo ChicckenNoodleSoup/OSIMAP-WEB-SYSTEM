@@ -40,7 +40,7 @@
     drop-shadow(28px 6px 40px rgba(255, 45, 45, 0.25));
 }
 
-/* ✅ Title (wider glow than logo, softer) */
+/* Title (wider glow than logo, softer) */
 .page-title {
   margin: 0;
   font-size: clamp(1.5rem, 4vw, 2.5rem);
@@ -175,7 +175,7 @@
 
 /* Frosted Card */
 .records-card {
-  background: rgba(20, 20, 20, 0.6);
+  background: rgba(255, 255, 255, 0.06);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   border-radius: 28px;
@@ -221,7 +221,7 @@
   height: 36px;
   border-radius: 28px; 
   border: 1px solid rgba(255,255,255,0.2);
-  background-color: rgba(20, 20, 20, 0.4);
+  background-color: rgba(255, 255, 255, 0.06);
   color: white;
 }
 
@@ -334,7 +334,7 @@ input[type="time"] {
   gap: 12px;
   margin: 0 0 1rem 0;
   font-size: 14px;
-  background: rgba(20,20,20,0.5);
+  background: rgba(255, 255, 255, 0.06);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   padding: 0.5rem 1rem;

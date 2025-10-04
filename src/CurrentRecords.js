@@ -249,7 +249,6 @@ function CurrentRecords() {
                     <th>Latitude</th>
                     <th>Longitude</th>
                     <th>Offense Type</th>
-                    <th>Year</th>
                     <th>Severity</th>
                   </tr>
                 </thead>
@@ -373,22 +372,6 @@ function CurrentRecords() {
                             />
                           ) : (
                             record.offensetype
-                          )}
-                        </td>
-
-                        <td>
-                          {editingRowId === record.id ? (
-                            <input
-                              type="number"
-                              value={editedRow.year ?? ""}
-                              onChange={(e) =>
-                                setEditedRow((prev) => ({ ...prev, year: e.target.value }))
-                              }
-                              className="edit-input"
-                              onClick={(e) => e.stopPropagation()}
-                            />
-                          ) : (
-                            record.year
                           )}
                         </td>
 
