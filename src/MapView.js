@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState, useMemo, useCallback } from "react";
+import React, { useEffect, useState, useMemo, useCallback } from "react";
 import {
   MapContainer,
   TileLayer,
@@ -171,7 +171,7 @@ function LegendControl({ clusterCenters }) {
       
       const updateLegendContent = () => {
         panel.innerHTML = `
-          <div class="legend-title">Layers</div>
+          <div class="legend-title">Heatmap Layers</div>
           <div class="legend-item">
             <span class="legend-color legend-high"></span> High severity
           </div>
