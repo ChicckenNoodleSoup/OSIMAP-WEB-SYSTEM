@@ -346,44 +346,77 @@ function Print() {
       {/* Print Styles */}
       <style>{`
         @media print {
+          /* Global white background */
+          html, body, #root, .min-h-screen {
+            background: white !important;
+            background-image: none !important;
+            height: auto !important;
+            overflow: visible !important;
+          }
+
+          /* Remove all background and shadow effects */
           *, *::before, *::after {
             background: none !important;
             background-image: none !important;
             box-shadow: none !important;
             filter: none !important;
             opacity: 1 !important;
+            mix-blend-mode: normal !important;
+            isolation: auto !important;
           }
 
-          body {
-            background: white !important;
-          }
-
+          /* Hide non-printing elements */
           .no-print {
             display: none !important;
           }
-          
+
+          /* Remove any lingering pseudo backgrounds */
+          html::before,
+          html::after,
+          body::before,
+          body::after,
+          #root::before,
+          #root::after,
+          .min-h-screen::before,
+          .min-h-screen::after {
+            content: none !important;
+            display: none !important;
+          }
+
+          /* Hide background image */
+          img.bg-image {
+            display: none !important;
+            visibility: hidden !important;
+            opacity: 0 !important;
+          }
+
+          /* Proper pagination */
+          .print-section, section, table, div {
+            page-break-inside: auto !important;
+            break-inside: auto !important;
+          }
+
+          table {
+            page-break-after: auto;
+          }
+
+          h2, h3 {
+            page-break-after: avoid;
+          }
+
+          /* Page setup */
           body {
             margin: 0;
             padding: 0;
           }
-          
+
           @page {
             size: A4;
-          }
-          
-          .max-w-6xl {
-            max-width: 100% !important;
-          }
-          
-          table {
-            page-break-inside: avoid;
-          }
-          
-          h2, h3 {
-            page-break-after: avoid;
+            margin: 1cm;
           }
         }
       `}</style>
+
     </div>
   );
 }
