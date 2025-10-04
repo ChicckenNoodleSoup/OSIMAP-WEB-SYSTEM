@@ -239,7 +239,7 @@
   pointer-events: auto;
 }
 
-/* Apply/Print button convenience classes */
+/* Print button convenience classes */
 .apply-btn { background: linear-gradient(180deg,#28a745,#1f7a35); color: white; margin-top: 1rem; }
 .print-btn { background: linear-gradient(180deg,#2563eb,#1e47b7); color: white; margin-top: 1rem; margin-left: 1rem; }
 
