@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import "./CurrentRecords.css";
 import { DateTime } from "./DateTime";
 import { createClient } from "@supabase/supabase-js";
+import { useNavigate } from "react-router-dom";
 
 const SUPABASE_URL = process.env.REACT_APP_SUPABASE_URL;
 const SUPABASE_KEY = process.env.REACT_APP_SUPABASE_KEY;
@@ -78,11 +79,14 @@ function CurrentRecords() {
     indexOfLastRecord
   );
 
-  // keep onClick for future use
+  const navigate = useNavigate();
+
   const handleRowClick = (record) => {
-    console.log("Row clicked:", record);
-    // You can add logic here later
+    if (record.lat && record.lng) {
+      navigate(`/map?lat=${record.lat}&lng=${record.lng}`);
+    }
   };
+
 
   return (
     <div className="scroll-wrapper">

@@ -15,6 +15,8 @@ import "leaflet-fullscreen/dist/leaflet.fullscreen.css";
 import "./MapView.css";
 import { DateTime } from "./DateTime";
 import L from "leaflet";
+import { useSearchParams } from "react-router-dom";
+
 
 // Your Mapbox access token (if needed, this is not used in the provided TileLayer URLs)
 // mapboxgl.accessToken = 'pk.eyJ1IjoibWFud2VsYmUiLCJhIjoiY2x3bW9wMDBtMWo5eTJrczFqaW1qdzQ1cCJ9.uF-N1-17B46iI5c56zM9_A';
@@ -465,6 +467,23 @@ export default function MapView() {
     </div>
   );
 
+  function FlyToQueryLocation() {
+    const map = useMap();
+    const [searchParams] = useSearchParams();
+  
+    useEffect(() => {
+      const lat = parseFloat(searchParams.get("lat"));
+      const lng = parseFloat(searchParams.get("lng"));
+  
+      if (!isNaN(lat) && !isNaN(lng) && map) {
+        map.flyTo([lat, lng], 17, { duration: 1.5 });
+      }
+    }, [searchParams, map]);
+  
+    return null;
+  }
+  
+
   return (
     <div className="scroll-wrapper">
       <div className="mapview-container">
@@ -592,6 +611,9 @@ export default function MapView() {
               maxBounds={sanFernandoBounds}
               maxBoundsViscosity={1.0}
             >
+              <SafeFullscreenControl />
+              <LegendControl clusterCenters={filteredData.clusterCenters} />
+              <FlyToQueryLocation />
               <LayersControl position="topright">
                 <LayersControl.BaseLayer checked name="Light">
                   <TileLayer url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png" attribution="© CartoDB" />
