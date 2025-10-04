@@ -404,7 +404,7 @@ export default function MapView() {
   async function fetchData() {
     setLoading(true);
     try {
-      let res = await fetch("https://crime-map-proto.onrender.com/data/accidents_clustered.geojson");
+      let res = await fetch("http://localhost:5000/data/accidents_clustered.geojson");
       if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
       const data = await res.json();
       console.log("Fetched GeoJSON:", data.features?.length, "points");
