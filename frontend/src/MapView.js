@@ -404,10 +404,10 @@ export default function MapView() {
     async function fetchData() {
       setLoading(true);
       try {
-        let res = await fetch("http://crime-map-proto.onrender.com/data/accidents_clustered.geojson");
+        let res = await fetch("https://crime-map-proto.onrender.com/data/accidents_clustered.geojson");
         if (!res.ok) {
           console.warn("Clustered data not available, trying regular accidents.geojson");
-          res = await fetch("http://crime-map-proto.onrender.com/data/accidents.geojson");
+          res = await fetch("https://crime-map-proto.onrender.com/data/accidents.geojson");
           if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
         }
 
