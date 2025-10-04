@@ -65,17 +65,24 @@ function Print() {
   const fetchData = async () => {
     setLoading(true);
     try {
-      // Build filters for barangay/date only
+      // Build filters for barangay only (NOT date)
       const filters = {};
       if (selectedBarangay) filters.barangay = selectedBarangay;
-  
+
       // Fetch all rows in chunks
       let accidentData = await fetchAllRecords('road_traffic_accident', 'datecommitted', filters);
-  
-      // Apply date filters client-side
+
+      // ⚠️ Calculate min/max BEFORE applying date filters
+      if (accidentData.length > 0) {
+        const dates = accidentData.map(a => a.datecommitted).sort();
+        setMinDate(dates[0]);
+        setMaxDate(dates[dates.length - 1]);
+      }
+
+      // NOW apply date filters client-side
       if (startDate) accidentData = accidentData.filter(a => a.datecommitted >= startDate);
       if (endDate) accidentData = accidentData.filter(a => a.datecommitted <= endDate);
-  
+
       setAccidents(accidentData);
   
       // Fetch clusters (single query)
@@ -141,7 +148,7 @@ function Print() {
     window.print();
   };
 
-  // ✅ Step 1: Base filters (date + barangay)
+  //  Step 1: Base filters (date + barangay)
   const baseAccidents = accidents.filter(a => {
     const inDateRange =
       (!startDate || a.datecommitted >= startDate) &&
@@ -151,19 +158,19 @@ function Print() {
     return inDateRange && matchesBarangay;
   });
 
-  // ✅ Step 2: Base stats (for the current date/barangay filters)
+  //  Step 2: Base stats (for the current date/barangay filters)
   const statsAll = generateSummaryStats(baseAccidents);
 
-  // ✅ Step 3: Use base stats for percentage calculation
+  //  Step 3: Use base stats for percentage calculation
   const statsForPercentage = statsAll;
 
-  // ✅ Step 4: Filter for severity if needed
+  //  Step 4: Filter for severity if needed
   const filteredAccidents = selectedSeverity
     ? baseAccidents.filter(a => a.severity === selectedSeverity)
     : baseAccidents;
   const statsFiltered = generateSummaryStats(filteredAccidents);
 
-  // ✅ Step 5: Display logic
+  //  Step 5: Display logic
   const stats = selectedSeverity ? statsFiltered : statsAll;
   const displayAccidents = filteredAccidents;
 
@@ -412,48 +419,63 @@ function Print() {
 
         @media print {
           html, body, #root, .min-h-screen {
-            background: white !important;
+            background: #fff !important;
             background-image: none !important;
+            background-color: #fff !important;
+            color: #000 !important;
             height: auto !important;
             overflow: visible !important;
-          }
-
-          *, *::before, *::after {
-            background: none !important;
-            background-image: none !important;
             box-shadow: none !important;
-            filter: none !important;
-            opacity: 1 !important;
-            mix-blend-mode: normal !important;
-            isolation: auto !important;
+            border: none !important;
+        
+            /* Disable Chrome’s “eco-print” adjustments */
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+            color-adjust: exact !important;
           }
-
-          /* Hide filters when printing */
-          .no-print { 
-            display: none !important; 
+        
+          /*  Force all elements to have a clean white background */
+          * {
+            background: transparent !important;
+            background-image: none !important;
+            background-color: transparent !important;
+            color: #000 !important;
+            box-shadow: none !important;
+            border-color: #000 !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
           }
-
-          /* Show report when printing */
+        
+          /* Ensure your report section itself prints with white background */
           .print-only {
             display: block !important;
+            background: #fff !important;
+            background-color: #fff !important;
+            color: #000 !important;
           }
-
+        
+          .no-print {
+            display: none !important;
+          }
+        
           img.bg-image {
             display: none !important;
             visibility: hidden !important;
             opacity: 0 !important;
           }
-
+        
           .print-section, section, table, div {
             page-break-inside: auto !important;
             break-inside: auto !important;
           }
-
+        
           @page { 
             size: A4; 
             margin: 1cm; 
+            background: #fff !important;
           }
         }
+                
       `}</style>
     </div>
   );
