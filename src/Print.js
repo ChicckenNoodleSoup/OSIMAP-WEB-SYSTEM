@@ -6,6 +6,43 @@ const supabase = createClient(
   process.env.REACT_APP_SUPABASE_KEY
 );
 
+// Helper function to fetch all rows beyond 1000-limit
+const fetchAllRecords = async (tableName, orderField = 'id', filters = {}) => {
+  const pageSize = 1000;
+  let allData = [];
+  let from = 0;
+  let to = pageSize - 1;
+  let done = false;
+
+  while (!done) {
+    let query = supabase
+      .from(tableName)
+      .select('*')
+      .order(orderField, { ascending: true })
+      .range(from, to);
+
+    // Apply filters if provided
+    for (const [key, value] of Object.entries(filters)) {
+      if (value !== undefined && value !== null && value !== '') {
+        query = query.eq(key, value);
+      }
+    }
+
+    const { data, error } = await query;
+    if (error) throw error;
+
+    if (data.length === 0) {
+      done = true;
+    } else {
+      allData = [...allData, ...data];
+      from += pageSize;
+      to += pageSize;
+    }
+  }
+
+  return allData;
+};
+
 function Print() {
   const [accidents, setAccidents] = useState([]);
   const [clusters, setClusters] = useState([]);
@@ -28,30 +65,24 @@ function Print() {
   const fetchData = async () => {
     setLoading(true);
     try {
-      // Build query - fetch ALL accidents (no severity filter in SQL)
-      let query = supabase
-        .from('road_traffic_accident')
-        .select('*')
-        .order('datecommitted', { ascending: true });
+      // Build filters for barangay/date only
+      const filters = {};
+      if (selectedBarangay) filters.barangay = selectedBarangay;
   
-      // Apply only date and barangay filters in SQL
-      if (startDate) query = query.gte('datecommitted', startDate);
-      if (endDate) query = query.lte('datecommitted', endDate);
-      if (selectedBarangay) query = query.eq('barangay', selectedBarangay);
-      // NOTE: Severity filter is NOT applied here - it's applied client-side
+      // Fetch all rows in chunks
+      let accidentData = await fetchAllRecords('road_traffic_accident', 'datecommitted', filters);
   
-      // Run query
-      const { data: accidentData, error: accidentError } = await query;
-      if (accidentError) throw accidentError;
+      // Apply date filters client-side
+      if (startDate) accidentData = accidentData.filter(a => a.datecommitted >= startDate);
+      if (endDate) accidentData = accidentData.filter(a => a.datecommitted <= endDate);
   
-      setAccidents(accidentData || []);
+      setAccidents(accidentData);
   
-      // Clusters (optional)
+      // Fetch clusters (single query)
       const { data: clusterData, error: clusterError } = await supabase
         .from('Cluster_Centers')
         .select('*')
         .order('danger_score', { ascending: false });
-  
       if (clusterError) throw clusterError;
       setClusters(clusterData || []);
   
@@ -59,26 +90,17 @@ function Print() {
       const uniqueBarangays = [...new Set(accidentData.map(a => a.barangay))].sort();
       setBarangayList(uniqueBarangays);
   
-      // ✅ Min/Max dates (for full range)
-      const { data: minDateData } = await supabase
-        .from('road_traffic_accident')
-        .select('datecommitted')
-        .order('datecommitted', { ascending: true })
-        .limit(1);
-  
-      const { data: maxDateData } = await supabase
-        .from('road_traffic_accident')
-        .select('datecommitted')
-        .order('datecommitted', { ascending: false })
-        .limit(1);
-  
-      setMinDate(minDateData?.[0]?.datecommitted || '');
-      setMaxDate(maxDateData?.[0]?.datecommitted || '');
+      // Min/max date
+      if (accidentData.length > 0) {
+        const dates = accidentData.map(a => a.datecommitted).sort();
+        setMinDate(dates[0]);
+        setMaxDate(dates[dates.length - 1]);
+      }
     } catch (error) {
       console.error('Error fetching data:', error);
     }
     setLoading(false);
-  };
+  };  
   
 
   const generateSummaryStats = (filteredAccidents) => {
@@ -156,7 +178,7 @@ function Print() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Filter Section - Hidden when printing */}
+      {/* Filter Section - Visible on screen, hidden when printing */}
       <div className="no-print bg-white shadow-md p-6 mb-6">
         <h2 className="text-2xl font-bold mb-4">Report Filters</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -219,8 +241,8 @@ function Print() {
         </button>
       </div>
 
-      {/* Printable Report Section */}
-      <div className="max-w-6xl mx-auto bg-white shadow-lg p-8 print:shadow-none print:p-0">
+      {/* Printable Report Section - HIDDEN on screen, visible only when printing */}
+      <div className="print-only max-w-6xl mx-auto bg-white shadow-lg p-8 print:shadow-none print:p-0">
         {/* Report Header */}
         <div className="border-b-2 border-gray-800 pb-4 mb-6">
           <h1 className="text-3xl font-bold text-center mb-2">
@@ -381,8 +403,13 @@ function Print() {
         </div>
       </div>
 
-      {/* Print Styles (unchanged) */}
+      {/* Print Styles */}
       <style>{`
+        /* Hide report on screen */
+        .print-only {
+          display: none !important;
+        }
+
         @media print {
           html, body, #root, .min-h-screen {
             background: white !important;
@@ -401,7 +428,15 @@ function Print() {
             isolation: auto !important;
           }
 
-          .no-print { display: none !important; }
+          /* Hide filters when printing */
+          .no-print { 
+            display: none !important; 
+          }
+
+          /* Show report when printing */
+          .print-only {
+            display: block !important;
+          }
 
           img.bg-image {
             display: none !important;
@@ -414,7 +449,10 @@ function Print() {
             break-inside: auto !important;
           }
 
-          @page { size: A4; margin: 1cm; }
+          @page { 
+            size: A4; 
+            margin: 1cm; 
+          }
         }
       `}</style>
     </div>
