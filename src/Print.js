@@ -399,6 +399,13 @@ function Print() {
         .print-only { display: none !important; }
 
         @media print {
+          body * {
+            visibility: hidden !important;
+          }
+          .print-only, .print-only * {
+            visibility: visible !important;
+          }
+
           html, body, #root, .min-h-screen {
             background: #fff !important;
             background-image: none !important;
@@ -425,6 +432,15 @@ function Print() {
           }
 
           .print-only {
+            padding: 1cm !important;
+            position: absolute !important;
+            left: 0 !important;
+            top: 0 !important;
+            width: 100% !important;
+            height: auto !important;
+            overflow: visible !important;
+            background: #fff !important;
+            z-index: 999999 !important;
             display: block !important;
             background: #fff !important;
             background-color: #fff !important;
