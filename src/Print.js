@@ -22,23 +22,23 @@ function Print() {
 
   useEffect(() => {
     fetchData();
-  }, [startDate, endDate, selectedBarangay, selectedSeverity]);
+  }, [startDate, endDate, selectedBarangay]);
   
 
   const fetchData = async () => {
     setLoading(true);
     try {
-      // Build query
+      // Build query - fetch ALL accidents (no severity filter in SQL)
       let query = supabase
         .from('road_traffic_accident')
         .select('*')
         .order('datecommitted', { ascending: true });
   
-      // Apply filters directly in SQL
+      // Apply only date and barangay filters in SQL
       if (startDate) query = query.gte('datecommitted', startDate);
       if (endDate) query = query.lte('datecommitted', endDate);
       if (selectedBarangay) query = query.eq('barangay', selectedBarangay);
-      if (selectedSeverity) query = query.eq('severity', selectedSeverity);
+      // NOTE: Severity filter is NOT applied here - it's applied client-side
   
       // Run query
       const { data: accidentData, error: accidentError } = await query;
@@ -46,7 +46,7 @@ function Print() {
   
       setAccidents(accidentData || []);
   
-      // Clusters (optional, keep your old logic)
+      // Clusters (optional)
       const { data: clusterData, error: clusterError } = await supabase
         .from('Cluster_Centers')
         .select('*')
@@ -55,11 +55,11 @@ function Print() {
       if (clusterError) throw clusterError;
       setClusters(clusterData || []);
   
-      // Barangay list (from filtered dataset OR all-time dataset — your choice)
+      // Barangay list
       const uniqueBarangays = [...new Set(accidentData.map(a => a.barangay))].sort();
       setBarangayList(uniqueBarangays);
   
-      // ✅ Min/Max dates still fetched separately so full calendar range works
+      // ✅ Min/Max dates (for full range)
       const { data: minDateData } = await supabase
         .from('road_traffic_accident')
         .select('datecommitted')
@@ -119,7 +119,32 @@ function Print() {
     window.print();
   };
 
-  const stats = generateSummaryStats(accidents);
+  // ✅ Step 1: Base filters (date + barangay)
+  const baseAccidents = accidents.filter(a => {
+    const inDateRange =
+      (!startDate || a.datecommitted >= startDate) &&
+      (!endDate || a.datecommitted <= endDate);
+    const matchesBarangay =
+      !selectedBarangay || a.barangay === selectedBarangay;
+    return inDateRange && matchesBarangay;
+  });
+
+  // ✅ Step 2: Base stats (for the current date/barangay filters)
+  const statsAll = generateSummaryStats(baseAccidents);
+
+  // ✅ Step 3: Use base stats for percentage calculation
+  const statsForPercentage = statsAll;
+
+  // ✅ Step 4: Filter for severity if needed
+  const filteredAccidents = selectedSeverity
+    ? baseAccidents.filter(a => a.severity === selectedSeverity)
+    : baseAccidents;
+  const statsFiltered = generateSummaryStats(filteredAccidents);
+
+  // ✅ Step 5: Display logic
+  const stats = selectedSeverity ? statsFiltered : statsAll;
+  const displayAccidents = filteredAccidents;
+
   const sortedBarangays = Object.entries(stats.barangayCounts)
     .sort((a, b) => b[1] - a[1]);
   const sortedMonths = Object.entries(stats.monthlyCounts)
@@ -178,6 +203,7 @@ function Print() {
               className="w-full px-3 py-2 border rounded"
             >
               <option value="">All Severities</option>
+              <option value="Critical">Critical</option>
               <option value="High">High</option>
               <option value="Medium">Medium</option>
               <option value="Low">Low</option>
@@ -230,12 +256,14 @@ function Print() {
                 </tr>
               </thead>
               <tbody>
-                {Object.entries(stats.severityCounts).map(([severity, count]) => (
+                {Object.entries(selectedSeverity ? statsAll.severityCounts : stats.severityCounts)
+                  .filter(([severity]) => !selectedSeverity || severity === selectedSeverity)
+                  .map(([severity, count]) => (
                   <tr key={severity}>
                     <td className="border border-gray-300 px-4 py-2">{severity}</td>
                     <td className="border border-gray-300 px-4 py-2 text-right">{count}</td>
                     <td className="border border-gray-300 px-4 py-2 text-right">
-                      {((count / stats.total) * 100).toFixed(1)}%
+                      {((count / statsAll.total) * 100).toFixed(1)}%
                     </td>
                   </tr>
                 ))}
@@ -321,7 +349,17 @@ function Print() {
                     <td className="border border-gray-300 px-4 py-2 text-sm">
                       {cluster.center_lat?.toFixed(4)}, {cluster.center_lon?.toFixed(4)}
                     </td>
-                    <td className="border border-gray-300 px-4 py-2 text-sm">{cluster.barangays}</td>
+                    <td className="border border-gray-300 px-4 py-2 text-sm">
+                      {Array.isArray(cluster.barangays)
+                        ? cluster.barangays.join(', ')
+                        : typeof cluster.barangays === 'string'
+                          ? cluster.barangays
+                              .split(/[,;]+|(?<=\D)\s+(?=\D)/)
+                              .map(b => b.trim())
+                              .filter(Boolean)
+                              .join(', ')
+                          : ''}
+                    </td>
                     <td className="border border-gray-300 px-4 py-2 text-right">{cluster.accident_count}</td>
                     <td className="border border-gray-300 px-4 py-2 text-right">{cluster.recent_accidents}</td>
                     <td className="border border-gray-300 px-4 py-2 text-right font-semibold">
@@ -338,15 +376,14 @@ function Print() {
 
         {/* Footer */}
         <div className="text-center text-sm text-gray-600 mt-8 pt-4 border-t">
-          <p>This report is brought to you by Jollibee. Bida ang saya.</p>
+          <p>This report is for official use only.</p>
           <p>Generated using OSIMAP</p>
         </div>
       </div>
 
-      {/* Print Styles */}
+      {/* Print Styles (unchanged) */}
       <style>{`
         @media print {
-          /* Global white background */
           html, body, #root, .min-h-screen {
             background: white !important;
             background-image: none !important;
@@ -354,7 +391,6 @@ function Print() {
             overflow: visible !important;
           }
 
-          /* Remove all background and shadow effects */
           *, *::before, *::after {
             background: none !important;
             background-image: none !important;
@@ -365,58 +401,22 @@ function Print() {
             isolation: auto !important;
           }
 
-          /* Hide non-printing elements */
-          .no-print {
-            display: none !important;
-          }
+          .no-print { display: none !important; }
 
-          /* Remove any lingering pseudo backgrounds */
-          html::before,
-          html::after,
-          body::before,
-          body::after,
-          #root::before,
-          #root::after,
-          .min-h-screen::before,
-          .min-h-screen::after {
-            content: none !important;
-            display: none !important;
-          }
-
-          /* Hide background image */
           img.bg-image {
             display: none !important;
             visibility: hidden !important;
             opacity: 0 !important;
           }
 
-          /* Proper pagination */
           .print-section, section, table, div {
             page-break-inside: auto !important;
             break-inside: auto !important;
           }
 
-          table {
-            page-break-after: auto;
-          }
-
-          h2, h3 {
-            page-break-after: avoid;
-          }
-
-          /* Page setup */
-          body {
-            margin: 0;
-            padding: 0;
-          }
-
-          @page {
-            size: A4;
-            margin: 1cm;
-          }
+          @page { size: A4; margin: 1cm; }
         }
       `}</style>
-
     </div>
   );
 }
