@@ -22,63 +22,64 @@ function Print() {
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [startDate, endDate, selectedBarangay, selectedSeverity]);
+  
 
   const fetchData = async () => {
     setLoading(true);
     try {
-      // Fetch accidents
-      const { data: accidentData, error: accidentError } = await supabase
+      // Build query
+      let query = supabase
         .from('road_traffic_accident')
         .select('*')
-        .order('datecommitted', { ascending: false });
-
+        .order('datecommitted', { ascending: true });
+  
+      // Apply filters directly in SQL
+      if (startDate) query = query.gte('datecommitted', startDate);
+      if (endDate) query = query.lte('datecommitted', endDate);
+      if (selectedBarangay) query = query.eq('barangay', selectedBarangay);
+      if (selectedSeverity) query = query.eq('severity', selectedSeverity);
+  
+      // Run query
+      const { data: accidentData, error: accidentError } = await query;
       if (accidentError) throw accidentError;
-
-      // Fetch clusters
+  
+      setAccidents(accidentData || []);
+  
+      // Clusters (optional, keep your old logic)
       const { data: clusterData, error: clusterError } = await supabase
         .from('Cluster_Centers')
         .select('*')
         .order('danger_score', { ascending: false });
-
+  
       if (clusterError) throw clusterError;
-
-      setAccidents(accidentData || []);
       setClusters(clusterData || []);
-      
-      // Extract unique barangays
+  
+      // Barangay list (from filtered dataset OR all-time dataset — your choice)
       const uniqueBarangays = [...new Set(accidentData.map(a => a.barangay))].sort();
       setBarangayList(uniqueBarangays);
-      
-      // Find min and max dates
-      if (accidentData && accidentData.length > 0) {
-        const dates = accidentData.map(a => a.datecommitted).filter(d => d);
-        const sortedDates = dates.sort((a, b) => new Date(a) - new Date(b));
-        setMinDate(sortedDates[0] || '');
-        setMaxDate(sortedDates[sortedDates.length - 1] || '');
-
-      }
+  
+      // ✅ Min/Max dates still fetched separately so full calendar range works
+      const { data: minDateData } = await supabase
+        .from('road_traffic_accident')
+        .select('datecommitted')
+        .order('datecommitted', { ascending: true })
+        .limit(1);
+  
+      const { data: maxDateData } = await supabase
+        .from('road_traffic_accident')
+        .select('datecommitted')
+        .order('datecommitted', { ascending: false })
+        .limit(1);
+  
+      setMinDate(minDateData?.[0]?.datecommitted || '');
+      setMaxDate(maxDateData?.[0]?.datecommitted || '');
     } catch (error) {
       console.error('Error fetching data:', error);
     }
     setLoading(false);
   };
-
-  const getFilteredAccidents = () => {
-    return accidents.filter(accident => {
-      // Date filter
-      if (startDate && accident.datecommitted < startDate) return false;
-      if (endDate && accident.datecommitted > endDate) return false;
-      
-      // Barangay filter
-      if (selectedBarangay && accident.barangay !== selectedBarangay) return false;
-      
-      // Severity filter
-      if (selectedSeverity && accident.severity !== selectedSeverity) return false;
-      
-      return true;
-    });
-  };
+  
 
   const generateSummaryStats = (filteredAccidents) => {
     const total = filteredAccidents.length;
@@ -118,8 +119,7 @@ function Print() {
     window.print();
   };
 
-  const filteredAccidents = getFilteredAccidents();
-  const stats = generateSummaryStats(filteredAccidents);
+  const stats = generateSummaryStats(accidents);
   const sortedBarangays = Object.entries(stats.barangayCounts)
     .sort((a, b) => b[1] - a[1]);
   const sortedMonths = Object.entries(stats.monthlyCounts)
@@ -346,6 +346,18 @@ function Print() {
       {/* Print Styles */}
       <style>{`
         @media print {
+          *, *::before, *::after {
+            background: none !important;
+            background-image: none !important;
+            box-shadow: none !important;
+            filter: none !important;
+            opacity: 1 !important;
+          }
+
+          body {
+            background: white !important;
+          }
+
           .no-print {
             display: none !important;
           }
