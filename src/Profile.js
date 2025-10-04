@@ -132,7 +132,7 @@ function Profile() {
           {/* Overview Tab */}
           {activeTab === "overview" && (
             <div className="tab-section">
-              <h3 className="tab-title"></h3>
+              <h3 className="tab-title">Profile Overview</h3>
               
               {/* Profile Fields */}
               <div className="profile-item">

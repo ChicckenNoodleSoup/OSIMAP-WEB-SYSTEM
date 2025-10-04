@@ -473,7 +473,27 @@ export default function MapView() {
           <div className="page-title-container">
             <img src="stopLight.svg" alt="Logo" className="page-logo" />
             <h1 className="page-title">Accident Heatmap</h1>
+          
+
+          {/* Info button */}
+          <button type="button" className="viewmap-info-btn" aria-label="Dashboard Info">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1" />
+              <text x="12" y="16" textAnchor="middle" fontSize="12" fill="currentColor" fontFamily="Poppins, sans-serif">i</text>
+            </svg>
+          </button>
+
+          <div className="viewmap-edit-instructions" role="status">
+            <strong>💡 How Accident Heatmap Work</strong>
+            <div>• The heatmap shows areas with high accident density — red = more severe or frequent accidents.</div>
+            <div>• Cluster circles group nearby accidents. Larger circles mean more cases.</div>
+            <div>• Toggle <b>Heatmap</b>, <b>Clusters</b>, or <b>Points</b> using the checkboxes above the map.</div>
+            <div>• Use the filters to narrow results by <b>year</b>, <b>location</b>, <b>offense type</b>, or <b>severity</b>.</div>
+            <div>• Hover over clusters or points for details (not available in heatmap mode).</div>
+            <div>• The <b>Legend</b> (bottom-right) shows color meanings and lets you zoom to specific clusters.</div>
+            <div>• Use the fullscreen button (top-right) for a better view of the map.</div>
           </div>
+        </div>
           <DateTime />
         </div>
 
@@ -556,7 +576,7 @@ export default function MapView() {
             </div>
           )}
         </div>
-        
+
         <div className="map-card">
           <div className="mapview-wrapper">
             <MapContainer
