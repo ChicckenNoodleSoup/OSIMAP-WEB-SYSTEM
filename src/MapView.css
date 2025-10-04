@@ -178,27 +178,20 @@
 }
 
 /* Specific colors */
-.legend-high {
-  background: red;
-}
 
-.legend-medium {
-  background: yellow;
-  border: 1px solid #aaa;
+.legend-gradient-bar {
+  width: 200px;
+  height: 20px;
+  background: linear-gradient(to right, 
+    #0000ff 0%,    /* blue at 0.2 */
+    #00ffff 25%,   /* cyan at 0.4 */
+    #00ff00 50%,   /* lime at 0.6 */
+    #ffff00 75%,   /* yellow at 0.8 */
+    #ff0000 100%   /* red at 1.0 */
+  );
+  border-radius: 4px;
+  margin: 8px 0;
 }
-
-.legend-low {
-  background: green;
-}
-
-.legend-cluster {
-  background: blue;
-}
-
-.legend-noise {
-  background: gray;
-}
-
 /* 🚦 Shared animation */
 
 @keyframes stoplightShared {

@@ -170,20 +170,24 @@ function LegendControl({ clusterCenters }) {
       const panel = L.DomUtil.create("div", "legend-panel", container);
       
       const updateLegendContent = () => {
-        panel.innerHTML = `
-          <div class="legend-title">Heatmap Layers</div>
-          <div class="legend-item">
-            <span class="legend-color legend-high"></span> High severity
+panel.innerHTML = `
+          <div class="legend-title">Heatmap Intensity</div>
+          <div class="legend-gradient-container">
+            <div class="legend-gradient-bar"></div>
+            <div class="legend-gradient-labels">
+              <span>Low ------------------> </span>
+              <span>High</span>
+            </div>
           </div>
-          <div class="legend-item">
-            <span class="legend-color legend-medium"></span> Medium severity
-          </div>
-          <div class="legend-item">
-            <span class="legend-color legend-low"></span> Low severity
-          </div>
+          <div class="legend-separator"></div>
+          <div class="legend-title">Accident Points</div>
           <div class="legend-item">
             <span class="legend-color legend-noise"></span> Noise / Unclustered
           </div>
+          <div class="legend-item">
+            <span class="legend-color legend-clustered-point"></span> Clustered Point
+          </div>
+          <div class="legend-note">Points are colored </br>by their cluster assignment</div>
           <div class="legend-separator"></div>
           <div class="legend-title">
             Clusters
@@ -480,13 +484,14 @@ export default function MapView() {
 
           <div className="viewmap-edit-instructions" role="status">
             <strong>💡 How Accident Heatmap Work</strong>
-            <div>• The heatmap shows areas with high accident density — red = more severe or frequent accidents.</div>
-            <div>• Cluster circles group nearby accidents. Larger circles mean more cases.</div>
+            <div>• <b>Heatmap</b>: Shows accident density with a color gradient from blue (low) to red (high intensity).</div>
+            <div>• <b>Clusters</b>: Colored circles group nearby accidents. Larger circles indicate more incidents.</div>
+            <div>• <b>Points</b>: Individual accident markers colored by their cluster assignment. Gray points are unclustered.</div>
             <div>• Toggle <b>Heatmap</b>, <b>Clusters</b>, or <b>Points</b> using the checkboxes above the map.</div>
             <div>• Use the filters to narrow results by <b>year</b>, <b>location</b>, <b>offense type</b>, or <b>severity</b>.</div>
-            <div>• Hover over clusters or points for details (not available in heatmap mode).</div>
-            <div>• The <b>Legend</b> (bottom-right) shows color meanings and lets you zoom to specific clusters.</div>
-            <div>• Use the fullscreen button (top-right) for a better view of the map.</div>
+            <div>• Hover over clusters or points for detailed information (tooltips not available in heatmap mode).</div>
+            <div>• Click the <b>Legend</b> button (bottom-right) to view color meanings and click clusters to zoom.</div>
+            <div>• Use the fullscreen button (top-right) for an expanded map view.</div>
           </div>
         </div>
           <DateTime />
