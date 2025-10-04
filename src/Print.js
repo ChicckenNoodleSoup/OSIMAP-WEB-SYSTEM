@@ -138,12 +138,15 @@ function Print() {
     .sort((a, b) => a[0].localeCompare(b[0]));
 
   if (loading) {
-    // If filters are applied show spinner, otherwise simple loading text
+    // If filters are applied show simple spinner + text, otherwise simple loading text
     return (
       <div className="p-8">
         {filtersApplied ? (
-          <div className="loading-center">
-            <div className="spinner" aria-label="Loading" />
+          <div className="loading-center" role="status" aria-live="polite">
+            <div style={{display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10}}>
+              <div className="simple-spinner" aria-hidden="true" />
+              <div className="loading-text">Loading…</div>
+            </div>
           </div>
         ) : (
           <div>Loading data...</div>
@@ -165,6 +168,12 @@ function Print() {
               <text x="12" y="16" textAnchor="middle" fontSize="12" fill="currentColor" fontFamily="Poppins, sans-serif">i</text>
             </svg>
           </button>
+          <div className="cr-edit-instructions" role="status" aria-hidden="true">
+            <strong>💡 Print Help</strong>
+            <div> • Choose a start and end date or select a barangay and severity.</div>
+            <div> • Click <strong>Apply Filters</strong> to load the report.</div>
+            <div> • When filters are applied the Print button will enable.</div>
+          </div>
         </div>
 
         <DateTime />
