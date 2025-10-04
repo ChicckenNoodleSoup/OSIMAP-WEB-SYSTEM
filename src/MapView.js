@@ -250,38 +250,69 @@ function LegendControl({ clusterCenters }) {
   return null;
 }
 
-
 // Fixed Fullscreen Control
 function SafeFullscreenControl() {
   const map = useMap();
 
   useEffect(() => {
+    // Wait for map to be fully initialized
     const timer = setTimeout(() => {
       if (!map || !L.control.fullscreen) return;
+
       try {
         const control = L.control.fullscreen({
           position: "topright",
-          title: "Fullscreen",
-          titleCancel: "Exit Fullscreen",
+          title: {
+            'false': 'View Fullscreen',
+            'true': 'Exit Fullscreen'
+          },
+          titleCancel: 'Exit Fullscreen',
           forceSeparateButton: true,
-          content: '⛶',
+          pseudoFullscreen: false,
         });
-        control.addTo(map);
 
+        control.addTo(map);
+        
+        // Manually set the title attribute after adding to map
+        setTimeout(() => {
+          const button = document.querySelector('.leaflet-control-fullscreen-button');
+          if (button) {
+            button.setAttribute('title', 'View Fullscreen');
+            button.setAttribute('aria-label', 'View Fullscreen');
+          }
+        }, 50);
 
         const handleFsChange = () => {
           try {
+            // Safe check for fullscreen state
             const isFs = map && typeof map.isFullscreen === 'function' ? map.isFullscreen() : false;
             document.body.classList.toggle("fullscreen-active", isFs);
+            
+            // Update button title based on fullscreen state
+            const button = document.querySelector('.leaflet-control-fullscreen-button');
+            if (button) {
+              button.setAttribute('title', isFs ? 'Exit Fullscreen' : 'View Fullscreen');
+              button.setAttribute('aria-label', isFs ? 'Exit Fullscreen' : 'View Fullscreen');
+            }
           } catch (error) {
             console.warn('Fullscreen state check failed:', error);
+            // Fallback: check document fullscreen state
             const isFs = !!(document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement);
             document.body.classList.toggle("fullscreen-active", isFs);
+            
+            // Update button title based on fullscreen state
+            const button = document.querySelector('.leaflet-control-fullscreen-button');
+            if (button) {
+              button.setAttribute('title', isFs ? 'Exit Fullscreen' : 'View Fullscreen');
+              button.setAttribute('aria-label', isFs ? 'Exit Fullscreen' : 'View Fullscreen');
+            }
           }
         };
 
+        // Add event listeners with error handling
         map.on("fullscreenchange", handleFsChange);
-
+        
+        // Also listen to document fullscreen events as fallback
         const documentEvents = ['fullscreenchange', 'webkitfullscreenchange', 'mozfullscreenchange', 'MSFullscreenChange'];
         documentEvents.forEach(event => {
           document.addEventListener(event, handleFsChange);
@@ -300,11 +331,10 @@ function SafeFullscreenControl() {
             console.warn('Error cleaning up fullscreen control:', error);
           }
         };
-
       } catch (error) {
         console.warn('Error initializing fullscreen control:', error);
       }
-    }, 100);
+    }, 100); // Small delay to ensure map is ready
 
     return () => clearTimeout(timer);
   }, [map]);
@@ -438,7 +468,27 @@ export default function MapView() {
           <div className="page-title-container">
             <img src="stopLight.svg" alt="Logo" className="page-logo" />
             <h1 className="page-title">Accident Heatmap</h1>
+          
+
+          {/* Info button */}
+          <button type="button" className="viewmap-info-btn" aria-label="Dashboard Info">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1" />
+              <text x="12" y="16" textAnchor="middle" fontSize="12" fill="currentColor" fontFamily="Poppins, sans-serif">i</text>
+            </svg>
+          </button>
+
+          <div className="viewmap-edit-instructions" role="status">
+            <strong>💡 How Accident Heatmap Work</strong>
+            <div>• The heatmap shows areas with high accident density — red = more severe or frequent accidents.</div>
+            <div>• Cluster circles group nearby accidents. Larger circles mean more cases.</div>
+            <div>• Toggle <b>Heatmap</b>, <b>Clusters</b>, or <b>Points</b> using the checkboxes above the map.</div>
+            <div>• Use the filters to narrow results by <b>year</b>, <b>location</b>, <b>offense type</b>, or <b>severity</b>.</div>
+            <div>• Hover over clusters or points for details (not available in heatmap mode).</div>
+            <div>• The <b>Legend</b> (bottom-right) shows color meanings and lets you zoom to specific clusters.</div>
+            <div>• Use the fullscreen button (top-right) for a better view of the map.</div>
           </div>
+        </div>
           <DateTime />
         </div>
 
@@ -505,7 +555,7 @@ export default function MapView() {
           </div>
         </div>
 
-        <div className="controls-panel">
+          <div className="controls-panel">
           <label>
             <input type="checkbox" checked={showHeatmap} onChange={handleToggle(setShowHeatmap)} /> Heatmap
           </label>

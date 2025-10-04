@@ -144,6 +144,22 @@ export default function AddRecord() {
               <div className="page-title-container">
                 <img src="stopLight.svg" alt="Logo" className="page-logo" />
                 <h1 className="page-title">Add Record</h1>
+                {/* Info button */}
+                <button type="button" className="addrec-info-btn" aria-label="Dashboard Info">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1" />
+                    <text x="12" y="16" textAnchor="middle" fontSize="12" fill="currentColor" fontFamily="Poppins, sans-serif">i</text>
+                  </svg>
+                </button>
+
+                <div className="addrec-edit-instructions" role="status">
+                  <strong>💡 How to Add Records</strong>
+                  <div>• Drag and drop your Excel file or click to browse.</div>
+                  <div>• Supported formats: <code>.xlsx</code> and <code>.xls</code>.</div>
+                  <div>• The system will upload, process, and convert data into GeoJSON.</div>
+                  <div>• Follow the progress steps below — each icon shows the current stage.</div>
+                  <div>• When complete, your new data will be reflected on the map and current records.</div>
+                </div>
               </div>
               <DateTime />
             </div>
