@@ -1,0 +1,246 @@
+/* Styles for Print page: frosted glass card, centered layout, and spinner */
+.frosted-container {
+  margin: 2rem auto;
+  max-width: 1100px;
+
+  background: rgba(255, 255, 255, 0.06);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  border-radius: 20px;
+  box-shadow: 0 10px 20px rgba(0,0,0,0.45);
+  border: 1px solid rgba(255,255,255,0.06);
+  padding: 1.5rem 1.75rem;
+  color: #EAF6FF; 
+}
+
+@media (max-width: 640px) {
+  .frosted-container {
+    margin: 1rem;
+    padding: 1rem;
+    border-radius: 10px;
+  }
+}
+
+/* Spinner used when filters are applied and data is loading */
+.spinner {
+  width: 48px;
+  height: 48px;
+  border: 5px solid rgba(0,0,0,0.08);
+  border-top-color: #2563eb; /* blue-600 similar to app */
+  border-radius: 50%;
+
+  animation: spin 1s linear infinite;
+    margin: 2rem auto;
+  max-width: 1100px;
+
+  background: rgba(255, 255, 255, 0.06);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  border-radius: 20px;
+  box-shadow: 0 10px 20px rgba(0,0,0,0.45);
+  border: 1px solid rgba(255,255,255,0.06);
+  padding: 1.5rem 1.75rem;
+  color: #EAF6FF; 
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Centered loading wrapper */
+.loading-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+}
+
+.loading-text {
+  font-size: 1.1rem;
+  color: #eaf6ff;
+  background: rgba(255,255,255,0.03);
+  padding: 12px 18px;
+  border-radius: 12px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.35);
+}
+
+/* Print tweaks: remove backdrop-filter for printed output to avoid issues */
+@media print {
+  .frosted-container {
+    background: #fff !important;
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+    box-shadow: none !important;
+    border: none !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+}
+
+.frosted-container input,
+.frosted-container select,
+.frosted-container .filter-dropdown {
+  background: rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255,255,255,0.08);
+  color: #eaf6ff;
+  padding: 10px 12px;
+  border-radius: 12px;
+  font-size: 0.95rem;
+  transition: box-shadow 0.15s ease, border-color 0.15s ease, transform 0.06s ease;
+}
+
+.frosted-container input:focus,
+.frosted-container select:focus {
+  outline: none;
+  border-color: rgba(0,133,255,0.8);
+  box-shadow: 0 6px 18px rgba(0,133,255,0.12);
+}
+
+.frosted-container label {
+  color: #dbefff;
+  font-weight: 600;
+}
+
+/* Buttons inside the card */
+.frosted-container button {
+  font-weight: 600;
+  border-radius: 10px;
+  padding: 10px 16px;
+  border: none;
+  cursor: pointer;
+  transition: transform 0.08s linear, box-shadow 0.12s ease;
+}
+
+.frosted-container button:active { transform: translateY(1px); }
+
+.frosted-container .apply-btn {
+  background: linear-gradient(180deg,#28a745,#1f7a35);
+  color: white;
+  box-shadow: 0 6px 18px rgba(31,122,53,0.22);
+}
+
+.frosted-container .print-btn {
+  background: linear-gradient(180deg,#2563eb,#1e47b7);
+  color: white;
+  box-shadow: 0 6px 18px rgba(37,99,235,0.18);
+}
+
+/* Tables readability */
+.frosted-container table {
+  width: 100%;
+  border-collapse: collapse;
+  background: transparent;
+  color: #e6f4ff;
+}
+
+.frosted-container th,
+.frosted-container td {
+  padding: 12px 10px;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  text-align: left;
+}
+
+.frosted-container thead tr {
+  background: rgba(255,255,255,0.04);
+}
+
+.frosted-container tbody tr:nth-child(even) {
+  background: rgba(255,255,255,0.02);
+}
+
+.frosted-container .text-right { text-align: right; }
+
+/* Small view adjustments */
+@media (max-width: 640px) {
+  .frosted-container { padding: 1rem; border-radius: 14px; }
+  .frosted-container table th, .frosted-container table td { padding: 10px 6px; font-size: 0.9rem; }
+}
+
+/* Helpers used by Print.js */
+.dashboard-card {
+  background: rgba(255,255,255,0.02);
+  border-radius: 14px;
+  padding: 1rem;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.25);
+}
+
+.filter-input {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.full-width { width: 100%; }
+
+.helper-text {
+  color: rgba(235,245,255,0.85);
+  font-size: 0.9rem;
+  margin-top: 0.5rem;
+}
+
+/* Info button used on Print page */
+.cr-info-btn, .viewmap-info-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.04);
+  color: #eaf6ff;
+  border: 1px solid rgba(255,255,255,0.06);
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.08s ease;
+  padding: 0;
+}
+
+.cr-info-btn:hover {
+  background: rgba(0,132,255,0.32);
+  transform: translateY(-2px);
+}
+
+/* Tooltip/instructions panel for Print page */
+.cr-edit-instructions {
+  position: absolute;
+  top: 56px;
+  left: 100%;
+  margin-left: 0;
+  background: rgba(10, 30, 60, 0.96);
+  color: #fff;
+  padding: 12px 14px;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  line-height: 1.3rem;
+  width: max-content;
+  max-width: 320px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.18s ease;
+  z-index: 40;
+  transform: translateX(-20%);
+}
+
+.cr-edit-instructions::before {
+  content: "";
+  position: absolute;
+  top: -7px;
+  right: 18px;
+  width: 12px;
+  height: 12px;
+  background: rgba(10, 30, 60, 0.96);
+  transform: rotate(45deg);
+  z-index: -1;
+}
+
+.cr-info-btn:hover ~ .cr-edit-instructions,
+.cr-info-btn:focus ~ .cr-edit-instructions {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Print button convenience classes */
+.apply-btn { background: linear-gradient(180deg,#28a745,#1f7a35); color: white; margin-top: 1rem; }
+.print-btn { background: linear-gradient(180deg,#2563eb,#1e47b7); color: white; margin-top: 1rem; margin-left: 1rem; }
+
+
