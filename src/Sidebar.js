@@ -59,19 +59,19 @@ function Sidebar({ onLogout }) {
             </div>
 
             <div
+              className={`menu-item ${isActive('/print') ? 'active' : ''}`}
+              onClick={() => navigate('/print')}
+            >
+              <img src="/print-icon.png" alt="Help" />
+              <span>Print Records</span>
+            </div>
+
+            <div
               className={`menu-item ${isActive('/helpsupport') ? 'active' : ''}`}
               onClick={() => navigate('/helpsupport')}
             >
               <img src="/help-icon.png" alt="Help" />
               <span>Developer Support</span>
-            </div>
-
-            <div
-              className={`menu-item ${isActive('/print') ? 'active' : ''}`}
-              onClick={() => navigate('/print')}
-            >
-              <img src="/help-icon.png" alt="Help" />
-              <span>Print Records</span>
             </div>
 
           </div>
