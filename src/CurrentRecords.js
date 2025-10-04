@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import "./CurrentRecords.css";
 import { DateTime } from "./DateTime";
 import { createClient } from "@supabase/supabase-js";
@@ -11,18 +11,8 @@ function CurrentRecords() {
   const [searchTerm, setSearchTerm] = useState("");
   const [records, setRecords] = useState([]);
   const [loading, setLoading] = useState(true);
-
   const [currentPage, setCurrentPage] = useState(1);
   const recordsPerPage = 50;
-
-  const [editingRowId, setEditingRowId] = useState(null);
-  const [editedRow, setEditedRow] = useState({});
-
-  // REMOVED: toggle instructions state (show on hover via CSS now)
-  // const [showInstructions, setShowInstructions] = useState(false);
-  
-  // ref for detecting outside clicks
-  const tableWrapperRef = useRef(null);
 
   useEffect(() => {
     const fetchAllRecords = async () => {
@@ -62,46 +52,6 @@ function CurrentRecords() {
     fetchAllRecords();
   }, []);
 
-  // Save changes automatically on blur / outside click
-  const handleBlur = async () => {
-    // Optional: persist to Supabase here if desired:
-    // await supabase.from("road_traffic_accident").update({...editedRow}).eq("id", editedRow.id);
-
-    setRecords((prev) =>
-      prev.map((rec) => (rec.id === editedRow.id ? editedRow : rec))
-    );
-    setEditingRowId(null);
-  };
-
-  // detect clicks outside table wrapper to save edits
-  useEffect(() => {
-    const onDocMouseDown = (e) => {
-      if (
-        editingRowId &&
-        tableWrapperRef.current &&
-        !tableWrapperRef.current.contains(e.target)
-      ) {
-        handleBlur();
-      }
-    };
-
-    const onDocKeyDown = (e) => {
-      if (!editingRowId) return;
-      if (e.key === "Enter") {
-        // prevent default form submit behavior and save
-        e.preventDefault();
-        handleBlur();
-      }
-    };
-
-    document.addEventListener("mousedown", onDocMouseDown);
-    document.addEventListener("keydown", onDocKeyDown);
-    return () => {
-      document.removeEventListener("mousedown", onDocMouseDown);
-      document.removeEventListener("keydown", onDocKeyDown);
-    };
-  }, [editingRowId, editedRow, handleBlur]); // include handleBlur so latest handler is used
-
   const filteredRecords = records.filter((record) =>
     [
       record.id?.toString(),
@@ -128,50 +78,68 @@ function CurrentRecords() {
     indexOfLastRecord
   );
 
-  // Start editing a row
+  // keep onClick for future use
   const handleRowClick = (record) => {
-    setEditingRowId(record.id);
-    setEditedRow({ ...record });
+    console.log("Row clicked:", record);
+    // You can add logic here later
   };
 
   return (
     <div className="scroll-wrapper">
       <div className="records-container">
-
         <div className="page-header">
-          <div style={{display: 'flex', alignItems: 'center', gap: 12}}>
-               <div className="page-title-container">
-                  <img src="stopLight.svg" alt="Logo" className="page-logo" />
-                  <h1 className="page-title">Current Records</h1>
-                </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <div className="page-title-container">
+              <img src="stopLight.svg" alt="Logo" className="page-logo" />
+              <h1 className="page-title">Current Records</h1>
+            </div>
 
-            {/* Info button shows panel on hover/focus (no JS toggle) */}
             <button
               type="button"
               className="cr-info-btn"
               aria-label="Edit instructions"
             >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1" />
-                <text x="12" y="16" textAnchor="middle" fontSize="12" fill="currentColor" fontFamily="Poppins, sans-serif">i</text>
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                aria-hidden="true"
+              >
+                <circle
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="1"
+                />
+                <text
+                  x="12"
+                  y="16"
+                  textAnchor="middle"
+                  fontSize="12"
+                  fill="currentColor"
+                  fontFamily="Poppins, sans-serif"
+                >
+                  i
+                </text>
               </svg>
             </button>
 
-              {/* instructions panel moved inside page-header so CSS :hover can control visibility */}
-              <div className="cr-edit-instructions" role="status" aria-hidden="true">
-                <strong>💡 How to Edit Rows</strong>
-                <div> • Click a row to start editing.</div>
-                <div> • Change fields inline.</div>
-                <div> • Click outside or press Enter to save.</div>
-              </div>
+            <div
+              className="cr-edit-instructions"
+              role="status"
+              aria-hidden="true"
+            >
+              <strong>💡 Record Info</strong>
+              <div>Click a row to perform an action later.</div>
             </div>
-
-            <DateTime />
           </div>
 
+          <DateTime />
+        </div>
 
-
-      <div className="search-actions">
+        <div className="search-actions">
           <div className="search-container">
             <svg
               className="search-icon"
@@ -181,10 +149,12 @@ function CurrentRecords() {
               fill="currentColor"
               viewBox="0 0 16 16"
             >
-              <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 
+              <path
+                d="M11.742 10.344a6.5 6.5 0 1 0-1.397 
                 1.398h-.001l3.85 3.85a1 1 0 0 0 
                 1.415-1.414l-3.85-3.85zm-5.242.656a5 
-                5 0 1 1 0-10 5 5 0 0 1 0 10z" />
+                5 0 1 1 0-10 5 5 0 0 1 0 10z"
+              />
             </svg>
             <input
               type="text"
@@ -226,7 +196,9 @@ function CurrentRecords() {
             ))}
 
           <button
-            onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+            onClick={() =>
+              setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+            }
             disabled={currentPage === totalPages}
             className="pagination-btn"
           >
@@ -238,7 +210,7 @@ function CurrentRecords() {
           {loading ? (
             <p>Loading {records.length} records...</p>
           ) : (
-            <div className="table-body-wrapper" ref={tableWrapperRef}>
+            <div className="table-body-wrapper">
               <table className="records-table">
                 <thead>
                   <tr>
@@ -255,141 +227,15 @@ function CurrentRecords() {
                 <tbody>
                   {currentRecords.length > 0 ? (
                     currentRecords.map((record) => (
-                      <tr
-                        key={record.id}
-                        className={editingRowId === record.id ? "editing-row" : ""}
-                        onClick={() =>
-                          editingRowId !== record.id && handleRowClick(record)
-                        }
-                      >
-                        <td>
-                          {editingRowId === record.id ? (
-                            <input
-                              type="text"
-                              value={editedRow.id || ""}
-                              readOnly
-                              className="edit-input"
-                              onClick={(e) => e.stopPropagation()}
-                            />
-                          ) : (
-                            record.id
-                          )}
-                        </td>
-
-                        <td>
-                          {editingRowId === record.id ? (
-                            <input
-                              type="date"
-                              value={editedRow.datecommitted || ""}
-                              onChange={(e) =>
-                                setEditedRow((prev) => ({ ...prev, datecommitted: e.target.value }))
-                              }
-                              className="edit-input"
-                              onClick={(e) => e.stopPropagation()}
-                              autoFocus
-                            />
-                          ) : (
-                            record.datecommitted
-                          )}
-                        </td>
-
-                        <td>
-                          {editingRowId === record.id ? (
-                            <input
-                              type="time"
-                              value={editedRow.timecommitted || ""}
-                              onChange={(e) =>
-                                setEditedRow((prev) => ({ ...prev, timecommitted: e.target.value }))
-                              }
-                              className="edit-input"
-                              onClick={(e) => e.stopPropagation()}
-                            />
-                          ) : (
-                            record.timecommitted
-                          )}
-                        </td>
-
-                        <td>
-                          {editingRowId === record.id ? (
-                            <input
-                              type="text"
-                              value={editedRow.barangay || ""}
-                              onChange={(e) =>
-                                setEditedRow((prev) => ({ ...prev, barangay: e.target.value }))
-                              }
-                              className="edit-input"
-                              onClick={(e) => e.stopPropagation()}
-                            />
-                          ) : (
-                            record.barangay
-                          )}
-                        </td>
-
-                        <td>
-                          {editingRowId === record.id ? (
-                            <input
-                              type="number"
-                              step="any"
-                              value={editedRow.lat ?? ""}
-                              onChange={(e) =>
-                                setEditedRow((prev) => ({ ...prev, lat: e.target.value }))
-                              }
-                              className="edit-input"
-                              onClick={(e) => e.stopPropagation()}
-                            />
-                          ) : (
-                            record.lat
-                          )}
-                        </td>
-
-                        <td>
-                          {editingRowId === record.id ? (
-                            <input
-                              type="number"
-                              step="any"
-                              value={editedRow.lng ?? ""}
-                              onChange={(e) =>
-                                setEditedRow((prev) => ({ ...prev, lng: e.target.value }))
-                              }
-                              className="edit-input"
-                              onClick={(e) => e.stopPropagation()}
-                            />
-                          ) : (
-                            record.lng
-                          )}
-                        </td>
-
-                        <td>
-                          {editingRowId === record.id ? (
-                            <input
-                              type="text"
-                              value={editedRow.offensetype || ""}
-                              onChange={(e) =>
-                                setEditedRow((prev) => ({ ...prev, offensetype: e.target.value }))
-                              }
-                              className="edit-input"
-                              onClick={(e) => e.stopPropagation()}
-                            />
-                          ) : (
-                            record.offensetype
-                          )}
-                        </td>
-
-                        <td>
-                          {editingRowId === record.id ? (
-                            <input
-                              type="text"
-                              value={editedRow.severity || ""}
-                              onChange={(e) =>
-                                setEditedRow((prev) => ({ ...prev, severity: e.target.value }))
-                              }
-                              className="edit-input"
-                              onClick={(e) => e.stopPropagation()}
-                            />
-                          ) : (
-                            record.severity
-                          )}
-                        </td>
+                      <tr key={record.id} onClick={() => handleRowClick(record)}>
+                        <td>{record.id}</td>
+                        <td>{record.datecommitted}</td>
+                        <td>{record.timecommitted}</td>
+                        <td>{record.barangay}</td>
+                        <td>{record.lat}</td>
+                        <td>{record.lng}</td>
+                        <td>{record.offensetype}</td>
+                        <td>{record.severity}</td>
                       </tr>
                     ))
                   ) : (
