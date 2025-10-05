@@ -128,7 +128,7 @@
   position: absolute;
   top: 100%; /* directly below the button */
   left: 50%;
-  transform: translateX(-50%);
+  transform: translateX(-100%);
   width: 320px;
   max-width: 90vw;
   z-index: 60;
@@ -154,7 +154,7 @@
   content: "";
   position: absolute;
   top: -7px;
-  right: 260px;
+  right: 90px;
   width: 14px;
   height: 14px;
   background: rgba(10, 30, 60, 0.92);

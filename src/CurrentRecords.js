@@ -132,7 +132,8 @@ function CurrentRecords() {
               aria-hidden="true"
             >
               <strong>💡 Record Info</strong>
-              <div>Click a row to perform an action later.</div>
+              <div>• Use the search bar to look for a specific record.</div>
+              <div>• Navigate through records using the pagination controls.</div>
             </div>
           </div>
 
