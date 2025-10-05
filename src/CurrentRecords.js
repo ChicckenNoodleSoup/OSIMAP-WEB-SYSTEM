@@ -14,6 +14,7 @@ function CurrentRecords() {
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const recordsPerPage = 50;
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchAllRecords = async () => {
@@ -78,8 +79,6 @@ function CurrentRecords() {
     indexOfFirstRecord,
     indexOfLastRecord
   );
-
-  const navigate = useNavigate();
 
   const handleRowClick = (record) => {
     if (record.lat && record.lng) {
