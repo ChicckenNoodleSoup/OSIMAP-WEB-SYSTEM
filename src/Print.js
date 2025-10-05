@@ -162,13 +162,13 @@ function Print() {
           <img src="stopLight.svg" alt="Logo" className="page-logo" />
           <h1 className="page-title">Print Records</h1>
 
-          <button type="button" className="cr-info-btn" aria-label="Print Info">
+          <button type="button" className="pr-cr-info-btn" aria-label="Print Info">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
               <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1" />
               <text x="12" y="16" textAnchor="middle" fontSize="12" fill="currentColor" fontFamily="Poppins, sans-serif">i</text>
             </svg>
           </button>
-          <div className="cr-edit-instructions" role="status" aria-hidden="true">
+          <div className="pr-cr-edit-instructions" role="status" aria-hidden="true">
             <strong>💡 Print Help</strong>
             <div> • Choose a start and end date or select a barangay and severity.</div>
             <div> • Click <strong>Apply Filters</strong> to load the report.</div>
