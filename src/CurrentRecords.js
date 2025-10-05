@@ -82,9 +82,16 @@ function CurrentRecords() {
 
   const handleRowClick = (record) => {
     if (record.lat && record.lng) {
-      navigate(`/map?lat=${record.lat}&lng=${record.lng}`);
+      navigate("/map", {
+        state: {
+          fromRecords: true,
+          lat: record.lat,
+          lng: record.lng
+        }
+      });
     }
-  };
+  };  
+  
 
 
   return (

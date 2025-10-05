@@ -16,6 +16,7 @@ import "./MapView.css";
 import { DateTime } from "./DateTime";
 import L from "leaflet";
 import { useSearchParams } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 
 
 // Your Mapbox access token (if needed, this is not used in the provided TileLayer URLs)
@@ -350,11 +351,25 @@ function SafeFullscreenControl() {
 
 // Main component
 export default function MapView() {
+  const location = useLocation();
+  const fromRecords = location.state?.fromRecords;
+  const recordLat = location.state?.lat;
+  const recordLng = location.state?.lng;
+  const [hasFlown, setHasFlown] = useState(false);
+
+
   const [accidentData, setAccidentData] = useState(null);
   const [showClusters, setShowClusters] = useState(true);
   const [showHeatmap, setShowHeatmap] = useState(true);
   const [showMarkers, setShowMarkers] = useState(false);
   const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (fromRecords) {
+      setShowHeatmap(false);
+      setShowMarkers(true);
+    }
+  }, []);
 
   // Filter states
   const [selectedYear, setSelectedYear] = useState("all");
@@ -469,19 +484,17 @@ export default function MapView() {
 
   function FlyToQueryLocation() {
     const map = useMap();
-    const [searchParams] = useSearchParams();
   
     useEffect(() => {
-      const lat = parseFloat(searchParams.get("lat"));
-      const lng = parseFloat(searchParams.get("lng"));
-  
-      if (!isNaN(lat) && !isNaN(lng) && map) {
-        map.flyTo([lat, lng], 17, { duration: 1.5 });
+      if (!hasFlown && recordLat && recordLng && map) {
+        map.flyTo([recordLat, recordLng], 17, { duration: 1.5 });
+        setHasFlown(true); // ensure this runs only once
       }
-    }, [searchParams, map]);
+    }, [map, recordLat, recordLng, hasFlown]);
   
     return null;
   }
+  
   
 
   return (
@@ -613,7 +626,7 @@ export default function MapView() {
             >
               <SafeFullscreenControl />
               <LegendControl clusterCenters={filteredData.clusterCenters} />
-              <FlyToQueryLocation />
+              <FlyToQueryLocation fromRecords={fromRecords} />
               <LayersControl position="topright">
                 <LayersControl.BaseLayer checked name="Light">
                   <TileLayer url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png" attribution="© CartoDB" />
