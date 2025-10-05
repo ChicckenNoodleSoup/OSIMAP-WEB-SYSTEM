@@ -178,7 +178,7 @@ panel.innerHTML = `
           <div class="legend-gradient-container">
             <div class="legend-gradient-bar"></div>
             <div class="legend-gradient-labels">
-              <span>Low ------------------> </span>
+              <span style="margin-right: 140px;">Low</span>
               <span>High</span>
             </div>
           </div>
@@ -190,7 +190,7 @@ panel.innerHTML = `
           <div class="legend-item">
             <span class="legend-color legend-clustered-point"></span> Clustered Point
           </div>
-          <div class="legend-note">Points are colored </br>by their cluster assignment</div>
+          <div class="legend-note">Points are colored by their </br>cluster assignment</div>
           <div class="legend-separator"></div>
           <div class="legend-title">
             Clusters
@@ -551,7 +551,7 @@ export default function MapView() {
           <div className="viewmap-edit-instructions" role="status">
             <strong>💡 How Accident Heatmap Work</strong>
             <div>• <b>Heatmap</b>: Shows accident density with a color gradient from blue (low) to red (high intensity).</div>
-            <div>• <b>Clusters</b>: Colored circles group nearby accidents. Larger circles indicate more incidents.</div>
+            <div>• <b>Clusters</b>: Colored circles group nearby accidents.</div>
             <div>• <b>Points</b>: Individual accident markers colored by their cluster assignment. Gray points are unclustered.</div>
             <div>• Toggle <b>Heatmap</b>, <b>Clusters</b>, or <b>Points</b> using the checkboxes above the map.</div>
             <div>• Use the filters to narrow results by <b>year</b>, <b>location</b>, <b>offense type</b>, or <b>severity</b>.</div>
@@ -645,44 +645,41 @@ export default function MapView() {
 
         <div className="map-card">
           <div className="mapview-wrapper">
-            <MapContainer
-              center={[15.0306, 120.6845]}
-              zoom={14}
-              minZoom={12}
-              maxZoom={18}
-              scrollWheelZoom={true}
-              className="mapview-map"
-              preferCanvas={true}
-              updateWhenZooming={false}
-              updateWhenIdle={true}
-              maxBounds={sanFernandoBounds}
-              maxBoundsViscosity={1.0}
-            >
-              {selectedRecord && <RecordPopup record={selectedRecord} />}
-              <SafeFullscreenControl />
-              <LegendControl clusterCenters={filteredData.clusterCenters} />
-              <FlyToQueryLocation fromRecords={fromRecords} />
-              <LayersControl position="topright">
-                <LayersControl.BaseLayer checked name="Light">
-                  <TileLayer url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png" attribution="© CartoDB" />
-                </LayersControl.BaseLayer>
-                <LayersControl.BaseLayer name="Streets">
-                  <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" attribution="© OpenStreetMap contributors" />
-                </LayersControl.BaseLayer>
-                <LayersControl.BaseLayer name="Dark">
-                  <TileLayer url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png" attribution="© CartoDB" />
-                </LayersControl.BaseLayer>
-              </LayersControl>
-
-              <SafeFullscreenControl />
-              
-              <LegendControl clusterCenters={filteredData.clusterCenters} />
-              
-              <ClusteredHeatmapLayer filteredData={filteredData} showHeatmap={showHeatmap} />
-              <ClusterCenters clusterCenters={filteredData.clusterCenters} showClusters={showClusters} />
-              <AccidentMarkers accidentPoints={filteredData.accidentPoints} showMarkers={showMarkers} />
-              
-            </MapContainer>
+          <MapContainer
+            center={[15.0306, 120.6845]}
+            zoom={14}
+            minZoom={12}
+            maxZoom={18}
+            scrollWheelZoom={true}
+            className="mapview-map"
+            preferCanvas={true}
+            updateWhenZooming={false}
+            updateWhenIdle={true}
+            maxBounds={sanFernandoBounds}
+            maxBoundsViscosity={1.0}
+          >
+            {selectedRecord && <RecordPopup record={selectedRecord} />}
+            <SafeFullscreenControl />
+            <LegendControl clusterCenters={filteredData.clusterCenters} />
+            <FlyToQueryLocation fromRecords={fromRecords} />
+            
+            <LayersControl position="topright">
+              <LayersControl.BaseLayer checked name="Light">
+                <TileLayer url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png" attribution="© CartoDB" />
+              </LayersControl.BaseLayer>
+              <LayersControl.BaseLayer name="Streets">
+                <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" attribution="© OpenStreetMap contributors" />
+              </LayersControl.BaseLayer>
+              <LayersControl.BaseLayer name="Dark">
+                <TileLayer url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png" attribution="© CartoDB" />
+              </LayersControl.BaseLayer>
+            </LayersControl>
+            
+            <ClusteredHeatmapLayer filteredData={filteredData} showHeatmap={showHeatmap} />
+            <ClusterCenters clusterCenters={filteredData.clusterCenters} showClusters={showClusters} />
+            <AccidentMarkers accidentPoints={filteredData.accidentPoints} showMarkers={showMarkers} />
+            
+          </MapContainer>
           </div>
         </div>
       </div>

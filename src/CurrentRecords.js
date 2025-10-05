@@ -145,6 +145,7 @@ function CurrentRecords() {
               <strong>💡 Record Info</strong>
               <div>• Use the search bar to look for a specific record.</div>
               <div>• Navigate through records using the pagination controls.</div>
+              <div>• Click on any record row to view its location on the map.</div>
             </div>
           </div>
 

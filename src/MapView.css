@@ -192,6 +192,15 @@
   border-radius: 4px;
   margin: 8px 0;
 }
+
+.legend-clustered-point{
+  background: linear-gradient(to right, #FF6B6B, #4ECDC4, #45B7D1, #96CEB4, #FFEAA7);;
+}
+
+.legend-note{
+  margin-left: 20px;
+}
+
 /* 🚦 Shared animation */
 
 @keyframes stoplightShared {
