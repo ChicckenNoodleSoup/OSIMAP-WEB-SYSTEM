@@ -356,6 +356,7 @@ export default function MapView() {
   const recordLat = location.state?.lat;
   const recordLng = location.state?.lng;
   const [hasFlown, setHasFlown] = useState(false);
+  const recordDetails = location.state?.recordDetails;
 
 
   const [accidentData, setAccidentData] = useState(null);
@@ -363,6 +364,15 @@ export default function MapView() {
   const [showHeatmap, setShowHeatmap] = useState(true);
   const [showMarkers, setShowMarkers] = useState(false);
   const [loading, setLoading] = useState(true);
+
+  const [selectedRecord, setSelectedRecord] = useState(null);
+
+  useEffect(() => {
+    if (fromRecords && recordLat && recordLng && recordDetails) {
+      setSelectedRecord(recordDetails);
+    }
+  }, [fromRecords, recordLat, recordLng, recordDetails]);
+
 
   useEffect(() => {
     if (fromRecords) {
@@ -495,6 +505,30 @@ export default function MapView() {
     return null;
   }
   
+  function RecordPopup({ record }) {
+    const map = useMap();
+  
+    useEffect(() => {
+      if (!record || !map) return;
+  
+      const popup = L.popup({ autoClose: false, closeOnClick: true })
+        .setLatLng([record.lat, record.lng])
+        .setContent(`
+          <div>
+            <b>Barangay:</b> ${record.barangay}<br/>
+            <b>Date:</b> ${record.datecommitted}<br/>
+            <b>Time:</b> ${record.timecommitted}<br/>
+            <b>Offense:</b> ${record.offensetype}<br/>
+            <b>Severity:</b> ${record.severity}
+          </div>
+        `)
+        .openOn(map);
+  
+      return () => map.closePopup(popup);
+    }, [map, record]);
+  
+    return null;
+  }
   
 
   return (
@@ -624,6 +658,7 @@ export default function MapView() {
               maxBounds={sanFernandoBounds}
               maxBoundsViscosity={1.0}
             >
+              {selectedRecord && <RecordPopup record={selectedRecord} />}
               <SafeFullscreenControl />
               <LegendControl clusterCenters={filteredData.clusterCenters} />
               <FlyToQueryLocation fromRecords={fromRecords} />

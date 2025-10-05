@@ -86,7 +86,8 @@ function CurrentRecords() {
         state: {
           fromRecords: true,
           lat: record.lat,
-          lng: record.lng
+          lng: record.lng,
+          recordDetails: record,
         }
       });
     }
