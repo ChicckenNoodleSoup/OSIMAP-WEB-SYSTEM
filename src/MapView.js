@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo, useCallback } from "react";
+import React, { useEffect, useState, useMemo, useCallback, useRef } from "react";
 import {
   MapContainer,
   TileLayer,
@@ -17,6 +17,7 @@ import { DateTime } from "./DateTime";
 import L from "leaflet";
 import { useSearchParams } from "react-router-dom";
 import { useLocation } from "react-router-dom";
+import FullscreenFilters from './FullscreenFilters';
 
 
 // Your Mapbox access token (if needed, this is not used in the provided TileLayer URLs)
@@ -349,7 +350,64 @@ function SafeFullscreenControl() {
   return null;
 }
 
-// Main component
+// Add this component before the main MapView function
+const SearchZoomControl = ({ searchTerm, searchResults, onRecordSelect }) => {
+  const map = useMap();
+  
+  useEffect(() => {
+    if (searchResults.length === 1 && searchTerm.length > 2) {
+      const result = searchResults[0];
+      if (result.lat && result.lng) {
+        map.flyTo([result.lat, result.lng], 16, {
+          duration: 1.5,
+          easeLinearity: 0.25
+        });
+      }
+    }
+  }, [map, searchResults, searchTerm]);
+
+  return null;
+};
+
+// Updated barangay coordinates with complete list
+const barangayCoordinates = {
+  'alasas': [15.0122, 120.6966],
+  'baliti': [15.1050, 120.6239],
+  'bulaon': [15.0706, 120.6917],
+  'calulut': [15.0667, 120.7000],
+  'del carmen': [15.0250, 120.6708],
+  'del pilar': [15.0337, 120.6911],
+  'del rosario': [15.0075, 120.6822],
+  'dela paz norte': [15.0500, 120.6833],
+  'dela paz sur': [15.0444, 120.6875],
+  'dolores': [15.0192, 120.6625],
+  'juliana': [15.0328, 120.6822],
+  'lara': [15.0094, 120.6700],
+  'lourdes': [15.0244, 120.6556],
+  'magliman': [15.0461, 120.6733],
+  'maimpis': [15.0494, 120.6683],
+  'malino': [15.1221, 120.6310],
+  'malpitic': [15.0383, 120.6953],
+  'pandaras': [15.0583, 120.6967],
+  'panipuan': [15.1161, 120.6675],
+  'pulung bulu': [15.0322, 120.6865],
+  'quebiawan': [15.0394, 120.6935],
+  'saguin': [15.0372, 120.6793],
+  'san agustin': [15.0314, 120.6793],
+  'san felipe': [15.0094, 120.6916],
+  'san isidro': [15.0258, 120.6751],
+  'san jose': [15.0350, 120.6872],
+  'san juan': [15.0172, 120.6811],
+  'san nicolas': [15.0497, 120.6915],
+  'san pedro': [15.0190, 120.6990],
+  'sta. lucia': [15.0431, 120.6886],
+  'sta. teresita': [15.0625, 120.7056],
+  'sto. niño': [15.0363, 120.6797],
+  'sto. rosario': [15.0334, 120.6871],
+  'sindalan': [15.1014, 120.6581],
+  'telabastagan': [15.0608, 120.6860]
+};
+
 export default function MapView() {
   const location = useLocation();
   const fromRecords = location.state?.fromRecords;
@@ -366,6 +424,14 @@ export default function MapView() {
   const [loading, setLoading] = useState(true);
 
   const [selectedRecord, setSelectedRecord] = useState(null);
+  const [displayMode, setDisplayMode] = useState('points');
+
+  // Add search state variables
+  const [searchTerm, setSearchTerm] = useState('');
+  const [searchResults, setSearchResults] = useState([]);
+  const [showSearchDropdown, setShowSearchDropdown] = useState(false);
+  const [selectedSearchIndex, setSelectedSearchIndex] = useState(-1);
+  const searchInputRef = useRef(null);
 
   useEffect(() => {
     if (fromRecords && recordLat && recordLng && recordDetails) {
@@ -481,6 +547,102 @@ export default function MapView() {
 
   const handleToggle = useCallback((setter) => (e) => setter(e.target.checked), []);
 
+  // Add search functionality
+  const handleSearch = useCallback((term) => {
+    setSearchTerm(term);
+    
+    if (term.length < 2) {
+      setSearchResults([]);
+      setShowSearchDropdown(false);
+      return;
+    }
+
+    // Check for barangay match first
+    const barangayName = term.toLowerCase().trim();
+    if (barangayCoordinates[barangayName]) {
+      setSearchResults([{
+        id: `barangay-${barangayName}`,
+        type: 'barangay',
+        name: barangayName.charAt(0).toUpperCase() + barangayName.slice(1),
+        lat: barangayCoordinates[barangayName][0],
+        lng: barangayCoordinates[barangayName][1]
+      }]);
+      setShowSearchDropdown(true);
+      return;
+    }
+
+    // Search in current records
+    const results = filteredData.accidentPoints
+      .filter(point => {
+        const searchLower = term.toLowerCase();
+        return (
+          point.location?.toLowerCase().includes(searchLower)
+        );
+      })
+      .slice(0, 8) // Limit to 8 results
+      .map(point => ({
+        ...point,
+        type: 'record'
+      }));
+
+    setSearchResults(results);
+    setShowSearchDropdown(results.length > 0);
+  }, [filteredData.accidentPoints]);
+
+  // Handle search input change
+  const handleSearchInputChange = (e) => {
+    const value = e.target.value;
+    handleSearch(value);
+  };
+
+  // Handle search result selection
+  const handleSearchResultSelect = (result) => {
+    if (result.type === 'barangay' || result.type === 'record') {
+      setSelectedRecord(result.type === 'record' ? result : null);
+      // The zoom will be handled by SearchZoomControl
+    }
+    setShowSearchDropdown(false);
+    setSearchTerm(result.name || result.location || '');
+  };
+
+  // Handle keyboard navigation
+  const handleSearchKeyDown = (e) => {
+    if (!showSearchDropdown || searchResults.length === 0) return;
+
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setSelectedSearchIndex(prev => 
+        prev < searchResults.length - 1 ? prev + 1 : prev
+      );
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setSelectedSearchIndex(prev => prev > 0 ? prev - 1 : -1);
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      if (selectedSearchIndex >= 0) {
+        handleSearchResultSelect(searchResults[selectedSearchIndex]);
+      } else if (searchResults.length === 1) {
+        handleSearchResultSelect(searchResults[0]);
+      }
+    } else if (e.key === 'Escape') {
+      setShowSearchDropdown(false);
+      setSelectedSearchIndex(-1);
+    }
+  };
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (searchInputRef.current && !searchInputRef.current.contains(event.target)) {
+        setShowSearchDropdown(false);
+        setSelectedSearchIndex(-1);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   if (loading) return (
     <div className="scroll-wrapper">
       <div className="mapview-container">
@@ -531,6 +693,7 @@ export default function MapView() {
   }
   
 
+  // Main component
   return (
     <div className="scroll-wrapper">
       <div className="mapview-container">
@@ -636,11 +799,6 @@ export default function MapView() {
           <label>
             <input type="checkbox" checked={showMarkers} onChange={handleToggle(setShowMarkers)} /> Points
           </label>
-          {filteredData.stats && (
-            <div className="stats">
-              {filteredData.stats.totalAccidents} accidents • {filteredData.stats.totalClusters} clusters • {filteredData.stats.noisePoints} noise
-            </div>
-          )}
         </div>
 
         <div className="map-card">
@@ -658,6 +816,79 @@ export default function MapView() {
             maxBounds={sanFernandoBounds}
             maxBoundsViscosity={1.0}
           >
+            {/* Enhanced corner search with functionality */}
+            <div className="simple-corner-search" ref={searchInputRef}>
+              <input
+                type="text"
+                placeholder="Search barangay..."
+                className="simple-search-input"
+                value={searchTerm}
+                onChange={handleSearchInputChange}
+                onKeyDown={handleSearchKeyDown}
+                onFocus={() => {
+                  if (searchResults.length > 0) setShowSearchDropdown(true);
+                }}
+              />
+              
+              {/* Search dropdown */}
+              {showSearchDropdown && searchResults.length > 0 && (
+                <div className="search-dropdown">
+                  {searchResults.map((result, index) => (
+                    <div
+                      key={result.id || index}
+                      className={`search-dropdown-item ${
+                        index === selectedSearchIndex ? 'selected' : ''
+                      }`}
+                      onClick={() => handleSearchResultSelect(result)}
+                    >
+                      <div className="search-item-main">
+                        {result.type === 'barangay' ? (
+                          <span className="search-barangay">📍 {result.name} (Barangay)</span>
+                        ) : (
+                          <span>{result.location}</span>
+                        )}
+                      </div>
+                      {result.type === 'record' && (
+                        <div className="search-item-meta">
+                          {result.offense_type} • {result.severity} • {result.year}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <SearchZoomControl 
+              searchTerm={searchTerm}
+              searchResults={searchResults}
+              onRecordSelect={setSelectedRecord}
+            />
+
+            <img src="/osimap-logo.svg" alt="OSIMAP Logo" className="osimap-logo" />
+            <FullscreenFilters
+              yearFilter={selectedYear}
+              locationFilter={selectedLocation}
+              offenseFilter={selectedOffenseType}
+              severityFilter={selectedSeverity}
+              displayMode={displayMode}
+              onYearChange={setSelectedYear}
+              onLocationChange={setSelectedLocation}
+              onOffenseChange={setSelectedOffenseType}
+              onSeverityChange={setSelectedSeverity}
+              onDisplayModeChange={setDisplayMode}
+              availableYears={availableYears}
+              availableLocations={availableLocations}
+              availableOffenseTypes={availableOffenseTypes}
+              availableSeverities={availableSeverities}
+              showHeatmap={showHeatmap}
+              showClusters={showClusters}
+              showMarkers={showMarkers}
+              onToggleHeatmap={(checked) => setShowHeatmap(checked)}
+              onToggleClusters={(checked) => setShowClusters(checked)}
+              onToggleMarkers={(checked) => setShowMarkers(checked)}
+              stats={filteredData.stats}
+            />
             {selectedRecord && <RecordPopup record={selectedRecord} />}
             <SafeFullscreenControl />
             <LegendControl clusterCenters={filteredData.clusterCenters} />
@@ -672,6 +903,12 @@ export default function MapView() {
               </LayersControl.BaseLayer>
               <LayersControl.BaseLayer name="Dark">
                 <TileLayer url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png" attribution="© CartoDB" />
+              </LayersControl.BaseLayer>
+              <LayersControl.BaseLayer name="Satellite">
+                <TileLayer
+                  url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+                  attribution="© Esri"
+                />
               </LayersControl.BaseLayer>
             </LayersControl>
             

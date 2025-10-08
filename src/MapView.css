@@ -379,6 +379,223 @@
   margin-right: 7px;
 }
 
+/* New styles */
+.osimap-logo {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  z-index: 1000;
+  width: 120px;
+  height: auto;
+}
+
+/* Hide logo and search by default */
+.osimap-logo,
+.search-container {
+  display: none;
+}
+
+/* Show logo and search only in fullscreen mode */
+.fullscreen-active .osimap-logo {
+  display: block;
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  z-index: 1000;
+  width: 120px;
+  height: auto;
+}
+
+.fullscreen-active .search-container {
+  display: block;
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 1000;
+  width: 300px;
+  background: white;
+  border-radius: 6px;
+  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.3);
+  padding: 8px;
+  backdrop-filter: none;
+}
+
+/* Adjust search container position to avoid overlapping with other controls */
+.fullscreen-active .leaflet-control-container .leaflet-top.leaflet-right {
+  margin-top: 80px; /* Give space for search bar */
+}
+
+/* Move zoom controls to bottom-left in fullscreen mode */
+.fullscreen-active .leaflet-control-container .leaflet-control-zoom {
+  position: fixed;
+  bottom: 20px;
+  left: 20px;
+  margin: 0;
+  z-index: 1000;
+  background: white;
+  border-radius: 6px;
+  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.3);
+  border: none;
+  backdrop-filter: none;
+  
+}
+
+.fullscreen-active .leaflet-control-container .leaflet-control-zoom a {
+  background: white;
+  color: #333;
+  border: 1px solid #ccc;
+  transition: all 0.2s ease;
+}
+
+.fullscreen-active .leaflet-control-container .leaflet-control-zoom a:hover {
+  background: #f0f0f0;
+  color: #333;
+}
+
+/* Update search input to match legend style */
+.fullscreen-active .search-input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background: white;
+  color: #333;
+  font-size: 13px;
+  margin-top: 15px;
+}
+
+.fullscreen-active .search-input::placeholder {
+  color: #666;
+}
+
+.fullscreen-active .search-results {
+  background: white;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.3);
+  color: #333;
+  margin-left: 1200px;
+}
+
+.fullscreen-active .search-result-item {
+  color: #333;
+  border-bottom: 1px solid #eee;
+}
+
+.fullscreen-active .search-result-item:hover {
+  background: #f0f0f0;
+}
+
+.fullscreen-active .search-result-meta {
+  color: #666;
+}
+
+/* Simple corner search - only show in fullscreen */
+.simple-corner-search {
+  display: none;
+}
+
+.fullscreen-active .simple-corner-search {
+  display: block;
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 1005;
+  width: 180px;
+  margin-top: 18px;
+  margin-bottom: 15px;
+}
+
+.simple-search-input {
+  width: 100%;
+  height: 40px;
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 15px;
+  background: white;
+  font-size: 12px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  outline: none;
+  margin-left: 1200px;
+  
+}
+
+.simple-search-input:focus {
+  border-color: #007AFF;
+  box-shadow: 0 2px 8px rgba(0,122,255,0.2);
+}
+
+/* Enhanced search dropdown styles */
+.search-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 1210px;
+  right: 0;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  max-height: 200px;
+  overflow-y: auto;
+  z-index: 1010;
+  margin-top: 13px;
+  width: 180px;
+  min-height: 40px;
+  border-radius: 8px;
+}
+
+.search-dropdown-item {
+  padding: 10px 14px;
+  cursor: pointer;
+  border-bottom: 1px solid #f0f0f0;
+  transition: background-color 0.2s ease;
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+
+.search-dropdown-item:last-child {
+  border-bottom: none;
+}
+
+.search-dropdown-item:hover,
+.search-dropdown-item.selected {
+  background-color: #f8f9fa;
+}
+
+.search-item-main {
+  font-size: 15px;
+  color: #333;
+  font-weight: 600;
+  line-height: 1.4;
+  display: block;
+}
+
+.search-barangay {
+  color: #007AFF;
+  font-weight: 600;
+  font-size: 12px;
+}
+
+.search-item-meta {
+  font-size: 13px;
+  color: #666;
+  margin-top: 4px;
+  line-height: 1.3;
+}
+
+/* Adjust search container positioning */
+.fullscreen-active .simple-corner-search {
+  position: relative;
+  width: 250px;
+}
+
+/* Hide original search container to avoid conflicts */
+.fullscreen-active .search-container {
+  display: none;
+}
+
 /* Responsiveness */
 @media (max-width: 1024px) {
   .mapview-container {
@@ -458,19 +675,14 @@
 /* Fullscreen enhancements with glassmorphism */
 .fullscreen-active .mapview-wrapper {
   position: fixed !important;
-  top: 20px;
-  left: 20px;
-  width: calc(100vw - 40px) !important;
-  height: calc(100vh - 40px) !important;
+  top: 0;
+  left: 0;
+  width: 100vw !important;
+  height: 100vh !important;
   z-index: 9999;
-  border-radius: 28px;
-  padding: 20px !important;
+  border-radius: 0;
+  padding: 0 !important;
   margin: 0 !important;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
-  backdrop-filter: blur(20px);
-  background: rgba(255, 255, 255, 0.08);
-  border: 2px solid rgba(255, 255, 255, 0.2);
-  transition: all 0.5s ease-in-out;
 }
 
 .fullscreen-active .map-card {
@@ -485,47 +697,42 @@
 
 .fullscreen-active .control-filter-bar {
   position: fixed;
-  top: 30px;
-  right: 30px;
-  left: auto;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
   z-index: 10001;
   background: rgba(255, 255, 255, 0.12);
   backdrop-filter: blur(15px);
   border: 1px solid rgba(255, 255, 255, 0.25);
-  max-width: 600px;
+  width: auto;
+  max-width: 80%;
+  padding: 10px 20px;
   flex-direction: row;
-  gap: 10px;
+  gap: 15px;
+  justify-content: center;
 }
 
-.fullscreen-active .filter-group {
-  flex-direction: row;
-  gap: 8px;
+.fullscreen-active .search-container {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 1000;
+  width: 300px;
+  background: white;
+  border-radius: 6px;
+  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.3);
+  padding: 8px;
+  backdrop-filter: none;
 }
 
 .fullscreen-active .controls-panel {
   position: fixed;
-  top: 30px;
-  left: 30px;
+  top: 140px;
+  left: 50%;
+  transform: translateX(-50%);
   z-index: 10000;
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(12px);
-  padding: 12px 18px;
-  border-radius: 20px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  color: white;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  transition: all 0.5s ease-in-out;
-}
-
-.fullscreen-active .controls-panel label {
-  color: white;
-}
-
-.fullscreen-active .mapview-tooltip {
-  font-size: 1rem;
-  transition: all 0.3s ease;
+  flex-direction: row;
+  padding: 10px 20px;
 }
 
 /* Legend panel */

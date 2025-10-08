@@ -1,0 +1,189 @@
+/* Fullscreen-only styles */
+.fullscreen-filters {
+  display: none;
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  margin-top: 15px;
+}
+
+.fullscreen-active .fullscreen-filters {
+  display: block;
+  position: fixed;
+  top: 20px;
+  left: 50%; /* Center horizontally */
+  transform: translateX(-50%);
+  z-index: 1000;
+}
+
+/* Filter container */
+.fullscreen-active .filter-container {
+  display: flex;
+  gap: 16px; /* Increased gap for better spacing */
+  padding: 8px 20px; /* Increased horizontal padding */
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.15);
+  align-items: center;
+  height: 42px;
+  min-width: 600px; /* Reduced since stats moved out */
+  justify-content: center; /* Center the filters */
+}
+
+/* Dropdowns */
+.fullscreen-active .filter-dropdown {
+  padding: 6px 12px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 20px; /* Match search bar rounded corners */
+  background: white;
+  color: #4a4a4a;
+  font-size: 13px;
+  height: 32px;
+  width: 100%;
+  min-width: 130px;
+  max-width: 180px;
+  transition: all 0.2s ease;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23666666%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 10px;
+  padding-right: 28px;
+}
+
+/* Display controls on left */
+.fullscreen-active .display-controls {
+  position: fixed;
+  bottom: 20px; /* Changed from top to bottom */
+  left: 50%; /* Center horizontally */
+  transform: translateX(-50%); /* Center alignment */
+  display: flex;
+  flex-direction: row; /* Changed to horizontal alignment */
+  gap: 16px; /* Increased gap for horizontal layout */
+  padding: 8px 16px; /* Adjusted padding for horizontal layout */
+  background: white;
+  border-radius: 20px; /* Matched with other elements */
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+  width: auto; /* Let content determine width */
+  min-width: 300px; /* Ensure minimum width */
+  justify-content: center; /* Center the items */
+  align-items: center; /* Center items vertically */
+}
+
+/* Display control labels */
+.fullscreen-active .display-controls label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #4a4a4a;
+  cursor: pointer;
+  user-select: none;
+  padding: 4px 0;
+  white-space: nowrap;
+  
+}
+
+/* Checkbox styling */
+.fullscreen-active .display-controls input[type="checkbox"] {
+  width: 10px;
+  height: 14px;
+  margin: 0;
+  border-radius: 6px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+  border: 1px solid #d1d1d1;
+  cursor: pointer;
+}
+
+/* Stats container below filters */
+.fullscreen-active .stats-container {
+  position: fixed;
+  top: 75px; /* Position below filters */
+  left: 50%; /* Center horizontally */
+  transform: translateX(-50%);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 8px 16px;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+  max-width: 320px; /* Make stats bar less wide */
+  width: 100%;
+  margin-top: 20px;
+}
+
+.fullscreen-active .stats {
+  font-size: 13px;
+  color: #666;
+  white-space: nowrap;
+  border: none;
+  padding: 0;
+  margin: 0;
+  width: 100%;
+  text-align: center;
+}
+
+/* Logo */
+.fullscreen-active .osimap-logo {
+  width: 90px;
+  height: auto;
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  z-index: 1000;
+}
+
+/* Search container */
+.fullscreen-active .search-container {
+  position: fixed;
+  top: 120px; /* Position below logo */
+  left: 20px;
+  display: flex;
+  align-items: center;
+  z-index: 1000;
+  width: 40px; /* Initial width when collapsed */
+  transition: width 0.3s ease;
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+/* Search icon */
+.fullscreen-active .search-icon {
+  min-width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #4a4a4a;
+}
+
+/* Search input */
+.fullscreen-active .search-input {
+  width: 0;
+  padding: 8px 12px;
+  border: none;
+  outline: none;
+  font-size: 13px;
+  color: #4a4a4a;
+  transition: width 0.3s ease;
+  background: transparent;
+}
+
+/* Expanded state */
+.fullscreen-active .search-container.expanded {
+  width: 240px;
+}
+
+.fullscreen-active .search-container.expanded .search-input {
+  width: 200px;
+}
