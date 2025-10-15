@@ -22,25 +22,14 @@
 }
 
 /* Spinner used when filters are applied and data is loading */
-.spinner {
+.spinner,
+.simple-spinner {
   width: 48px;
   height: 48px;
-  border: 5px solid rgba(0,0,0,0.08);
-  border-top-color: #2563eb; /* blue-600 similar to app */
+  border: 5px solid rgba(255,255,255,0.1);
+  border-top-color: #2563eb;
   border-radius: 50%;
-
   animation: spin 1s linear infinite;
-    margin: 2rem auto;
-  max-width: 1100px;
-
-  background: rgba(255, 255, 255, 0.06);
-  -webkit-backdrop-filter: blur(12px);
-  backdrop-filter: blur(12px);
-  border-radius: 20px;
-  box-shadow: 0 10px 20px rgba(0,0,0,0.45);
-  border: 1px solid rgba(255,255,255,0.06);
-  padding: 1.5rem 1.75rem;
-  color: #EAF6FF; 
 }
 
 @keyframes spin {
@@ -96,6 +85,24 @@
   outline: none;
   border-color: rgba(0,133,255,0.8);
   box-shadow: 0 6px 18px rgba(0,133,255,0.12);
+}
+
+/* Placeholder styling for inputs */
+.frosted-container input::placeholder {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+/* Date picker icon styling */
+.frosted-container input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+  opacity: 0.7;
+}
+
+/* Select dropdown option styling */
+.frosted-container select option {
+  background: rgba(30, 30, 30, 0.95);
+  color: #fff;
+  padding: 0.5rem;
 }
 
 .frosted-container label {
@@ -242,5 +249,3 @@
 /* Print button convenience classes */
 .apply-btn { background: linear-gradient(180deg,#28a745,#1f7a35); color: white; margin-top: 1rem; }
 .print-btn { background: linear-gradient(180deg,#2563eb,#1e47b7); color: white; margin-top: 1rem; margin-left: 1rem; }
-
-

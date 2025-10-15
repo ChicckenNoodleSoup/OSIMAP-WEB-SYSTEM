@@ -15,7 +15,6 @@ import "leaflet-fullscreen/dist/leaflet.fullscreen.css";
 import "./MapView.css";
 import { DateTime } from "./DateTime";
 import L from "leaflet";
-import { useSearchParams } from "react-router-dom";
 import { useLocation } from "react-router-dom";
 import FullscreenFilters from './FullscreenFilters';
 
@@ -718,7 +717,7 @@ export default function MapView() {
             <div>• <b>Points</b>: Individual accident markers colored by their cluster assignment. Gray points are unclustered.</div>
             <div>• Toggle <b>Heatmap</b>, <b>Clusters</b>, or <b>Points</b> using the checkboxes above the map.</div>
             <div>• Use the filters to narrow results by <b>year</b>, <b>location</b>, <b>offense type</b>, or <b>severity</b>.</div>
-            <div>• Hover over clusters or points for detailed information (tooltips not available in heatmap mode).</div>
+            <div>• Hover over clusters or points for detailed information (not available in heatmap mode).</div>
             <div>• Click the <b>Legend</b> button (bottom-right) to view color meanings and click clusters to zoom.</div>
             <div>• Use the fullscreen button (top-right) for an expanded map view.</div>
           </div>

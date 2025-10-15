@@ -144,6 +144,12 @@
   text-align: right;
 }
 
+.profile-edit-select option {
+  background: rgba(30, 30, 30, 0.95);
+  color: #fff;
+  padding: 0.5rem;
+}
+
 .profile-edit-input:focus,
 .profile-edit-select:focus {
   border-color: #00aaff;
@@ -155,9 +161,9 @@
   display: flex;
   justify-content: flex-end;
   align-items: center;
-  margin-top: 0rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-  padding-top: 1rem;
+  margin-top: -0.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding-bottom: 1rem;
 }
 
 .edit-buttons {
@@ -179,42 +185,7 @@
   transition: all 0.3s ease;
 }
 
-/* Specific button styles */
-.edit-btn {
-  background: rgba(0, 123, 255, 0.25);
-  color: #fff;
-}
-.edit-btn:hover {
-  background: rgba(0, 123, 255, 0.4);
-}
-
-.save-btn {
-  background: rgba(46, 204, 113, 0.25);
-  color: #2ecc71;
-}
-
-.cancel-btn {
-  background: rgba(231, 76, 60, 0.25);
-  color: #e74c3c;
-}
-
-.save-btn:hover {
-  background: rgba(46, 204, 113, 0.4);
-}
-
-.cancel-btn:hover {
-  background: rgba(231, 76, 60, 0.4);
-}
-
-.profile-btn.secondary-btn {
-  background: rgba(231, 76, 60, 0.25);
-  color: #e74c3c;
-}
-
-.profile-btn.primary-btn {
-  background: rgba(46, 204, 113, 0.25);
-  color: #2ecc71;
-}
+/* Specific color rules removed; relying on shared .btn variants */
 
 /* Password form inputs */
 .profile-form input[type="password"] {
@@ -222,6 +193,16 @@
   margin-bottom: 0.8rem;
 }
 
+/* Placeholder styling for password inputs */
+.profile-edit-input::placeholder {
+  color: rgba(255, 255, 255, 0.6);
+  opacity: 1;
+}
+
+.profile-form input[type="password"]::placeholder {
+  color: rgba(255, 255, 255, 0.6);
+  opacity: 1;
+}
 .checkbox-label {
   display: flex;
   align-items: center;
