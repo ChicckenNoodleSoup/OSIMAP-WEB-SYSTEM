@@ -229,12 +229,12 @@ function Profile() {
                 <div className="form-buttons">
                   <button 
                     type="button" 
-                    className="profile-btn secondary-btn"
+                    className="btn btn--ghost"
                     onClick={() => setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' })}
                   >
                     Cancel
                   </button>
-                  <button type="submit" className="profile-btn primary-btn">
+                  <button type="submit" className="btn btn--primary">
                     Save Changes
                   </button>
                 </div>
@@ -261,16 +261,16 @@ function Profile() {
         {/* Buttons at the very bottom of the card */}
         <div className="profile-footer-buttons">
           {activeTab === "overview" && !isEditing && (
-            <button onClick={handleEdit} className="edit-btn">
+            <button onClick={handleEdit} className="btn btn--primary">
               Edit Profile
             </button>
           )}
           {activeTab === "overview" && isEditing && (
             <div className="edit-buttons">
-              <button onClick={handleSave} className="save-btn">
+              <button onClick={handleSave} className="btn btn--success">
                 ✓ Save
               </button>
-              <button onClick={handleCancel} className="cancel-btn">
+              <button onClick={handleCancel} className="btn btn--danger">
                 ✕ Cancel
               </button>
             </div>

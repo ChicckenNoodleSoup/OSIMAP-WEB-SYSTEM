@@ -22,7 +22,22 @@ function Sidebar({ onLogout }) {
           />
         </div>
 
-        <div className="hamburger-menu" onClick={toggleSidebar}>☰</div>
+        <div
+          className="hamburger-menu"
+          role="button"
+          aria-label="Toggle sidebar"
+          aria-expanded={!collapsed}
+          tabIndex={0}
+          onClick={toggleSidebar}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              toggleSidebar();
+            }
+          }}
+        >
+          ☰
+        </div>
 
         {!collapsed && (
           <div className="menu">
