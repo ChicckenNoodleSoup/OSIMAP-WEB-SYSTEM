@@ -1,13 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import './SignIn.css';
+import { validateUsername, validatePassword } from './utils/validation';
 
 function SignIn({ setIsAuthenticated }) {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [errorMessage, setErrorMessage] = useState(''); // for errors
+  const [errorMessage, setErrorMessage] = useState('');
+  const [usernameError, setUsernameError] = useState('');
+  const [passwordError, setPasswordError] = useState('');
   const navigate = useNavigate();
 
   // Street lights + floating particles
@@ -46,9 +49,37 @@ function SignIn({ setIsAuthenticated }) {
     setFloatingParticles(particles);
   }, []);
 
+  const handleUsernameChange = (e) => {
+    const value = e.target.value;
+    setUsername(value);
+    setUsernameError('');
+    setErrorMessage('');
+  };
+
+  const handlePasswordChange = (e) => {
+    const value = e.target.value;
+    setPassword(value);
+    setPasswordError('');
+    setErrorMessage('');
+  };
+
+  const validateForm = () => {
+    const usernameErr = validateUsername(username);
+    const passwordErr = validatePassword(password);
+
+    setUsernameError(usernameErr);
+    setPasswordError(passwordErr);
+
+    return !usernameErr && !passwordErr;
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
-    setErrorMessage(''); // reset old errors
+    setErrorMessage('');
+
+    if (!validateForm()) {
+      return;
+    }
 
     if (username === 'admin' && password === 'password') {
       setIsLoading(true);
@@ -136,42 +167,51 @@ function SignIn({ setIsAuthenticated }) {
             <img src="/signin-icon.png" alt="Card Logo" className="signin-card-logo" />
 
             <form onSubmit={handleSubmit}>
-              <h6>Username</h6>
-              <input
-                type="text"
-                placeholder="Enter Username"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                disabled={isLoading}
-              />
-
-              <h6>Password</h6>
-              <div className="password-wrapper">
+              <div>
+                <h6>
+                  Username
+                  {usernameError && <span className="validation-error">{usernameError}</span>}
+                </h6>
                 <input
-                  type={showPassword ? 'text' : 'password'}
-                  placeholder="Enter Password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  type="text"
+                  placeholder="Enter Username"
+                  value={username}
+                  onChange={handleUsernameChange}
                   disabled={isLoading}
                 />
-                <span
-                  className="eye-icon"
-                  onClick={() => setShowPassword(!showPassword)}
-                  title={showPassword ? 'Hide password' : 'Show password'}
-                >
-                  {showPassword ? (
-                    <svg viewBox="0 0 24 24">
-                      <path d="M12 4.5C7.5 4.5 3.6 7.3 2 12c1.6 4.7 5.5 7.5 10 7.5s8.4-2.8 10-7.5c-1.6-4.7-5.5-7.5-10-7.5zM12 17c-2.8 0-5-2.2-5-5s2.2-5 5-5 5 2.2 5 5-2.2 5-5 5zm0-8c-1.7 0-3 1.3-3 3s1.3 3 3 3 3-1.3 3-3-1.3-3-3-3z"/>
-                    </svg>
-                  ) : (
-                    <svg viewBox="0 0 24 24">
-                      <path d="M12 7c2.8 0 5 2.2 5 5 0 .6-.1 1.2-.3 1.7l1.4 1.4c1.2-1.2 2.1-2.7 2.7-4.4-1.6-4.7-5.5-7.5-10-7.5-1.4 0-2.8.3-4.1.8L8 5.3C9.3 6.1 10.6 7 12 7zm-5-2L5.6 3.6 4.2 5l1.9 1.9C4.6 8.2 3.1 10 2 12c1.6 4.7 5.5 7.5 10 7.5 1.9 0 3.7-.5 5.3-1.3L19 19.7l1.4-1.4L7 5zm5.3 8.3c-.2.4-.3.8-.3 1.2 0 1.7 1.3 3 3 3 .4 0 .8-.1 1.2-.3l-3.9-3.9z"/>
-                    </svg>
-                  )}
-                </span>
               </div>
 
-              {/* Error message */}
+              <div>
+                <h6>
+                  Password
+                  {passwordError && <span className="validation-error">{passwordError}</span>}
+                </h6>
+                <div className="password-wrapper">
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    placeholder="Enter Password"
+                    value={password}
+                    onChange={handlePasswordChange}
+                    disabled={isLoading}
+                  />
+                  <span
+                    className="eye-icon"
+                    onClick={() => setShowPassword(!showPassword)}
+                    title={showPassword ? 'Hide password' : 'Show password'}
+                  >
+                    {showPassword ? (
+                      <svg viewBox="0 0 24 24">
+                        <path d="M12 4.5C7.5 4.5 3.6 7.3 2 12c1.6 4.7 5.5 7.5 10 7.5s8.4-2.8 10-7.5c-1.6-4.7-5.5-7.5-10-7.5zM12 17c-2.8 0-5-2.2-5-5s2.2-5 5-5 5 2.2 5 5-2.2 5-5 5zm0-8c-1.7 0-3 1.3-3 3s1.3 3 3 3 3-1.3 3-3-1.3-3-3-3z"/>
+                      </svg>
+                    ) : (
+                      <svg viewBox="0 0 24 24">
+                        <path d="M12 7c2.8 0 5 2.2 5 5 0 .6-.1 1.2-.3 1.7l1.4 1.4c1.2-1.2 2.1-2.7 2.7-4.4-1.6-4.7-5.5-7.5-10-7.5-1.4 0-2.8.3-4.1.8L8 5.3C9.3 6.1 10.6 7 12 7zm-5-2L5.6 3.6 4.2 5l1.9 1.9C4.6 8.2 3.1 10 2 12c1.6 4.7 5.5 7.5 10 7.5 1.9 0 3.7-.5 5.3-1.3L19 19.7l1.4-1.4L7 5zm5.3 8.3c-.2.4-.3.8-.3 1.2 0 1.7 1.3 3 3 3 .4 0 .8-.1 1.2-.3l-3.9-3.9z"/>
+                      </svg>
+                    )}
+                  </span>
+                </div>
+              </div>
+
               {errorMessage && <p className="error-message">{errorMessage}</p>}
 
               <div className="signin-options">

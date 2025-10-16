@@ -1,91 +1,122 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './CreateAccount.css';
+import { validateUsername, validateEmail, validatePassword, validateConfirmPassword } from './utils/validation';
 
 function CreateAccount() {
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [isSubmitted, setIsSubmitted] = useState(false); // New state to track submission
+  const [isSubmitted, setIsSubmitted] = useState(false);
   const [message, setMessage] = useState('');
+  
+  const [usernameError, setUsernameError] = useState('');
+  const [emailError, setEmailError] = useState('');
+  const [passwordError, setPasswordError] = useState('');
+  const [confirmPasswordError, setConfirmPasswordError] = useState('');
+  
   const navigate = useNavigate();
+
+  const handleInputChange = (setter, errorSetter) => (e) => {
+    setter(e.target.value);
+    errorSetter('');
+    setMessage('');
+  };
+
+  const validateForm = () => {
+    const usernameErr = validateUsername(username);
+    const emailErr = validateEmail(email);
+    const passwordErr = validatePassword(password);
+    const confirmPassErr = validateConfirmPassword(password, confirmPassword);
+
+    setUsernameError(usernameErr);
+    setEmailError(emailErr);
+    setPasswordError(passwordErr);
+    setConfirmPasswordError(confirmPassErr);
+
+    return !usernameErr && !emailErr && !passwordErr && !confirmPassErr;
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    if (!username || !email || !password || !confirmPassword) {
-      setMessage('Please fill out all fields.');
-      setIsSubmitted(false); // Ensure we don't show success if there's an error
+    if (!validateForm()) {
       return;
     }
 
-    if (password !== confirmPassword) {
-      setMessage('Passwords do not match.');
-      setIsSubmitted(false); // Ensure we don't show success if there's an error
-      return;
-    }
-
-    // TODO: Replace with backend call (Supabase, API, etc.)
-    // On success:
     setMessage('A confirmation email has been sent to the system administrator. You will be notified via email once your account is accepted.');
-    setIsSubmitted(true); // Set state to show the success message
+    setIsSubmitted(true);
   };
 
   return (
     <div className="create-container">
       <div className="create-wrapper">
-        {/* Left side image */}
         <div className="create-image-side">
           <img src="/signin-image.png" alt="Background" className="create-bg-image" />
           <img src="/signin-logo.png" alt="Overlay" className="overlay-image" />
         </div>
 
-        {/* Right side form */}
         <div className="create-form-side">
           <div className="frosted-right"></div>
           <div className="create-card">
             <img src="/signin-icon.png" alt="Card Logo" className="create-card-logo" />
             
-            {/* Conditional Rendering: Show message or form */}
             {isSubmitted ? (
               <p className="success-message">{message}</p>
             ) : (
               <form onSubmit={handleSubmit}>
-                <h6>Username</h6>
-                <input
-                  type="text"
-                  placeholder="Enter Username"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                />
+                <div>
+                  <h6>
+                    Username
+                    {usernameError && <span className="validation-error">{usernameError}</span>}
+                  </h6>
+                  <input
+                    type="text"
+                    placeholder="Enter Username"
+                    value={username}
+                    onChange={handleInputChange(setUsername, setUsernameError)}
+                  />
+                </div>
 
-                <h6>Email</h6>
-                <input
-                  type="email"
-                  placeholder="Enter Email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                />
+                <div>
+                  <h6>
+                    Email
+                    {emailError && <span className="validation-error">{emailError}</span>}
+                  </h6>
+                  <input
+                    type="email"
+                    placeholder="Enter Email"
+                    value={email}
+                    onChange={handleInputChange(setEmail, setEmailError)}
+                  />
+                </div>
 
-                <h6>Password</h6>
-                <input
-                  type="password"
-                  placeholder="Enter Password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                />
+                <div>
+                  <h6>
+                    Password
+                    {passwordError && <span className="validation-error">{passwordError}</span>}
+                  </h6>
+                  <input
+                    type="password"
+                    placeholder="Enter Password"
+                    value={password}
+                    onChange={handleInputChange(setPassword, setPasswordError)}
+                  />
+                </div>
 
-                <h6>Confirm Password</h6>
-                <input
-                  type="password"
-                  placeholder="Confirm Password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                />
-                
-                {/* Show error message here if it exists */}
-                {message && <p className="error-message">{message}</p>}
+                <div>
+                  <h6>
+                    Confirm Password
+                    {confirmPasswordError && <span className="validation-error">{confirmPasswordError}</span>}
+                  </h6>
+                  <input
+                    type="password"
+                    placeholder="Confirm Password"
+                    value={confirmPassword}
+                    onChange={handleInputChange(setConfirmPassword, setConfirmPasswordError)}
+                  />
+                </div>
 
                 <button type="submit">Create Account</button>
                 <button
