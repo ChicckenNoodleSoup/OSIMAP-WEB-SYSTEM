@@ -63,25 +63,12 @@ function SignIn({ setIsAuthenticated }) {
     setErrorMessage('');
   };
 
-  const validateForm = () => {
-    const usernameErr = validateUsername(username);
-    const passwordErr = validatePassword(password);
-
-    setUsernameError(usernameErr);
-    setPasswordError(passwordErr);
-
-    return !usernameErr && !passwordErr;
-  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
     setErrorMessage('');
 
-    if (!validateForm()) {
-      return;
-    }
-
-    if (username === 'admin' && password === 'password') {
+    if (username === 'admin' && password === 'Password1234') {
       setIsLoading(true);
       setTimeout(() => {
         setIsAuthenticated(true);
