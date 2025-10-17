@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './CreateAccount.css';
 import { validateUsername, validateEmail, validatePassword, validateConfirmPassword } from './utils/validation';
@@ -17,6 +17,14 @@ function CreateAccount() {
   const [confirmPasswordError, setConfirmPasswordError] = useState('');
   
   const navigate = useNavigate();
+
+  // If already authenticated, redirect to dashboard immediately
+  useEffect(() => {
+    const storedAuth = localStorage.getItem('isAuthenticated');
+    if (storedAuth === 'true') {
+      navigate('/');
+    }
+  }, [navigate]);
 
   const handleInputChange = (setter, errorSetter) => (e) => {
     setter(e.target.value);

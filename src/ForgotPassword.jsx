@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";  
 import "./ForgotPassword.css";
 import { validateEmail } from './utils/validation';
@@ -8,6 +8,14 @@ function ForgotPassword() {
   const [email, setEmail] = useState('');
   const [sent, setSent] = useState(false);
   const [emailError, setEmailError] = useState('');
+
+  // If already authenticated, redirect to dashboard immediately
+  useEffect(() => {
+    const storedAuth = localStorage.getItem('isAuthenticated');
+    if (storedAuth === 'true') {
+      navigate('/');
+    }
+  }, [navigate]);
 
   const handleEmailChange = (e) => {
     const value = e.target.value;
