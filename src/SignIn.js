@@ -1,7 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import './SignIn.css';
-import { validateUsername, validatePassword } from './utils/validation';
+import { createClient } from "@supabase/supabase-js";
+
+const SUPABASE_URL = process.env.REACT_APP_SUPABASE_URL;
+const SUPABASE_KEY = process.env.REACT_APP_SUPABASE_KEY;
+const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 function SignIn({ setIsAuthenticated }) {
   const [username, setUsername] = useState('');
@@ -12,6 +16,14 @@ function SignIn({ setIsAuthenticated }) {
   const [usernameError, setUsernameError] = useState('');
   const [passwordError, setPasswordError] = useState('');
   const navigate = useNavigate();
+
+  // If already authenticated, redirect to dashboard immediately
+  useEffect(() => {
+    const storedAuth = localStorage.getItem('isAuthenticated');
+    if (storedAuth === 'true') {
+      navigate('/');
+    }
+  }, [navigate]);
 
   // Street lights + floating particles
   const [streetLights, setStreetLights] = useState([]);
@@ -63,19 +75,37 @@ function SignIn({ setIsAuthenticated }) {
     setErrorMessage('');
   };
 
-
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setErrorMessage('');
+    setIsLoading(true);
 
-    if (username === 'admin' && password === 'Password1234') {
-      setIsLoading(true);
-      setTimeout(() => {
+    try {
+      // Query the police_admin table to check credentials
+      const { data, error } = await supabase
+        .from('police_admin')
+        .select('*')
+        .eq('username', username)
+        .eq('password', password)
+        .single();
+
+      if (error) {
+        console.error('Authentication error:', error);
+        throw new Error('Authentication failed');
+      }
+
+      if (data) {
+        // Successful authentication
         setIsAuthenticated(true);
         localStorage.setItem('isAuthenticated', 'true');
+        localStorage.setItem('adminData', JSON.stringify(data));
         navigate('/');
-      }, 1500);
-    } else {
+      } else {
+        throw new Error('Invalid credentials');
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+      
       // Shake card
       const card = document.querySelector('.signin-card');
       if (card) {
@@ -84,8 +114,11 @@ function SignIn({ setIsAuthenticated }) {
           card.style.animation = '';
         }, 500);
       }
+      
       // Show error inside card
       setErrorMessage('Invalid username or password.');
+    } finally {
+      setIsLoading(false);
     }
   };
 

@@ -20,12 +20,14 @@ function ProtectedRoute({ isAuthenticated, children }) {
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [authReady, setAuthReady] = useState(false);
 
   useEffect(() => {
     const storedAuth = localStorage.getItem('isAuthenticated');
     if (storedAuth === 'true') {
       setIsAuthenticated(true);
     }
+    setAuthReady(true);
   }, []);
 
   useEffect(() => {
@@ -36,6 +38,10 @@ function App() {
     setIsAuthenticated(false);
     localStorage.removeItem('isAuthenticated');
   };
+
+  if (!authReady) {
+    return null;
+  }
 
   return (
     <BrowserRouter>
