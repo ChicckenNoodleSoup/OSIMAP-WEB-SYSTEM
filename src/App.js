@@ -11,6 +11,7 @@ import HelpSupport from './HelpSupport';
 import Print from './Print';
 import Profile from './Profile';
 import ForgotPassword from './ForgotPassword';
+import AdminDashboard from './AdminDashboard';
 import { UserProvider } from './UserContext';
 import './App.css';
 
@@ -80,6 +81,7 @@ function App() {
                         <Route path="/helpsupport" element={<HelpSupport />} />
                         <Route path="/print" element={<Print />} />
                         <Route path="/profile" element={<Profile />} />
+                        <Route path="/admin-dashboard" element={<AdminDashboard />} />
                         <Route path="*" element={<div>Page Not Found</div>} />
                       </Routes>
                     </div>

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { isAdministrator } from './utils/authUtils';
 import './Sidebar.css';
 
 function Sidebar({ onLogout }) {
@@ -80,6 +81,16 @@ function Sidebar({ onLogout }) {
               <img src="/print-icon.png" alt="Help" />
               <span>Print Records</span>
             </div>
+
+            {isAdministrator() && (
+              <div
+                className={`menu-item ${isActive('/admin-dashboard') ? 'active' : ''}`}
+                onClick={() => navigate('/admin-dashboard')}
+              >
+                <img src="/admin-dashboard-icon.png" alt="Admin Dashboard" />
+                <span>Admin Dashboard</span>
+              </div>
+            )}
 
             <div
               className={`menu-item ${isActive('/helpsupport') ? 'active' : ''}`}

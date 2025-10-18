@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import './SignIn.css';
 import { createClient } from "@supabase/supabase-js";
+import { setUserData } from './utils/authUtils';
+import { verifySecureHash } from './utils/passwordUtils';
 
 const SUPABASE_URL = process.env.REACT_APP_SUPABASE_URL;
 const SUPABASE_KEY = process.env.REACT_APP_SUPABASE_KEY;
@@ -81,12 +83,11 @@ function SignIn({ setIsAuthenticated }) {
     setIsLoading(true);
 
     try {
-      // Query the police_admin table to check credentials
+      // Query the police table to get user data
       const { data, error } = await supabase
-        .from('police_admin')
+        .from('police')
         .select('*')
-        .eq('username', username)
-        .eq('password', password)
+        .eq('email', username) // Using email for login instead of username
         .single();
 
       if (error) {
@@ -95,11 +96,40 @@ function SignIn({ setIsAuthenticated }) {
       }
 
       if (data) {
-        // Successful authentication
-        setIsAuthenticated(true);
-        localStorage.setItem('isAuthenticated', 'true');
-        localStorage.setItem('adminData', JSON.stringify(data));
-        navigate('/');
+        // Verify the password
+        const isPasswordValid = await verifySecureHash(password, data.password);
+        
+        if (!isPasswordValid) {
+          throw new Error('Invalid credentials');
+        }
+
+        // Check if user is Administrator - they can log in regardless of status
+        if (data.role === 'Administrator') {
+          // Administrators can always log in
+          setIsAuthenticated(true);
+          setUserData(data);
+          navigate('/');
+        } else {
+          // For non-administrators, check account status
+          if (data.status === 'pending') {
+            setErrorMessage('Your account is still pending approval. Please wait for administrator approval.');
+            return;
+          }
+          
+          if (data.status === 'rejected') {
+            setErrorMessage('Your account has been rejected. Please contact the administrator.');
+            return;
+          }
+          
+          if (data.status === 'approved') {
+            // Successful authentication for regular users
+            setIsAuthenticated(true);
+            setUserData(data);
+            navigate('/');
+          } else {
+            throw new Error('Invalid account status');
+          }
+        }
       } else {
         throw new Error('Invalid credentials');
       }
@@ -189,12 +219,12 @@ function SignIn({ setIsAuthenticated }) {
             <form onSubmit={handleSubmit}>
               <div>
                 <h6>
-                  Username
+                  Email
                   {usernameError && <span className="validation-error">{usernameError}</span>}
                 </h6>
                 <input
-                  type="text"
-                  placeholder="Enter Username"
+                  type="email"
+                  placeholder="Enter Email"
                   value={username}
                   onChange={handleUsernameChange}
                   disabled={isLoading}

@@ -1,6 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { useUser } from "./UserContext";
+import { createClient } from "@supabase/supabase-js";
+import { secureHash, verifySecureHash } from "./utils/passwordUtils";
 import "./Profile.css";
+
+const SUPABASE_URL = process.env.REACT_APP_SUPABASE_URL;
+const SUPABASE_KEY = process.env.REACT_APP_SUPABASE_KEY;
+const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 function Profile() {
   const [activeTab, setActiveTab] = useState("overview");
@@ -12,17 +18,48 @@ function Profile() {
     confirmPassword: ''
   });
   const [message, setMessage] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [userData, setUserData] = useState(null);
   const { user, updateUser } = useUser();
 
-  // Initialize edit form with current user data
+  // Fetch user data from Supabase
   useEffect(() => {
-    setEditForm({
-      fullName: user.fullName,
-      email: user.email,
-      role: user.role,
-      station: user.station
-    });
-  }, [user]);
+    fetchUserData();
+  }, []);
+
+  // Initialize edit form when user data is loaded
+  useEffect(() => {
+    if (userData) {
+      setEditForm({
+        fullName: userData.full_name,
+        email: userData.email,
+        role: userData.role,
+        station: userData.station || ''
+      });
+    }
+  }, [userData]);
+
+  const fetchUserData = async () => {
+    try {
+      setIsLoading(true);
+      
+      // Get user data from localStorage (your current auth system)
+      const adminData = localStorage.getItem('adminData');
+      
+      if (!adminData) {
+        setMessage('No user data found. Please log in again.');
+        return;
+      }
+
+      const userData = JSON.parse(adminData);
+      setUserData(userData);
+    } catch (error) {
+      console.error('Error:', error);
+      setMessage('Error loading profile data');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   // Clear message when switching tabs
   useEffect(() => {
@@ -39,36 +76,84 @@ function Profile() {
     setMessage('');
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!editForm.fullName.trim() || !editForm.email.trim()) {
       setMessage('Name and email are required fields.');
       return;
     }
 
-    updateUser({
-      fullName: editForm.fullName,
-      email: editForm.email,
-      role: editForm.role,
-      station: editForm.station
-    });
+    try {
+      setIsLoading(true);
+      
+      const { error } = await supabase
+        .from('police')
+        .update({
+          full_name: editForm.fullName,
+          email: editForm.email,
+          role: editForm.role,
+          station: editForm.station
+        })
+        .eq('email', userData.email);
 
-    setIsEditing(false);
-    setMessage('Profile updated successfully!');
-    setTimeout(() => setMessage(''), 3000);
+      if (error) {
+        console.error('Error updating profile:', error);
+        setMessage('Error updating profile. Please try again.');
+        return;
+      }
+
+      // Update local user data
+      setUserData(prev => ({
+        ...prev,
+        full_name: editForm.fullName,
+        email: editForm.email,
+        role: editForm.role,
+        station: editForm.station
+      }));
+
+      // Update localStorage with new data
+      const updatedUserData = {
+        ...userData,
+        full_name: editForm.fullName,
+        email: editForm.email,
+        role: editForm.role,
+        station: editForm.station
+      };
+      localStorage.setItem('adminData', JSON.stringify(updatedUserData));
+      localStorage.setItem('userRole', editForm.role);
+
+      // Update context
+      updateUser({
+        fullName: editForm.fullName,
+        email: editForm.email,
+        role: editForm.role,
+        station: editForm.station
+      });
+
+      setIsEditing(false);
+      setMessage('Profile updated successfully!');
+      setTimeout(() => setMessage(''), 3000);
+    } catch (error) {
+      console.error('Error:', error);
+      setMessage('Error updating profile. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleCancel = () => {
-    setEditForm({
-      fullName: user.fullName,
-      email: user.email,
-      role: user.role,
-      station: user.station
-    });
+    if (userData) {
+      setEditForm({
+        fullName: userData.full_name,
+        email: userData.email,
+        role: userData.role,
+        station: userData.station || ''
+      });
+    }
     setIsEditing(false);
     setMessage('');
   };
 
-  const handlePasswordSubmit = (e) => {
+  const handlePasswordSubmit = async (e) => {
     e.preventDefault();
     
     if (!passwordForm.currentPassword || !passwordForm.newPassword || !passwordForm.confirmPassword) {
@@ -86,11 +171,62 @@ function Profile() {
       return;
     }
 
-    // Here you would make an API call to update the password
-    setMessage('Password updated successfully!');
-    setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
-    setTimeout(() => setMessage(''), 3000);
+    try {
+      setIsLoading(true);
+
+      // Verify current password
+      const isCurrentPasswordValid = await verifySecureHash(passwordForm.currentPassword, userData.password);
+      
+      if (!isCurrentPasswordValid) {
+        setMessage('Current password is incorrect.');
+        return;
+      }
+
+      // Hash new password
+      const hashedNewPassword = await secureHash(passwordForm.newPassword);
+
+      // Update password in database
+      const { error } = await supabase
+        .from('police')
+        .update({ password: hashedNewPassword })
+        .eq('email', userData.email);
+
+      if (error) {
+        console.error('Error updating password:', error);
+        setMessage('Error updating password. Please try again.');
+        return;
+      }
+
+      setMessage('Password updated successfully!');
+      setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
+      setTimeout(() => setMessage(''), 3000);
+    } catch (error) {
+      console.error('Error:', error);
+      setMessage('Error updating password. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
   };
+
+  if (isLoading && !userData) {
+    return (
+      <div className="profile-scroll-wrapper">
+        <div className="profile-container">
+          <div className="loading">Loading profile...</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!userData) {
+    return (
+      <div className="profile-scroll-wrapper">
+        <div className="profile-container">
+          <div className="error">Error loading profile data</div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="profile-scroll-wrapper">
@@ -145,7 +281,7 @@ function Profile() {
                     className="profile-edit-input"
                   />
                 ) : (
-                  <p className="profile-value">{user.fullName}</p>
+                  <p className="profile-value">{userData.full_name}</p>
                 )}
               </div>
 
@@ -159,7 +295,7 @@ function Profile() {
                     className="profile-edit-input"
                   />
                 ) : (
-                  <p className="profile-value">{user.email}</p>
+                  <p className="profile-value">{userData.email}</p>
                 )}
               </div>
 
@@ -177,7 +313,7 @@ function Profile() {
                     <option value="Analyst">Analyst</option>
                   </select>
                 ) : (
-                  <p className="profile-value">{user.role}</p>
+                  <p className="profile-value">{userData.role}</p>
                 )}
               </div>
 
@@ -191,7 +327,7 @@ function Profile() {
                     className="profile-edit-input"
                   />
                 ) : (
-                  <p className="profile-value">{user.station}</p>
+                  <p className="profile-value">{userData.station || 'Not specified'}</p>
                 )}
               </div>
             </div>
@@ -223,19 +359,21 @@ function Profile() {
                   onChange={(e) => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })}
                   className="profile-edit-input"
                 />
-                <label className="checkbox-label">
-                  <input type="checkbox" /> Enable Two-Factor Authentication
-                </label>
                 <div className="form-buttons">
                   <button 
                     type="button" 
                     className="btn btn--ghost"
                     onClick={() => setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' })}
+                    disabled={isLoading}
                   >
                     Cancel
                   </button>
-                  <button type="submit" className="btn btn--primary">
-                    Save Changes
+                  <button 
+                    type="submit" 
+                    className="btn btn--primary"
+                    disabled={isLoading}
+                  >
+                    {isLoading ? 'Updating...' : 'Save Changes'}
                   </button>
                 </div>
               </form>
@@ -267,10 +405,18 @@ function Profile() {
           )}
           {activeTab === "overview" && isEditing && (
             <div className="edit-buttons">
-              <button onClick={handleSave} className="btn btn--success">
-                ✓ Save
+              <button 
+                onClick={handleSave} 
+                className="btn btn--success"
+                disabled={isLoading}
+              >
+                {isLoading ? 'Saving...' : '✓ Save'}
               </button>
-              <button onClick={handleCancel} className="btn btn--danger">
+              <button 
+                onClick={handleCancel} 
+                className="btn btn--danger"
+                disabled={isLoading}
+              >
                 ✕ Cancel
               </button>
             </div>

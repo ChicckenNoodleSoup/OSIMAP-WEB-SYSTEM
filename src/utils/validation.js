@@ -38,12 +38,15 @@ export const validateConfirmPassword = (password, confirmPassword) => {
   return '';
 };
 
-export const validateUsername = (username) => {
-  if (!username) {
-    return 'Username is required';
+export const validateFullName = (fullName) => {
+  if (!fullName) {
+    return 'Full name is required';
   }
-  if (username.trim().length < 3) {
-    return 'Username must be at least 3 characters long';
+  if (fullName.trim().length < 2) {
+    return 'Full name must be at least 2 characters long';
+  }
+  if (!/^[a-zA-Z\s]+$/.test(fullName.trim())) {
+    return 'Full name can only contain letters and spaces';
   }
   return '';
 };
