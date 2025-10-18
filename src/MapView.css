@@ -119,7 +119,7 @@
   pointer-events: none;
   transition: opacity 0.2s ease;
   z-index: 10;
-  transform: translateX(-50%); /* Center exactly */
+  transform: translateX(-50%);
 }
 
 .viewmap-edit-instructions::before {
@@ -183,18 +183,18 @@
   width: 200px;
   height: 20px;
   background: linear-gradient(to right, 
-    #0000ff 0%,    /* blue at 0.2 */
-    #00ffff 25%,   /* cyan at 0.4 */
-    #00ff00 50%,   /* lime at 0.6 */
-    #ffff00 75%,   /* yellow at 0.8 */
-    #ff0000 100%   /* red at 1.0 */
+    #0000ff 0%,
+    #00ffff 25%,
+    #00ff00 50%,
+    #ffff00 75%,
+    #ff0000 100%
   );
   border-radius: 4px;
   margin: 8px 0;
 }
 
 .legend-clustered-point{
-  background: linear-gradient(to right, #FF6B6B, #4ECDC4, #45B7D1, #96CEB4, #FFEAA7);;
+  background: linear-gradient(to right, #FF6B6B, #4ECDC4, #45B7D1, #96CEB4, #FFEAA7);
 }
 
 .legend-note{
@@ -252,7 +252,7 @@
   gap: 20px;
 }
 
-/* Combined filter and control bar */
+/* Combined filter and control bar - FIXED for dropdown overflow */
 .control-filter-bar {
   display: flex;
   flex-wrap: wrap;
@@ -265,12 +265,23 @@
   padding: 0.75rem 1.5rem;
   border: 1px solid rgba(255, 255, 255, 0.1);
   margin-top: -25px;
+  overflow: visible !important;
+  position: relative;
+  z-index: 10;
 }
 
 .filter-group {
   display: flex;
   align-items: center;
   gap: 8px;
+  overflow: visible !important;
+  position: relative;
+  z-index: 1;
+}
+
+/* Increase z-index when dropdown is open */
+.filter-group:has(.multi-select-dropdown .multi-select-options) {
+  z-index: 100000;
 }
 
 .filter-label {
@@ -324,6 +335,8 @@
   flex: 1;
   min-height: 400px;
   transition: all 0.5s ease-in-out;
+  position: relative;
+  z-index: 1;
 }
 
 /* Map wrapper inside the card */
@@ -347,36 +360,58 @@
   border-radius: 28px;
 }
 
-/* Controls panel */
+/* Controls panel - UPDATED with flexbox layout */
 .controls-panel {
   display: flex;
-  gap: 20px;
+  justify-content: space-between;
   align-items: center;
-  flex-wrap: wrap;
   color: #fff;
   background: rgba(255, 255, 255, 0.06);
   backdrop-filter: blur(12px);
   border-radius: 28px;
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
   margin-bottom: -10px;
-  padding: 0.30rem;
+  padding: 0.75rem 1.5rem;
+  position: relative;
+  z-index: 1;
+  gap: 20px;
 }
 
-.controls-panel label {
+/* Checkboxes container on the left */
+.controls-checkboxes {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+}
+
+.controls-checkboxes label {
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 6px;
   cursor: pointer;
   font-weight: 300;
-  margin-left: 7px;
+  font-size: 14px;
+  white-space: nowrap;
 }
 
-/* Stats */
+.controls-checkboxes input[type="checkbox"] {
+  cursor: pointer;
+}
+
+/* Stats display on the right */
+.stats-display {
+  font-size: 13px;
+  color: #ddd;
+  font-weight: 500;
+  white-space: nowrap;
+  margin-left: auto;
+}
+
+/* Legacy stats class for backward compatibility */
 .stats {
   margin-left: auto;
   font-size: 0.9rem;
   color: #ddd;
-  margin-right: 7px;
 }
 
 /* New styles */
@@ -422,7 +457,7 @@
 
 /* Adjust search container position to avoid overlapping with other controls */
 .fullscreen-active .leaflet-control-container .leaflet-top.leaflet-right {
-  margin-top: 80px; /* Give space for search bar */
+  margin-top: 80px;
 }
 
 /* Move zoom controls to bottom-left in fullscreen mode */
@@ -437,7 +472,6 @@
   box-shadow: 0 1px 5px rgba(0, 0, 0, 0.3);
   border: none;
   backdrop-filter: none;
-  
 }
 
 .fullscreen-active .leaflet-control-container .leaflet-control-zoom a {
@@ -517,7 +551,6 @@
   box-shadow: 0 2px 6px rgba(0,0,0,0.1);
   outline: none;
   margin-left: 1200px;
-  
 }
 
 .simple-search-input:focus {
@@ -553,7 +586,6 @@
   width: 100%;
   box-sizing: border-box;
 }
-
 
 .search-dropdown-item:last-child {
   border-bottom: none;
@@ -617,7 +649,6 @@
     height: 400px;
   }
   
-  /* Filter and controls in two lines for mobile */
   .control-filter-bar {
     flex-direction: column;
     align-items: stretch;
@@ -642,8 +673,14 @@
     gap: 10px;
     padding: 10px;
   }
+
+  .controls-checkboxes {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
   
-  .stats {
+  .stats-display {
     margin: 0;
     text-align: center;
   }
@@ -665,7 +702,6 @@
   }
 }
 
-/* For shorter screens (landscape laptops/tablets) */
 @media (max-height: 800px) {
   .mapview-wrapper {
     height: 70vh;
@@ -768,7 +804,6 @@
   display: inline-block;
 }
 
-/* Specific colors */
 .legend-high {
   background: red;
 }
@@ -790,7 +825,7 @@
   background: gray;
 }
 
-/* Additional legend styles for new functionality */
+/* Additional legend styles */
 .legend-container {
   max-height: calc(100vh - 120px);
   overflow-y: auto;

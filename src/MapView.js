@@ -17,10 +17,7 @@ import { DateTime } from "./DateTime";
 import L from "leaflet";
 import { useLocation } from "react-router-dom";
 import FullscreenFilters from './FullscreenFilters';
-
-
-// Your Mapbox access token (if needed, this is not used in the provided TileLayer URLs)
-// mapboxgl.accessToken = 'pk.eyJ1IjoibWFud2VsYmUiLCJhIjoiY2x3bW9wMDBtMWo5eTJrczFqaW1qdzQ1cCJ9.uF-N1-17B46iI5c56zM9_A';
+import MultiSelectDropdown from './MultiSelectDropdown';
 
 // Cluster colors
 const getClusterColor = (clusterId) => {
@@ -138,14 +135,12 @@ function AccidentMarkers({ accidentPoints, showMarkers }) {
   });
 }
 
-
-// Corrected Legend Control
+// Legend Control
 function LegendControl({ clusterCenters }) {
   const map = useMap();
   const [isPanelVisible, setIsPanelVisible] = useState(false);
   const [isClustersCollapsed, setIsClustersCollapsed] = useState(true);
 
-  // Sort clusters by accident count in descending order
   const sortedClusters = useMemo(() => {
     if (!clusterCenters) return [];
     return [...clusterCenters].sort((a, b) => b.properties.accident_count - a.properties.accident_count);
@@ -154,7 +149,6 @@ function LegendControl({ clusterCenters }) {
   useEffect(() => {
     if (!map) return;
     
-    // A simple, reliable way to ensure only one control is added.
     const legendId = 'custom-legend-control';
     const existingLegend = document.getElementById(legendId);
     if (existingLegend) {
@@ -173,7 +167,7 @@ function LegendControl({ clusterCenters }) {
       const panel = L.DomUtil.create("div", "legend-panel", container);
       
       const updateLegendContent = () => {
-panel.innerHTML = `
+        panel.innerHTML = `
           <div class="legend-title">Heatmap Intensity</div>
           <div class="legend-gradient-container">
             <div class="legend-gradient-bar"></div>
@@ -257,12 +251,11 @@ panel.innerHTML = `
   return null;
 }
 
-// Fixed Fullscreen Control
+// Fullscreen Control
 function SafeFullscreenControl() {
   const map = useMap();
 
   useEffect(() => {
-    // Wait for map to be fully initialized
     const timer = setTimeout(() => {
       if (!map || !L.control.fullscreen) return;
 
@@ -280,7 +273,6 @@ function SafeFullscreenControl() {
 
         control.addTo(map);
         
-        // Manually set the title attribute after adding to map
         setTimeout(() => {
           const button = document.querySelector('.leaflet-control-fullscreen-button');
           if (button) {
@@ -291,11 +283,9 @@ function SafeFullscreenControl() {
 
         const handleFsChange = () => {
           try {
-            // Safe check for fullscreen state
             const isFs = map && typeof map.isFullscreen === 'function' ? map.isFullscreen() : false;
             document.body.classList.toggle("fullscreen-active", isFs);
             
-            // Update button title based on fullscreen state
             const button = document.querySelector('.leaflet-control-fullscreen-button');
             if (button) {
               button.setAttribute('title', isFs ? 'Exit Fullscreen' : 'View Fullscreen');
@@ -303,11 +293,9 @@ function SafeFullscreenControl() {
             }
           } catch (error) {
             console.warn('Fullscreen state check failed:', error);
-            // Fallback: check document fullscreen state
             const isFs = !!(document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement);
             document.body.classList.toggle("fullscreen-active", isFs);
             
-            // Update button title based on fullscreen state
             const button = document.querySelector('.leaflet-control-fullscreen-button');
             if (button) {
               button.setAttribute('title', isFs ? 'Exit Fullscreen' : 'View Fullscreen');
@@ -316,10 +304,8 @@ function SafeFullscreenControl() {
           }
         };
 
-        // Add event listeners with error handling
         map.on("fullscreenchange", handleFsChange);
         
-        // Also listen to document fullscreen events as fallback
         const documentEvents = ['fullscreenchange', 'webkitfullscreenchange', 'mozfullscreenchange', 'MSFullscreenChange'];
         documentEvents.forEach(event => {
           document.addEventListener(event, handleFsChange);
@@ -341,7 +327,7 @@ function SafeFullscreenControl() {
       } catch (error) {
         console.warn('Error initializing fullscreen control:', error);
       }
-    }, 100); // Small delay to ensure map is ready
+    }, 100);
 
     return () => clearTimeout(timer);
   }, [map]);
@@ -349,7 +335,7 @@ function SafeFullscreenControl() {
   return null;
 }
 
-// Add this component before the main MapView function
+// Search Zoom Control
 const SearchZoomControl = ({ searchTerm, searchResults, onRecordSelect }) => {
   const map = useMap();
   
@@ -368,7 +354,7 @@ const SearchZoomControl = ({ searchTerm, searchResults, onRecordSelect }) => {
   return null;
 };
 
-// Updated barangay coordinates with complete list
+// Barangay coordinates
 const barangayCoordinates = {
   'alasas': [15.0122, 120.6966],
   'baliti': [15.1050, 120.6239],
@@ -415,7 +401,6 @@ export default function MapView() {
   const [hasFlown, setHasFlown] = useState(false);
   const recordDetails = location.state?.recordDetails;
 
-
   const [accidentData, setAccidentData] = useState(null);
   const [showClusters, setShowClusters] = useState(true);
   const [showHeatmap, setShowHeatmap] = useState(true);
@@ -425,7 +410,6 @@ export default function MapView() {
   const [selectedRecord, setSelectedRecord] = useState(null);
   const [displayMode, setDisplayMode] = useState('points');
 
-  // Add search state variables
   const [searchTerm, setSearchTerm] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [showSearchDropdown, setShowSearchDropdown] = useState(false);
@@ -438,16 +422,15 @@ export default function MapView() {
     }
   }, [fromRecords, recordLat, recordLng, recordDetails]);
 
-
   useEffect(() => {
     if (fromRecords) {
       setShowHeatmap(false);
       setShowMarkers(true);
     }
-  }, []);
+  }, [fromRecords]);
 
-  // Filter states
-  const [selectedYear, setSelectedYear] = useState("all");
+  // CHANGED: Filter states - selectedYears is now an array
+  const [selectedYears, setSelectedYears] = useState([]); // Empty array means "all"
   const [selectedLocation, setSelectedLocation] = useState("all");
   const [selectedOffenseType, setSelectedOffenseType] = useState("all");
   const [selectedSeverity, setSelectedSeverity] = useState("all");
@@ -476,7 +459,7 @@ export default function MapView() {
     return { availableYears: years, availableLocations: locations, availableOffenseTypes: offenseTypes, availableSeverities: severities };
   }, [accidentData]);
 
-  // Filter data based on selected filters
+  // CHANGED: Filter data based on selected filters - updated year logic
   const filteredData = useMemo(() => {
     if (!accidentData) return { accidentPoints: [], clusterCenters: [], stats: null };
 
@@ -488,10 +471,15 @@ export default function MapView() {
       f.properties && f.properties.type === "cluster_center"
     );
 
-    // Apply filters
+    // Apply filters with updated year logic
     accidents = accidents.filter(f => {
       const { year, barangay, offensetype, severity } = f.properties;
-      const yearMatch = selectedYear === "all" || String(year).trim() === selectedYear;
+      
+      // Convert year to string for comparison
+      const yearStr = String(year).trim();
+      
+      // Empty selectedYears array means "all years"
+      const yearMatch = selectedYears.length === 0 || selectedYears.includes(yearStr);
       const locationMatch = selectedLocation === "all" || String(barangay).trim() === selectedLocation;
       const offenseMatch = selectedOffenseType === "all" || String(offensetype).trim() === selectedOffenseType;
       const severityMatch = selectedSeverity === "all" || String(severity).trim() === selectedSeverity;
@@ -524,29 +512,34 @@ export default function MapView() {
         noisePoints: accidents.filter(f => f.properties.cluster === -1).length
       },
     };
-  }, [accidentData, selectedYear, selectedLocation, selectedOffenseType, selectedSeverity]);
+  }, [accidentData, selectedYears, selectedLocation, selectedOffenseType, selectedSeverity]);
 
- useEffect(() => {
-  async function fetchData() {
-    setLoading(true);
-    try {
-      let res = await fetch("http://localhost:5000/data/accidents_clustered.geojson");
-      if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-      const data = await res.json();
-      console.log("Fetched GeoJSON:", data.features?.length, "points");
-      setAccidentData(data);
-    } catch (err) {
-      console.error("Failed to load GeoJSON data:", err);
-    } finally {
-      setLoading(false);
+  useEffect(() => {
+    async function fetchData() {
+      setLoading(true);
+      try {
+        let res = await fetch("http://localhost:5000/data/accidents_clustered.geojson");
+        if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+        const data = await res.json();
+        console.log("Fetched GeoJSON:", data.features?.length, "points");
+        setAccidentData(data);
+      } catch (err) {
+        console.error("Failed to load GeoJSON data:", err);
+      } finally {
+        setLoading(false);
+      }
     }
-  }
-  fetchData();
-}, []);
+    fetchData();
+  }, []);
 
   const handleToggle = useCallback((setter) => (e) => setter(e.target.checked), []);
 
-  // Add search functionality
+  // NEW: Handler for year multi-select
+  const handleYearChange = useCallback((values) => {
+    setSelectedYears(values);
+  }, []);
+
+  // Search functionality
   const handleSearch = useCallback((term) => {
     setSearchTerm(term);
     
@@ -556,7 +549,6 @@ export default function MapView() {
       return;
     }
 
-    // Check for barangay match first
     const barangayName = term.toLowerCase().trim();
     if (barangayCoordinates[barangayName]) {
       setSearchResults([{
@@ -570,7 +562,6 @@ export default function MapView() {
       return;
     }
 
-    // Search in current records
     const results = filteredData.accidentPoints
       .filter(point => {
         const searchLower = term.toLowerCase();
@@ -578,7 +569,7 @@ export default function MapView() {
           point.location?.toLowerCase().includes(searchLower)
         );
       })
-      .slice(0, 8) // Limit to 8 results
+      .slice(0, 8)
       .map(point => ({
         ...point,
         type: 'record'
@@ -588,23 +579,19 @@ export default function MapView() {
     setShowSearchDropdown(results.length > 0);
   }, [filteredData.accidentPoints]);
 
-  // Handle search input change
   const handleSearchInputChange = (e) => {
     const value = e.target.value;
     handleSearch(value);
   };
 
-  // Handle search result selection
   const handleSearchResultSelect = (result) => {
     if (result.type === 'barangay' || result.type === 'record') {
       setSelectedRecord(result.type === 'record' ? result : null);
-      // The zoom will be handled by SearchZoomControl
     }
     setShowSearchDropdown(false);
     setSearchTerm(result.name || result.location || '');
   };
 
-  // Handle keyboard navigation
   const handleSearchKeyDown = (e) => {
     if (!showSearchDropdown || searchResults.length === 0) return;
 
@@ -629,7 +616,6 @@ export default function MapView() {
     }
   };
 
-  // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (searchInputRef.current && !searchInputRef.current.contains(event.target)) {
@@ -659,9 +645,9 @@ export default function MapView() {
     useEffect(() => {
       if (!hasFlown && recordLat && recordLng && map) {
         map.flyTo([recordLat, recordLng], 17, { duration: 1.5 });
-        setHasFlown(true); // ensure this runs only once
+        setHasFlown(true);
       }
-    }, [map, recordLat, recordLng, hasFlown]);
+    }, [map]);
   
     return null;
   }
@@ -690,9 +676,7 @@ export default function MapView() {
   
     return null;
   }
-  
 
-  // Main component
   return (
     <div className="scroll-wrapper">
       <div className="mapview-container">
@@ -700,46 +684,40 @@ export default function MapView() {
           <div className="page-title-container">
             <img src="stopLight.svg" alt="Logo" className="page-logo" />
             <h1 className="page-title">Accident Heatmap</h1>
-          
 
-          {/* Info button */}
-          <button type="button" className="viewmap-info-btn" aria-label="Dashboard Info">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-              <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1" />
-              <text x="12" y="16" textAnchor="middle" fontSize="12" fill="currentColor" fontFamily="Poppins, sans-serif">i</text>
-            </svg>
-          </button>
+            <button type="button" className="viewmap-info-btn" aria-label="Dashboard Info">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1" />
+                <text x="12" y="16" textAnchor="middle" fontSize="12" fill="currentColor" fontFamily="Poppins, sans-serif">i</text>
+              </svg>
+            </button>
 
-          <div className="viewmap-edit-instructions" role="status">
-            <strong>💡 How Accident Heatmap Work</strong>
-            <div>• <b>Heatmap</b>: Shows accident density with a color gradient from blue (low) to red (high intensity).</div>
-            <div>• <b>Clusters</b>: Colored circles group nearby accidents.</div>
-            <div>• <b>Points</b>: Individual accident markers colored by their cluster assignment. Gray points are unclustered.</div>
-            <div>• Toggle <b>Heatmap</b>, <b>Clusters</b>, or <b>Points</b> using the checkboxes above the map.</div>
-            <div>• Use the filters to narrow results by <b>year</b>, <b>location</b>, <b>offense type</b>, or <b>severity</b>.</div>
-            <div>• Hover over clusters or points for detailed information (not available in heatmap mode).</div>
-            <div>• Click the <b>Legend</b> button (bottom-right) to view color meanings and click clusters to zoom.</div>
-            <div>• Use the fullscreen button (top-right) for an expanded map view.</div>
+            <div className="viewmap-edit-instructions" role="status">
+              <strong>💡 How Accident Heatmap Work</strong>
+              <div>• <b>Heatmap</b>: Shows accident density with a color gradient from blue (low) to red (high intensity).</div>
+              <div>• <b>Clusters</b>: Colored circles group nearby accidents.</div>
+              <div>• <b>Points</b>: Individual accident markers colored by their cluster assignment. Gray points are unclustered.</div>
+              <div>• Toggle <b>Heatmap</b>, <b>Clusters</b>, or <b>Points</b> using the checkboxes above the map.</div>
+              <div>• Use the filters to narrow results by <b>year</b>, <b>location</b>, <b>offense type</b>, or <b>severity</b>.</div>
+              <div>• Hover over clusters or points for detailed information (not available in heatmap mode).</div>
+              <div>• Click the <b>Legend</b> button (bottom-right) to view color meanings and click clusters to zoom.</div>
+              <div>• Use the fullscreen button (top-right) for an expanded map view.</div>
+            </div>
           </div>
-        </div>
           <DateTime />
         </div>
 
-        {/* All filters and controls on one line */}
+        {/* CHANGED: Year filter now uses MultiSelectDropdown */}
         <div className="control-filter-bar">
           <div className="filter-group">
             <label htmlFor="year-select" className="filter-label">Year:</label>
-            <select
-              id="year-select"
-              className="filter-dropdown"
-              value={selectedYear}
-              onChange={(e) => setSelectedYear(e.target.value)}
-            >
-              <option value="all">All Years</option>
-              {availableYears.map(year => (
-                <option key={year} value={year}>{year}</option>
-              ))}
-            </select>
+            <MultiSelectDropdown
+              options={availableYears}
+              selectedValues={selectedYears}
+              onChange={handleYearChange}
+              placeholder="Select Years"
+              allLabel="All Years"
+            />
           </div>
 
           <div className="filter-group">
@@ -788,134 +766,142 @@ export default function MapView() {
           </div>
         </div>
 
-          <div className="controls-panel">
-          <label>
-            <input type="checkbox" checked={showHeatmap} onChange={handleToggle(setShowHeatmap)} /> Heatmap
-          </label>
-          <label>
-            <input type="checkbox" checked={showClusters} onChange={handleToggle(setShowClusters)} /> Clusters
-          </label>
-          <label>
-            <input type="checkbox" checked={showMarkers} onChange={handleToggle(setShowMarkers)} /> Points
-          </label>
+        <div className="controls-panel">
+          <div className="controls-checkboxes">
+            <label>
+              <input type="checkbox" checked={showHeatmap} onChange={handleToggle(setShowHeatmap)} /> Heatmap
+            </label>
+            <label>
+              <input type="checkbox" checked={showClusters} onChange={handleToggle(setShowClusters)} /> Clusters
+            </label>
+            <label>
+              <input type="checkbox" checked={showMarkers} onChange={handleToggle(setShowMarkers)} /> Points
+            </label>
+          </div>
+          
+          {filteredData.stats && (
+            <div className="stats-display">
+              {filteredData.stats.totalAccidents} accidents • {filteredData.stats.totalClusters} clusters • {filteredData.stats.noisePoints} noise
+            </div>
+          )}
         </div>
-
+        
         <div className="map-card">
           <div className="mapview-wrapper">
-          <MapContainer
-            center={[15.0306, 120.6845]}
-            zoom={14}
-            minZoom={12}
-            maxZoom={18}
-            scrollWheelZoom={true}
-            className="mapview-map"
-            preferCanvas={true}
-            updateWhenZooming={false}
-            updateWhenIdle={true}
-            maxBounds={sanFernandoBounds}
-            maxBoundsViscosity={1.0}
-          >
-            {/* Enhanced corner search with functionality */}
-            <div className="simple-corner-search" ref={searchInputRef}>
-              <input
-                type="text"
-                placeholder="Search barangay..."
-                className="simple-search-input"
-                value={searchTerm}
-                onChange={handleSearchInputChange}
-                onKeyDown={handleSearchKeyDown}
-                onFocus={() => {
-                  if (searchResults.length > 0) setShowSearchDropdown(true);
-                }}
-              />
-              
-              {/* Search dropdown */}
-              {showSearchDropdown && searchResults.length > 0 && (
-                <div className="search-dropdown">
-                  {searchResults.map((result, index) => (
-                    <div
-                      key={result.id || index}
-                      className={`search-dropdown-item ${
-                        index === selectedSearchIndex ? 'selected' : ''
-                      }`}
-                      onClick={() => handleSearchResultSelect(result)}
-                    >
-                      <div className="search-item-main">
-                        {result.type === 'barangay' ? (
-                          <span className="search-barangay">📍 {result.name} (Barangay)</span>
-                        ) : (
-                          <span>{result.location}</span>
+            <MapContainer
+              center={[15.0306, 120.6845]}
+              zoom={14}
+              minZoom={12}
+              maxZoom={18}
+              scrollWheelZoom={true}
+              className="mapview-map"
+              preferCanvas={true}
+              updateWhenZooming={false}
+              updateWhenIdle={true}
+              maxBounds={sanFernandoBounds}
+              maxBoundsViscosity={1.0}
+            >
+              <div className="simple-corner-search" ref={searchInputRef}>
+                <input
+                  type="text"
+                  placeholder="Search barangay..."
+                  className="simple-search-input"
+                  value={searchTerm}
+                  onChange={handleSearchInputChange}
+                  onKeyDown={handleSearchKeyDown}
+                  onFocus={() => {
+                    if (searchResults.length > 0) setShowSearchDropdown(true);
+                  }}
+                />
+                
+                {showSearchDropdown && searchResults.length > 0 && (
+                  <div className="search-dropdown">
+                    {searchResults.map((result, index) => (
+                      <div
+                        key={result.id || index}
+                        className={`search-dropdown-item ${
+                          index === selectedSearchIndex ? 'selected' : ''
+                        }`}
+                        onClick={() => handleSearchResultSelect(result)}
+                      >
+                        <div className="search-item-main">
+                          {result.type === 'barangay' ? (
+                            <span className="search-barangay">📍 {result.name} (Barangay)</span>
+                          ) : (
+                            <span>{result.location}</span>
+                          )}
+                        </div>
+                        {result.type === 'record' && (
+                          <div className="search-item-meta">
+                            {result.offense_type} • {result.severity} • {result.year}
+                          </div>
                         )}
                       </div>
-                      {result.type === 'record' && (
-                        <div className="search-item-meta">
-                          {result.offense_type} • {result.severity} • {result.year}
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
+                    ))}
+                  </div>
+                )}
+              </div>
 
-            <SearchZoomControl 
-              searchTerm={searchTerm}
-              searchResults={searchResults}
-              onRecordSelect={setSelectedRecord}
-            />
+              <SearchZoomControl 
+                searchTerm={searchTerm}
+                searchResults={searchResults}
+                onRecordSelect={setSelectedRecord}
+              />
 
-            <img src="/osimap-logo.svg" alt="OSIMAP Logo" className="osimap-logo" />
-            <FullscreenFilters
-              yearFilter={selectedYear}
-              locationFilter={selectedLocation}
-              offenseFilter={selectedOffenseType}
-              severityFilter={selectedSeverity}
-              displayMode={displayMode}
-              onYearChange={setSelectedYear}
-              onLocationChange={setSelectedLocation}
-              onOffenseChange={setSelectedOffenseType}
-              onSeverityChange={setSelectedSeverity}
-              onDisplayModeChange={setDisplayMode}
-              availableYears={availableYears}
-              availableLocations={availableLocations}
-              availableOffenseTypes={availableOffenseTypes}
-              availableSeverities={availableSeverities}
-              showHeatmap={showHeatmap}
-              showClusters={showClusters}
-              showMarkers={showMarkers}
-              onToggleHeatmap={(checked) => setShowHeatmap(checked)}
-              onToggleClusters={(checked) => setShowClusters(checked)}
-              onToggleMarkers={(checked) => setShowMarkers(checked)}
-              stats={filteredData.stats}
-            />
-            {selectedRecord && <RecordPopup record={selectedRecord} />}
-            <SafeFullscreenControl />
-            <LegendControl clusterCenters={filteredData.clusterCenters} />
-            <FlyToQueryLocation fromRecords={fromRecords} />
-            
-            <LayersControl position="topright">
-              <LayersControl.BaseLayer checked name="Light">
-                <TileLayer url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png" attribution="© CartoDB" />
-              </LayersControl.BaseLayer>
-              <LayersControl.BaseLayer name="Streets">
-                <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" attribution="© OpenStreetMap contributors" />
-              </LayersControl.BaseLayer>
-              <LayersControl.BaseLayer name="Dark">
-                <TileLayer url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png" attribution="© CartoDB" />
-              </LayersControl.BaseLayer>
-              <LayersControl.BaseLayer name="Satellite">
-                <TileLayer
-                  url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
-                  attribution="© Esri"
-                />
-              </LayersControl.BaseLayer>
-            </LayersControl>
-            
-            <ClusteredHeatmapLayer filteredData={filteredData} showHeatmap={showHeatmap} />
-            <ClusterCenters clusterCenters={filteredData.clusterCenters} showClusters={showClusters} />
-            <AccidentMarkers accidentPoints={filteredData.accidentPoints} showMarkers={showMarkers} />
-            
-          </MapContainer>
+              <img src="/osimap-logo.svg" alt="OSIMAP Logo" className="osimap-logo" />
+              
+              <FullscreenFilters
+                yearFilter={selectedYears}
+                locationFilter={selectedLocation}
+                offenseFilter={selectedOffenseType}
+                severityFilter={selectedSeverity}
+                displayMode={displayMode}
+                onYearChange={handleYearChange}
+                onLocationChange={setSelectedLocation}
+                onOffenseChange={setSelectedOffenseType}
+                onSeverityChange={setSelectedSeverity}
+                onDisplayModeChange={setDisplayMode}
+                availableYears={availableYears}
+                availableLocations={availableLocations}
+                availableOffenseTypes={availableOffenseTypes}
+                availableSeverities={availableSeverities}
+                showHeatmap={showHeatmap}
+                showClusters={showClusters}
+                showMarkers={showMarkers}
+                onToggleHeatmap={(checked) => setShowHeatmap(checked)}
+                onToggleClusters={(checked) => setShowClusters(checked)}
+                onToggleMarkers={(checked) => setShowMarkers(checked)}
+                stats={filteredData.stats}
+              />
+              
+              {selectedRecord && <RecordPopup record={selectedRecord} />}
+              <SafeFullscreenControl />
+              <LegendControl clusterCenters={filteredData.clusterCenters} />
+              <FlyToQueryLocation fromRecords={fromRecords} />
+              
+              <LayersControl position="topright">
+                <LayersControl.BaseLayer checked name="Light">
+                  <TileLayer url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png" attribution="© CartoDB" />
+                </LayersControl.BaseLayer>
+                <LayersControl.BaseLayer name="Streets">
+                  <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" attribution="© OpenStreetMap contributors" />
+                </LayersControl.BaseLayer>
+                <LayersControl.BaseLayer name="Dark">
+                  <TileLayer url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png" attribution="© CartoDB" />
+                </LayersControl.BaseLayer>
+                <LayersControl.BaseLayer name="Satellite">
+                  <TileLayer
+                    url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+                    attribution="© Esri"
+                  />
+                </LayersControl.BaseLayer>
+              </LayersControl>
+              
+              <ClusteredHeatmapLayer filteredData={filteredData} showHeatmap={showHeatmap} />
+              <ClusterCenters clusterCenters={filteredData.clusterCenters} showClusters={showClusters} />
+              <AccidentMarkers accidentPoints={filteredData.accidentPoints} showMarkers={showMarkers} />
+              
+            </MapContainer>
           </div>
         </div>
       </div>
