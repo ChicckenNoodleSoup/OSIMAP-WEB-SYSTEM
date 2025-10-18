@@ -1,5 +1,6 @@
 import React from 'react';
 import './FullscreenFilters.css';
+import MultiSelectDropdown from './MultiSelectDropdown';
 
 const FullscreenFilters = ({
   yearFilter,
@@ -27,16 +28,14 @@ const FullscreenFilters = ({
       {/* Main filters at top */}
       <div className="fullscreen-filters">
         <div className="filter-container">
-          <select
-            className="filter-dropdown"
-            value={yearFilter}
-            onChange={(e) => onYearChange(e.target.value)}
-          >
-            <option value="all">All Years</option>
-            {availableYears.map(year => (
-              <option key={year} value={year}>{year}</option>
-            ))}
-          </select>
+          {/* Year filter now uses MultiSelectDropdown */}
+          <MultiSelectDropdown
+            options={availableYears}
+            selectedValues={yearFilter}
+            onChange={onYearChange}
+            placeholder="Select Years"
+            allLabel="All Years"
+          />
 
           <select
             className="filter-dropdown"

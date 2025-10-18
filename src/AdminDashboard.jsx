@@ -3,6 +3,8 @@ import { createClient } from "@supabase/supabase-js";
 import { sendAccountStatusEmail } from './utils/emailService';
 import { isAdministrator } from './utils/authUtils';
 import RoleProtectedRoute from './components/RoleProtectedRoute';
+import { DateTime } from './DateTime';
+import { Shield, Users, Activity, CheckCircle, XCircle, Clock, Mail, User } from 'lucide-react';
 import './AdminDashboard.css';
 
 const SUPABASE_URL = process.env.REACT_APP_SUPABASE_URL;
@@ -147,136 +149,189 @@ function AdminDashboard() {
 
   if (isLoading) {
     return (
-      <div className="admin-dashboard-container">
-        <div className="loading">Loading pending accounts...</div>
+      <div className="scroll-wrapper">
+        <div className="admin-dashboard-container">
+          <div className="loading">
+            <Activity className="loading-icon" size={32} />
+            <p>Loading pending accounts...</p>
+          </div>
+        </div>
       </div>
     );
   }
 
   if (accessDenied) {
     return (
-      <div className="admin-dashboard-container">
-        <div className="access-denied">
-          <h2>Access Denied</h2>
-          <p>You don't have permission to access this page. Only Administrators can view the admin dashboard.</p>
+      <div className="scroll-wrapper">
+        <div className="admin-dashboard-container">
+          <div className="access-denied">
+            <Shield size={48} className="access-denied-icon" />
+            <h2>Access Denied</h2>
+            <p>You don't have permission to access this page. Only Administrators can view the admin dashboard.</p>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="admin-dashboard-container">
-      <div className="admin-dashboard-header">
-        <h1>Admin Dashboard</h1>
-        <p>Manage accounts and view user activity logs</p>
-      </div>
-
-      {message && (
-        <div className={`message ${message.includes('Error') ? 'error' : 'success'}`}>
-          {message}
+    <div className="scroll-wrapper">
+      <div className="admin-dashboard-container">
+        <div className="page-header">
+          <div className="page-title-container">
+            <img src="stopLight.svg" alt="Logo" className="page-logo" />
+            <h1 className="page-title">Admin Dashboard</h1>
+          </div>
+          <DateTime />
         </div>
-      )}
 
-      {/* Tab Navigation */}
-      <div className="tab-navigation">
-        <button
-          className={`tab-btn ${activeTab === 'accounts' ? 'active' : ''}`}
-          onClick={() => setActiveTab('accounts')}
-        >
-          Pending Accounts ({pendingAccounts.length})
-        </button>
-        <button
-          className={`tab-btn ${activeTab === 'logs' ? 'active' : ''}`}
-          onClick={() => setActiveTab('logs')}
-        >
-          User Activity Logs
-        </button>
-      </div>
+        {message && (
+          <div className={`message ${message.includes('Error') ? 'error' : 'success'}`}>
+            {message.includes('Error') ? <XCircle size={18} /> : <CheckCircle size={18} />}
+            <span>{message}</span>
+          </div>
+        )}
 
-      {/* Accounts Tab */}
-      {activeTab === 'accounts' && (
-        <>
-          {pendingAccounts.length === 0 ? (
-            <div className="no-accounts">
-              <p>No pending accounts to review</p>
-            </div>
-          ) : (
-            <div className="accounts-list">
-              {pendingAccounts.map((account) => (
-                <div key={account.id} className="account-card">
-                  <div className="account-info">
-                    <h3>{account.full_name}</h3>
-                    <p><strong>Email:</strong> {account.email}</p>
-                    <p><strong>Submitted:</strong> {new Date(account.created_at).toLocaleDateString()}</p>
+        {/* Tab Navigation */}
+        <div className="tab-navigation">
+          <button
+            className={`tab-btn ${activeTab === 'accounts' ? 'active' : ''}`}
+            onClick={() => setActiveTab('accounts')}
+          >
+            <Users size={18} />
+            <span>Pending Accounts</span>
+            <span className="tab-badge">{pendingAccounts.length}</span>
+          </button>
+          <button
+            className={`tab-btn ${activeTab === 'logs' ? 'active' : ''}`}
+            onClick={() => setActiveTab('logs')}
+          >
+            <Activity size={18} />
+            <span>User Activity Logs</span>
+          </button>
+        </div>
+
+        {/* Accounts Tab */}
+        {activeTab === 'accounts' && (
+          <>
+            {pendingAccounts.length === 0 ? (
+              <div className="no-data">
+                <Users size={48} className="no-data-icon" />
+                <p>No pending accounts to review</p>
+              </div>
+            ) : (
+              <div className="accounts-list">
+                {pendingAccounts.map((account) => (
+                  <div key={account.id} className="account-card">
+                    <div className="account-info">
+                      <div className="account-header">
+                        <User size={20} className="account-icon" />
+                        <h3>{account.full_name}</h3>
+                      </div>
+                      <div className="account-details">
+                        <div className="detail-item">
+                          <Mail size={18} />
+                          <span>{account.email}</span>
+                        </div>
+                        <div className="detail-item">
+                          <Clock size={18} />
+                          <span>{new Date(account.created_at).toLocaleDateString('en-US', { 
+                            year: 'numeric', 
+                            month: 'long', 
+                            day: 'numeric' 
+                          })}</span>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="account-actions">
+                      <button
+                        className="approve-btn"
+                        onClick={() => handleApproval(account.id, 'approve')}
+                      >
+                        <CheckCircle size={18} />
+                        <span>Approve</span>
+                      </button>
+                      <button
+                        className="reject-btn"
+                        onClick={() => handleApproval(account.id, 'reject')}
+                      >
+                        <XCircle size={18} />
+                        <span>Reject</span>
+                      </button>
+                    </div>
                   </div>
-                  
-                  <div className="account-actions">
-                    <button
-                      className="approve-btn"
-                      onClick={() => handleApproval(account.id, 'approve')}
-                    >
-                      Approve
-                    </button>
-                    <button
-                      className="reject-btn"
-                      onClick={() => handleApproval(account.id, 'reject')}
-                    >
-                      Reject
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </>
-      )}
+                ))}
+              </div>
+            )}
+          </>
+        )}
 
-      {/* Logs Tab */}
-      {activeTab === 'logs' && (
-        <>
-          {logsLoading ? (
-            <div className="loading">Loading user activity logs...</div>
-          ) : userLogs.length === 0 ? (
-            <div className="no-logs">
-              <p>No user activity logs found</p>
-            </div>
-          ) : (
-            <div className="logs-list">
-              {userLogs.map((log) => (
-                <div key={log.id} className="log-card">
-                  <div className="log-info">
-                    <div className="log-header">
-                      <h4>{log.police?.full_name || 'Unknown User'}</h4>
-                      <span className="log-time">
-                        {new Date(log.created_at).toLocaleString()}
+        {/* Logs Tab */}
+        {activeTab === 'logs' && (
+          <>
+            {logsLoading ? (
+              <div className="loading">
+                <Activity className="loading-icon" size={32} />
+                <p>Loading user activity logs...</p>
+              </div>
+            ) : userLogs.length === 0 ? (
+              <div className="no-data">
+                <Activity size={48} className="no-data-icon" />
+                <p>No user activity logs found</p>
+              </div>
+            ) : (
+              <div className="logs-list">
+                {userLogs.map((log) => (
+                  <div key={log.id} className="log-card">
+                    <div className="log-info">
+                      <div className="log-header">
+                        <div className="log-user">
+                          <User size={18} />
+                          <h4>{log.police?.full_name || 'Unknown User'}</h4>
+                        </div>
+                        <div className="log-time">
+                          <Clock size={14} />
+                          <span>{new Date(log.created_at).toLocaleString('en-US', {
+                            month: 'short',
+                            day: 'numeric',
+                            year: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })}</span>
+                        </div>
+                      </div>
+                      <div className="log-email">
+                        <Mail size={14} />
+                        <span>{log.police?.email || 'No email'}</span>
+                      </div>
+                      <div className="log-activity">
+                        <Activity size={14} />
+                        <span>{log.activity || 'No activity description'}</span>
+                      </div>
+                      {log.details && (
+                        <div className="log-details">
+                          <span>{log.details}</span>
+                        </div>
+                      )}
+                      {log.ip_address && (
+                        <div className="log-ip">
+                          <span>IP: {log.ip_address}</span>
+                        </div>
+                      )}
+                    </div>
+                    <div className="log-type">
+                      <span className={`log-type-badge ${log.log_type?.toLowerCase() || 'info'}`}>
+                        {log.log_type || 'INFO'}
                       </span>
                     </div>
-                    <p className="log-email">{log.police?.email || 'No email'}</p>
-                    <p className="log-activity">
-                      <strong>Activity:</strong> {log.activity || 'No activity description'}
-                    </p>
-                    {log.details && (
-                      <p className="log-details">
-                        <strong>Details:</strong> {log.details}
-                      </p>
-                    )}
-                    {log.ip_address && (
-                      <p className="log-ip">
-                        <strong>IP:</strong> {log.ip_address}
-                      </p>
-                    )}
                   </div>
-                  <div className="log-type">
-                    <span className={`log-type-badge ${log.log_type?.toLowerCase() || 'info'}`}>
-                      {log.log_type || 'INFO'}
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </>
-      )}
+                ))}
+              </div>
+            )}
+          </>
+        )}
+      </div>
     </div>
   );
 }
