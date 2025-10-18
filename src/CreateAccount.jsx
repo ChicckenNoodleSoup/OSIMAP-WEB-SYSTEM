@@ -137,6 +137,7 @@ function CreateAccount() {
                     placeholder="Enter Full Name"
                     value={username}
                     onChange={handleInputChange(setUsername, setUsernameError)}
+                    maxLength={100}
                   />
                 </div>
 
@@ -150,6 +151,7 @@ function CreateAccount() {
                     placeholder="Enter Email"
                     value={email}
                     onChange={handleInputChange(setEmail, setEmailError)}
+                    maxLength={254}
                   />
                 </div>
 
@@ -163,6 +165,7 @@ function CreateAccount() {
                     placeholder="Enter Password"
                     value={password}
                     onChange={handleInputChange(setPassword, setPasswordError)}
+                    maxLength={128}
                   />
                 </div>
 
@@ -176,6 +179,7 @@ function CreateAccount() {
                     placeholder="Confirm Password"
                     value={confirmPassword}
                     onChange={handleInputChange(setConfirmPassword, setConfirmPasswordError)}
+                    maxLength={128}
                   />
                 </div>
 

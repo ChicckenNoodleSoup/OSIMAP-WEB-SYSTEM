@@ -87,7 +87,7 @@ function Sidebar({ onLogout }) {
                 className={`menu-item ${isActive('/admin-dashboard') ? 'active' : ''}`}
                 onClick={() => navigate('/admin-dashboard')}
               >
-                <img src="/admin-dashboard-icon.png" alt="Admin Dashboard" />
+                <img src="/admin-icon.png" alt="Admin Dashboard" />
                 <span>Admin Dashboard</span>
               </div>
             )}

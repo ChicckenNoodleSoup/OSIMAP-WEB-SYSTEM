@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useUser } from "./UserContext";
 import { createClient } from "@supabase/supabase-js";
 import { secureHash, verifySecureHash } from "./utils/passwordUtils";
+import { validatePassword, validateFullName, validateEmail, validateStation } from "./utils/validation";
 import "./Profile.css";
 
 const SUPABASE_URL = process.env.REACT_APP_SUPABASE_URL;
@@ -77,8 +78,27 @@ function Profile() {
   };
 
   const handleSave = async () => {
-    if (!editForm.fullName.trim() || !editForm.email.trim()) {
-      setMessage('Name and email are required fields.');
+    // Validate all fields
+    const fullNameError = validateFullName(editForm.fullName);
+    if (fullNameError) {
+      setMessage(fullNameError);
+      return;
+    }
+
+    const emailError = validateEmail(editForm.email);
+    if (emailError) {
+      setMessage(emailError);
+      return;
+    }
+
+    const stationError = validateStation(editForm.station);
+    if (stationError) {
+      setMessage(stationError);
+      return;
+    }
+
+    if (!editForm.role) {
+      setMessage('Role is required.');
       return;
     }
 
@@ -166,8 +186,10 @@ function Profile() {
       return;
     }
 
-    if (passwordForm.newPassword.length < 8) {
-      setMessage('Password must be at least 8 characters long.');
+    // Validate new password
+    const passwordError = validatePassword(passwordForm.newPassword);
+    if (passwordError) {
+      setMessage(passwordError);
       return;
     }
 
@@ -279,6 +301,8 @@ function Profile() {
                     value={editForm.fullName || ''}
                     onChange={(e) => setEditForm({ ...editForm, fullName: e.target.value })}
                     className="profile-edit-input"
+                    maxLength={100}
+                    required
                   />
                 ) : (
                   <p className="profile-value">{userData.full_name}</p>
@@ -293,6 +317,8 @@ function Profile() {
                     value={editForm.email || ''}
                     onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
                     className="profile-edit-input"
+                    maxLength={254}
+                    required
                   />
                 ) : (
                   <p className="profile-value">{userData.email}</p>
@@ -306,7 +332,9 @@ function Profile() {
                     value={editForm.role || ''}
                     onChange={(e) => setEditForm({ ...editForm, role: e.target.value })}
                     className="profile-edit-select"
+                    required
                   >
+                    <option value="">Select Role</option>
                     <option value="Administrator">Administrator</option>
                     <option value="Officer">Officer</option>
                     <option value="Supervisor">Supervisor</option>
@@ -325,6 +353,8 @@ function Profile() {
                     value={editForm.station || ''}
                     onChange={(e) => setEditForm({ ...editForm, station: e.target.value })}
                     className="profile-edit-input"
+                    maxLength={50}
+                    required
                   />
                 ) : (
                   <p className="profile-value">{userData.station || 'Not specified'}</p>
@@ -344,6 +374,7 @@ function Profile() {
                   value={passwordForm.currentPassword}
                   onChange={(e) => setPasswordForm({ ...passwordForm, currentPassword: e.target.value })}
                   className="profile-edit-input"
+                  maxLength={128}
                 />
                 <input 
                   type="password" 
@@ -351,6 +382,7 @@ function Profile() {
                   value={passwordForm.newPassword}
                   onChange={(e) => setPasswordForm({ ...passwordForm, newPassword: e.target.value })}
                   className="profile-edit-input"
+                  maxLength={128}
                 />
                 <input 
                   type="password" 
@@ -358,6 +390,7 @@ function Profile() {
                   value={passwordForm.confirmPassword}
                   onChange={(e) => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })}
                   className="profile-edit-input"
+                  maxLength={128}
                 />
                 <div className="form-buttons">
                   <button 
