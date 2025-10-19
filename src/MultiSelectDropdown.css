@@ -1,0 +1,166 @@
+/* Multi-select dropdown container */
+.multi-select-dropdown {
+  position: relative;
+  min-width: 150px;
+  user-select: none;
+  width: 100%;
+}
+
+/* Trigger button - styled to match .filter-dropdown */
+.multi-select-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 15px;
+  color: #fff;
+  padding: 8px 12px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  height: 36px;
+  width: 100%;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+}
+
+.multi-select-trigger:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(0, 133, 255, 0.5);
+  box-shadow: 0 0 8px rgba(0, 133, 255, 0.3);
+}
+
+.multi-select-text {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.multi-select-arrow {
+  font-size: 0.7rem;
+  transition: transform 0.3s ease;
+  flex-shrink: 0;
+}
+
+.multi-select-arrow.open {
+  transform: rotate(180deg);
+}
+
+/* Options dropdown */
+.multi-select-options {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background: rgba(30, 30, 30, 0.98);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  max-height: 250px;
+  overflow-y: auto;
+  z-index: 99999;
+  padding: 4px;
+}
+
+/* Individual option */
+.multi-select-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  color: #fff;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: background 0.2s ease;
+}
+
+.multi-select-option:hover {
+  background: rgba(0, 133, 255, 0.3);
+}
+
+.multi-select-option.selected {
+  background: rgba(0, 133, 255, 0.2);
+}
+
+.multi-select-option input[type="checkbox"] {
+  cursor: pointer;
+  width: 16px;
+  height: 16px;
+  accent-color: #0085ff;
+  flex-shrink: 0;
+}
+
+.multi-select-option span {
+  flex: 1;
+}
+
+/* Scrollbar styling */
+.multi-select-options::-webkit-scrollbar {
+  width: 8px;
+}
+
+.multi-select-options::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 4px;
+}
+
+.multi-select-options::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+}
+
+.multi-select-options::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 133, 255, 0.5);
+}
+
+/* Fullscreen mode styling */
+.fullscreen-active .multi-select-trigger {
+  background: white;
+  color: #4a4a4a;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 20px;
+  height: 36px;
+  padding: 8px 12px;
+}
+
+.fullscreen-active .multi-select-trigger:hover {
+  background: #f5f5f5;
+  border-color: rgba(0, 133, 255, 0.3);
+  box-shadow: 0 0 6px rgba(0, 133, 255, 0.2);
+}
+
+.fullscreen-active .multi-select-options {
+  background: white;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.fullscreen-active .multi-select-option {
+  color: #4a4a4a;
+}
+
+.fullscreen-active .multi-select-option:hover {
+  background: rgba(0, 133, 255, 0.1);
+}
+
+.fullscreen-active .multi-select-option.selected {
+  background: rgba(0, 133, 255, 0.15);
+}
+
+.fullscreen-active .multi-select-options::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.fullscreen-active .multi-select-options::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.fullscreen-active .multi-select-options::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 133, 255, 0.5);
+}

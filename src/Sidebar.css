@@ -12,14 +12,39 @@
   justify-content: space-between;
   padding: 0 0 0 0.5rem;
   transition: width 0.5s ease, background 0.5s ease;
-  overflow: hidden;
+  overflow-y: auto; /* Changed from overflow: hidden to allow scrolling */
+  overflow-x: hidden;
   border-radius: 28px;
+}
+
+/* Custom scrollbar for sidebar */
+.sidebar::-webkit-scrollbar {
+  width: 8px; /* Made narrower from 8px */
+}
+
+.sidebar::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0);
+  border-radius: 10px;
+  margin: 40px 0; /* Increased margin to make thumb shorter */
+}
+
+.sidebar::-webkit-scrollbar-thumb {
+  background: rgba(0, 133, 255, 0.5);
+  border-radius: 10px;
+  transition: background 0.3s ease;
+  min-height: 10px; /* Minimum thumb height */
+  max-height: 20px; /* Maximum thumb height */
+}
+
+.sidebar::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 133, 255, 0.8);
 }
 
 /* Collapsed state */
 .sidebar.collapsed {
   width: clamp(80px, 10vw, 120px);
   background: none;
+  overflow-y: hidden; /* No scroll when collapsed */
 }
 
 /* Logo */
@@ -31,6 +56,7 @@
   height: 100px;
   transition: height 0.5s ease;
   overflow: hidden;
+  flex-shrink: 0; /* Prevent logo from shrinking */
 }
 
 .logo-img {
@@ -62,7 +88,7 @@
   padding: 10px;
   margin-top: 1.5rem;
   transform: scale(1);
-  opacity: 1; /* make sure visible when collapsed */
+  opacity: 1;
   transition: all 0.3s ease;
 }
 
@@ -72,6 +98,10 @@
   transition: transform 0.3s ease;
 }
 
+/* Sidebar top section */
+.sidebar-top {
+  flex-shrink: 0; /* Prevent from shrinking */
+}
 
 /* Hamburger */
 .hamburger-menu {
@@ -81,12 +111,13 @@
   margin-left: 1.5rem;
   cursor: pointer;
   transition: all 0.5s ease;
+  flex-shrink: 0;
 }
 
 .hamburger-menu:hover {
   transform: scale(1.05);
   transition: transform 0.3s ease;
-  color:#0085FF
+  color: #0085FF;
 }
 
 .sidebar.collapsed .hamburger-menu {
@@ -100,7 +131,11 @@
   display: flex;
   flex-direction: column;
   margin-top: -0.5rem;
+  flex: 1; /* Allow menu to grow and take available space */
+  overflow-y: auto; /* Allow menu to scroll if needed */
+  padding-bottom: 1rem;
 }
+
 
 .menu-item {
   display: flex;
@@ -112,12 +147,14 @@
   width: 100%;
   padding: clamp(0.5em, 2vh, 0.75em) clamp(0.75em, 2vw, 1.25em);
   background-color: transparent;
+  flex-shrink: 0; /* Prevent menu items from shrinking */
 }
 
 .menu-item img {
   width: clamp(24px, 3vw, 50px);
   height: auto;
   margin-right: 1rem;
+  flex-shrink: 0;
 }
 
 .menu-item span {
@@ -133,19 +170,11 @@
 
 .menu-item:hover,
 .menu-item.active {
-  background: rgba(0, 133, 255, 0.1);
-}
-
-.menu-item:hover,
-.menu-item.active {
-  background: rgba(0, 133, 255, 0.15); /* soft blue overlay */
-  box-shadow: 0 0 12px rgba(0, 133, 255, 0.6); /* subtle glow */
+  background: rgba(0, 133, 255, 0.15);
+  box-shadow: 0 0 12px rgba(0, 133, 255, 0.6);
   border-radius: 12px;
   transition: all 0.3s ease;
 }
-
-
-
 
 /* Bottom section */
 .sidebar-bottom {
@@ -155,6 +184,11 @@
   padding: 0.5rem 0;
   margin-bottom: 2vh;
   width: 100%;
+  flex-shrink: 0; /* Prevent bottom section from shrinking */
+  margin-top: auto; /* Push to bottom */
+  position: sticky;
+  bottom: 0;
+  z-index: 10;
 }
 
 .sidebar-bottom .menu-item {
@@ -168,6 +202,7 @@
 
 .logout-btn {
   margin-top: 1vh;
+  width: 90%;
 }
 
 .logout-btn button {
@@ -180,6 +215,7 @@
   cursor: pointer;
   transition: background 0.3s ease;
   font-size: clamp(0.85rem, 1vw, 1rem);
+  width: 100%;
 }
 
 .logout-btn button:hover {
@@ -212,47 +248,46 @@
     width: 6vw;
   }
 }
+
+/* Small screen adjustments */
+@media (max-height: 700px) {
+  .sidebar-logo {
+    height: 80px;
+  }
+  
+  .logo-img {
+    margin-top: 1rem;
+  }
+  
+  .menu-item {
+    padding: 0.4em 0.75em;
+  }
+  
+  .sidebar-bottom {
+    margin-bottom: 1vh;
+  }
+}
+
 /* Sidebar hover effect */
 .sidebar:hover {
-  transform: scale(1.02); /* Slight grow */
-  box-shadow: 0 12px 32px rgba(0, 133, 255, 0.5); /* Glowing shadow */
+  transform: scale(1.02);
+  box-shadow: 0 12px 32px rgba(0, 133, 255, 0.5);
   background: linear-gradient(
     135deg, 
     rgba(0, 0, 0, 0.6), 
     rgba(0, 133, 255, 0.6)
-  ); /* Slightly more vibrant gradient */
+  );
   transition: all 0.4s ease;
 }
 
-/* Optional: animated gradient movement on hover */
+/* Animated gradient background */
 .sidebar::before {
   content: '';
   position: absolute;
-  top: -50%;
-  left: -50%;
-  width: 200%;
-  height: 200%;
-  background: linear-gradient(120deg, rgba(0,133,255,0.2), rgba(255,255,255,0.05), rgba(0,133,255,0.2));
-  border-radius: 28px;
-  z-index: 0;
-  opacity: 0;
-  transition: opacity 0.5s ease;
-}
-
-.sidebar:hover::before {
-  opacity: 1;
-  animation: diagonalSlide 6s linear infinite;
-}
-
-@keyframes diagonalSlide {
-  0% { background-position: -200% -200%; }
-  100% { background-position: 200% 200%; }
-}
-
-.sidebar::before {
-  content: '';
-  position: absolute;
-  top:0; left:0; right:0; bottom:0;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   border-radius: 28px;
   background: linear-gradient(135deg, rgba(0,133,255,0.1), rgba(255,255,255,0.05), rgba(0,133,255,0.1));
   background-size: 200% 200%;
@@ -261,6 +296,15 @@
   transition: opacity 0.3s ease;
 }
 
+.sidebar:hover::before {
+  opacity: 1;
+  animation: diagonalSlide 6s linear infinite;
+}
+
+@keyframes diagonalSlide {
+  0% { background-position: 0% 0%; }
+  100% { background-position: 100% 100%; }
+}
 
 /* Make content above pseudo-element */
 .sidebar > * {

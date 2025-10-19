@@ -120,6 +120,11 @@ function SignIn({ setIsAuthenticated }) {
             return;
           }
           
+          if (data.status === 'revoked') {
+            setErrorMessage('Your account has been revoked. Please contact the administrator.');
+            return;
+          }
+          
           if (data.status === 'approved') {
             // Successful authentication for regular users
             setIsAuthenticated(true);

@@ -127,28 +127,6 @@ function SessionTimeout() {
             Any activity will automatically extend your session.
           </p>
         </div>
-        <div style={{ 
-          display: 'flex', 
-          gap: '12px', 
-          justifyContent: 'flex-end' 
-        }}>
-          <button 
-            style={{
-              padding: '10px 20px',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: 'pointer',
-              fontSize: '14px',
-              fontWeight: '500',
-              backgroundColor: '#6c757d',
-              color: 'white',
-              transition: 'all 0.2s ease'
-            }}
-            onClick={handleLogout}
-          >
-            Logout Now
-          </button>
-        </div>
       </div>
     </div>
   );

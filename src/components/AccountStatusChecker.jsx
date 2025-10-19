@@ -23,8 +23,8 @@ function AccountStatusChecker() {
         if (userData.role === 'Administrator') return;
         
         // Check if user is rejected/revoked
-        if (userData.status === 'rejected') {
-          console.log('User account has been rejected, logging out...');
+        if (userData.status === 'rejected' || userData.status === 'revoked') {
+          console.log('User account has been rejected/revoked, logging out...');
           // Clear user data and navigate to login
           clearUserData();
           navigate('/signin', { replace: true });
