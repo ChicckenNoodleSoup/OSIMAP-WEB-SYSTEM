@@ -318,7 +318,7 @@
 }
 
 .filter-dropdown option {
-  background: rgba(255, 255, 255, 0.15);  /* Light transparent white */
+  background: rgba(30, 30, 30, 0.95);  
   backdrop-filter: blur(10px);
   color: #fff;
   padding: 10px 12px;
