@@ -256,7 +256,7 @@
 .control-filter-bar {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 6px;
   align-items: center;
   background: rgba(255, 255, 255, 0.08);
   backdrop-filter: blur(12px);
@@ -273,7 +273,7 @@
 .filter-group {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 4px;
   overflow: visible !important;
   position: relative;
   z-index: 1;
@@ -570,7 +570,6 @@
   box-shadow: 0 2px 8px rgba(0,122,255,0.2);
 }
 
-/* Enhanced search dropdown styles */
 .search-dropdown {
   position: absolute;
   top: 100%;
@@ -720,7 +719,6 @@
   }
 }
 
-/* Fullscreen enhancements with glassmorphism */
 .fullscreen-active .mapview-wrapper {
   position: fixed !important;
   top: 0;
