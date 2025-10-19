@@ -12,6 +12,11 @@ const PORT = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 
+// Global processing state
+let isProcessing = false;
+let processingStartTime = null;
+let processingError = null;
+
 // Ensure "data" folder exists
 const dataFolder = path.join(process.cwd(), "data");
 if (!fs.existsSync(dataFolder)) {
@@ -56,18 +61,30 @@ function runSingleScript(scriptPath, onSuccess) {
       if (onSuccess) onSuccess();
     } else {
       console.error(`${scriptPath} exited with code ${code}`);
+      isProcessing = false;
+      processingError = `Script ${path.basename(scriptPath)} failed with exit code ${code}`;
     }
+  });
+
+  process.on("error", (error) => {
+    console.error(`Error starting ${scriptPath}:`, error);
+    isProcessing = false;
+    processingError = `Failed to start ${path.basename(scriptPath)}: ${error.message}`;
   });
 }
 
 
 // Function to run Python scripts sequentially (including cleanup after processing)
 const runPythonScripts = () => {
+  isProcessing = true;
+  processingStartTime = new Date();
+  processingError = null;
+  
   const script1 = path.join(process.cwd(), "cleaning2.py");
   const script2 = path.join(process.cwd(), "export_geojson.py");
   const script3 = path.join(process.cwd(), "cluster_hdbscan.py");
   const cleanupScript = path.join(process.cwd(), "cleanup_files.py");
-  const uploadScript = path.join(process.cwd(), "mobile_cluster_fetch.py"); // <-- new one
+  const uploadScript = path.join(process.cwd(), "mobile_cluster_fetch.py");
 
   console.log("Starting Python script execution...");
   console.log(`Step 1: Running ${script1}`);
@@ -82,6 +99,7 @@ const runPythonScripts = () => {
           console.log(`Step 5: Uploading clusters with ${uploadScript}`);
           runSingleScript(uploadScript, () => {
             console.log("🎉 All Python scripts completed successfully!");
+            isProcessing = false;
           });
         });
       });
@@ -93,6 +111,33 @@ const runPythonScripts = () => {
 // Root route
 app.get("/", (req, res) => {
   res.send("Backend is running. Use POST /upload to upload files.");
+});
+
+// Test endpoint for debugging
+app.get("/test", (req, res) => {
+  res.json({ 
+    message: "Backend is accessible", 
+    timestamp: new Date().toISOString(),
+    isProcessing: isProcessing 
+  });
+});
+
+// Route to check processing status
+app.get("/status", (req, res) => {
+  console.log("Status endpoint hit - isProcessing:", isProcessing);
+  const processingTime = processingStartTime ? 
+    Math.floor((new Date() - processingStartTime) / 1000) : 0;
+  
+  const statusResponse = {
+    isProcessing,
+    processingTime: processingTime,
+    processingStartTime: processingStartTime,
+    processingError: processingError,
+    status: isProcessing ? "processing" : processingError ? "error" : "idle"
+  };
+  
+  console.log("Status response:", statusResponse);
+  res.json(statusResponse);
 });
 
 // Route to check available data files
