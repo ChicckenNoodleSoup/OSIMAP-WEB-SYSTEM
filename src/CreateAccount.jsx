@@ -4,6 +4,7 @@ import './CreateAccount.css';
 import { validateFullName, validateEmail, validatePassword, validateConfirmPassword } from './utils/validation';
 import { createClient } from "@supabase/supabase-js";
 import { secureHash } from './utils/passwordUtils';
+import { logAccountEvent } from './utils/loggingUtils';
 
 const SUPABASE_URL = process.env.REACT_APP_SUPABASE_URL;
 const SUPABASE_KEY = process.env.REACT_APP_SUPABASE_KEY;
@@ -100,6 +101,9 @@ function CreateAccount() {
         setMessage(`Error creating account: ${error.message}. Please try again.`);
         return;
       }
+
+      // Log account creation
+      await logAccountEvent.created(data[0].id, `New account created: ${username} (${email})`);
 
       setMessage('Your account has been submitted for approval. You will be notified via email once your account is reviewed by an administrator.');
       setIsSubmitted(true);

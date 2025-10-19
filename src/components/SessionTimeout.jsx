@@ -1,13 +1,17 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getTimeUntilExpiration, extendSession, clearUserData, isAuthenticated } from '../utils/authUtils';
+import { logAuthEvent } from '../utils/loggingUtils';
 
 function SessionTimeout() {
   const [timeLeft, setTimeLeft] = useState(0);
   const [showModal, setShowModal] = useState(false);
+  const hasLoggedExpiration = useRef(false);
   const navigate = useNavigate();
 
   useEffect(() => {
+    let interval;
+
     const checkSession = () => {
       const timeUntilExpiration = getTimeUntilExpiration();
       setTimeLeft(timeUntilExpiration);
@@ -23,9 +27,11 @@ function SessionTimeout() {
       }
       
       // Auto-logout when session expires
-      if (timeUntilExpiration <= 0) {
-        clearUserData();
-        navigate('/signin', { replace: true });
+      if (timeUntilExpiration <= 0 && !hasLoggedExpiration.current) {
+        hasLoggedExpiration.current = true;
+        // Clear the interval immediately to prevent multiple calls
+        clearInterval(interval);
+        handleLogout();
       }
     };
 
@@ -33,7 +39,7 @@ function SessionTimeout() {
     checkSession();
 
     // Check every second for real-time updates
-    const interval = setInterval(checkSession, 1000);
+    interval = setInterval(checkSession, 1000);
 
     return () => clearInterval(interval);
   }, []);
@@ -66,7 +72,8 @@ function SessionTimeout() {
     setShowModal(false);
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    await logAuthEvent.sessionExpired();
     clearUserData();
     navigate('/signin', { replace: true });
   };

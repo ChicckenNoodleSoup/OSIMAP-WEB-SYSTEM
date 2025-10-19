@@ -16,6 +16,7 @@ import SessionTimeout from './components/SessionTimeout';
 import AccountStatusChecker from './components/AccountStatusChecker';
 import { UserProvider } from './UserContext';
 import { isAuthenticated, clearUserData, extendSession } from './utils/authUtils';
+import { logAuthEvent } from './utils/loggingUtils';
 import './App.css';
 import ResetPassword from './ResetPassword';
 
@@ -55,7 +56,8 @@ function App() {
     };
   }, []);
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    await logAuthEvent.logout();
     clearUserData();
     setAuthState(false);
   };

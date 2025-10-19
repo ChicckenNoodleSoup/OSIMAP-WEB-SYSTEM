@@ -11,6 +11,7 @@ import {
 import "./DateTime.css";
 import "./AddRecord.css";
 import { DateTime } from "./DateTime";
+import { logDataEvent } from "./utils/loggingUtils";
 
 export default function AddRecord() {
   const [uploadStatus, setUploadStatus] = useState("");
@@ -25,60 +26,54 @@ export default function AddRecord() {
 
   // Function to poll backend status
   const pollBackendStatus = () => {
-    let pollAttempts = 0;
-    const maxPollAttempts = 10;
-    
-    const pollInterval = setInterval(() => {
-      fetch("http://localhost:5000/status")
-        .then((res) => {
-          if (!res.ok) {
-            throw new Error(`HTTP ${res.status}: ${res.statusText}`);
-          }
-          return res.json();
-        })
-        .then((statusData) => {
-          console.log("Backend status:", statusData);
-          pollAttempts = 0; // Reset attempts on successful request
+    const pollInterval = setInterval(async () => {
+      try {
+        const res = await fetch("http://localhost:5000/status");
+        if (!res.ok) {
+          throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+        }
+        const statusData = await res.json();
+        
+        console.log("Backend status:", statusData);
+        
+        if (statusData.status === "error") {
+          // Processing failed
+          clearInterval(pollInterval);
+          setProcessingStage("error");
+          setUploadStatus(`❌ Processing failed: ${statusData.processingError || "Unknown error"}`);
+          // Log processing failure
+          await logDataEvent.processingFailed(statusData.processingError || "Unknown error");
+        } else if (!statusData.isProcessing && statusData.status === "idle") {
+          // Processing is complete
+          clearInterval(pollInterval);
+          setProcessingStage("complete");
+          setCurrentStep(4);
+          setUploadStatus("✅ Pipeline completed successfully!");
+          // Log processing completion
+          await logDataEvent.processingCompleted();
+        } else if (statusData.isProcessing) {
+          // Still processing, update progress based on time
+          const processingTime = statusData.processingTime || 0;
           
-          if (statusData.status === "error") {
-            // Processing failed
-            clearInterval(pollInterval);
-            setProcessingStage("error");
-            setUploadStatus(`❌ Processing failed: ${statusData.processingError || "Unknown error"}`);
-          } else if (!statusData.isProcessing && statusData.status === "idle") {
-            // Processing is complete
-            clearInterval(pollInterval);
-            setProcessingStage("complete");
-            setCurrentStep(4);
-            setUploadStatus("✅ Pipeline completed successfully!");
-          } else if (statusData.isProcessing) {
-            // Still processing, update progress based on time
-            const processingTime = statusData.processingTime || 0;
-            
-            if (processingTime < 3) {
-              setCurrentStep(2);
-              setUploadStatus("📊 Processing data through pipeline...");
-            } else if (processingTime < 6) {
-              setCurrentStep(3);
-              setUploadStatus("🗺️ Converting to GeoJSON...");
-            } else {
-              setCurrentStep(3);
-              setUploadStatus(`🔄 Still processing... (${processingTime}s elapsed)`);
-            }
-          }
-        })
-        .catch((err) => {
-          console.error("Error polling status:", err);
-          pollAttempts++;
-          
-          if (pollAttempts >= maxPollAttempts) {
-            clearInterval(pollInterval);
-            setProcessingStage("error");
-            setUploadStatus(`❌ Failed to connect to backend after ${maxPollAttempts} attempts. Please check if the backend server is running on port 5000.`);
+          if (processingTime < 3) {
+            setCurrentStep(2);
+            setUploadStatus("📊 Processing data through pipeline...");
+          } else if (processingTime < 6) {
+            setCurrentStep(3);
+            setUploadStatus("🗺️ Converting to GeoJSON...");
           } else {
-            console.log(`Polling attempt ${pollAttempts}/${maxPollAttempts} failed, retrying...`);
+            setCurrentStep(3);
+            setUploadStatus(`🔄 Still processing... (${processingTime}s elapsed)`);
           }
-        });
+        }
+      } catch (err) {
+        console.error("Error polling status:", err);
+        clearInterval(pollInterval);
+        setProcessingStage("error");
+        setUploadStatus("❌ Failed to check processing status. Please check backend server.");
+        // Log polling error
+        await logDataEvent.processingFailed(`Status polling failed: ${err.message}`);
+      }
     }, 1000); // Poll every second
 
     // Clear interval after 5 minutes as fallback
@@ -109,20 +104,28 @@ export default function AddRecord() {
         body: formData,
       })
         .then((res) => res.json())
-        .then((data) => {
+        .then(async (data) => {
           console.log("Backend response:", data);
+
+          // Log file upload
+          await logDataEvent.fileUploaded(file.name);
 
           setProcessingStage("processing");
           setCurrentStep(2);
           setUploadStatus("📊 Processing data through pipeline...");
 
+          // Log processing start
+          await logDataEvent.processingStarted();
+
           // Start polling backend status
           pollBackendStatus();
         })
-        .catch((err) => {
+        .catch(async (err) => {
           console.error(err);
           setProcessingStage("error");
           setUploadStatus("❌ Upload failed.");
+          // Log upload failure
+          await logDataEvent.processingFailed(`Upload failed: ${err.message}`);
         });
     });
   }, []);

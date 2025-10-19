@@ -4,6 +4,7 @@ import './SignIn.css';
 import { createClient } from "@supabase/supabase-js";
 import { setUserData, isAuthenticated } from './utils/authUtils';
 import { verifySecureHash } from './utils/passwordUtils';
+import { logAuthEvent } from './utils/loggingUtils';
 
 const SUPABASE_URL = process.env.REACT_APP_SUPABASE_URL;
 const SUPABASE_KEY = process.env.REACT_APP_SUPABASE_KEY;
@@ -99,6 +100,7 @@ function SignIn({ setIsAuthenticated }) {
         const isPasswordValid = await verifySecureHash(password, data.password);
         
         if (!isPasswordValid) {
+          await logAuthEvent.failedLogin(null, username);
           throw new Error('Invalid credentials');
         }
 
@@ -107,20 +109,24 @@ function SignIn({ setIsAuthenticated }) {
           // Administrators can always log in
           setIsAuthenticated(true);
           setUserData(data);
+          await logAuthEvent.login();
           navigate('/');
         } else {
           // For non-administrators, check account status
           if (data.status === 'pending') {
+            await logAuthEvent.loginBlockedPending(null, username);
             setErrorMessage('Your account is still pending approval. Please wait for administrator approval.');
             return;
           }
           
           if (data.status === 'rejected') {
+            await logAuthEvent.loginBlockedRejected(null, username);
             setErrorMessage('Your account has been rejected. Please contact the administrator.');
             return;
           }
           
           if (data.status === 'revoked') {
+            await logAuthEvent.loginBlockedRejected(null, username);
             setErrorMessage('Your account has been revoked. Please contact the administrator.');
             return;
           }
@@ -129,12 +135,15 @@ function SignIn({ setIsAuthenticated }) {
             // Successful authentication for regular users
             setIsAuthenticated(true);
             setUserData(data);
+            await logAuthEvent.login();
             navigate('/');
           } else {
             throw new Error('Invalid account status');
           }
         }
       } else {
+        // No user found with this email
+        await logAuthEvent.failedLogin(null, username);
         throw new Error('Invalid credentials');
       }
     } catch (error) {
@@ -276,7 +285,7 @@ function SignIn({ setIsAuthenticated }) {
               </div>
 
               <button type="submit" disabled={isLoading}>
-                {isLoading && <div className="loading-spinner-signin"></div>}
+                {isLoading && <div className="loading-spinner"></div>}
                 {isLoading ? 'Signing In...' : 'Login'}
               </button>
             </form>

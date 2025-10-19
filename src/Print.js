@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import './Print.css';
 import { createClient } from '@supabase/supabase-js';
 import { DateTime } from './DateTime';
+import { logSystemEvent } from './utils/loggingUtils';
 
 const supabase = createClient(
   process.env.REACT_APP_SUPABASE_URL,
@@ -114,7 +115,11 @@ function Print() {
     return { total, severityCounts, barangayCounts, monthlyCounts };
   };
 
-  const handlePrint = () => window.print();
+  const handlePrint = async () => {
+    // Log the print action
+    await logSystemEvent.printReport('accident data report');
+    window.print();
+  };
 
   const baseAccidents = accidents.filter(a => {
     const inDateRange =
@@ -138,52 +143,18 @@ function Print() {
     .sort((a, b) => a[0].localeCompare(b[0]));
 
   if (loading) {
+    // If filters are applied show simple spinner + text, otherwise simple loading text
     return (
       <div className="p-8">
         {filtersApplied ? (
           <div className="loading-center" role="status" aria-live="polite">
             <div style={{display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10}}>
-              <svg 
-                className="loading-spinner" 
-                viewBox="-13 -13 45 45" 
-                xmlns="http://www.w3.org/2000/svg"
-                aria-hidden="true"
-              >
-                <circle className="box5631" cx="13" cy="1" r="5"/>
-                <circle className="box5631" cx="25" cy="1" r="5"/>
-                <circle className="box5631" cx="1" cy="13" r="5"/>
-                <circle className="box5631" cx="13" cy="13" r="5"/>
-                <circle className="box5631" cx="25" cy="13" r="5"/>
-                <circle className="box5631" cx="1" cy="25" r="5"/>
-                <circle className="box5631" cx="13" cy="25" r="5"/>
-                <circle className="box5631" cx="25" cy="25" r="5"/>
-                <circle className="box5631" cx="1" cy="1" r="5"/>
-              </svg>
-              <div className="loading-text">Loading data...</div>
+              <div className="simple-spinner" aria-hidden="true" />
+              <div className="loading-text">Loading…</div>
             </div>
           </div>
         ) : (
-          <div className="loading-center" role="status" aria-live="polite">
-            <div style={{display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10}}>
-              <svg 
-                className="loading-spinner" 
-                viewBox="-13 -13 45 45" 
-                xmlns="http://www.w3.org/2000/svg"
-                aria-hidden="true"
-              >
-                <circle className="box5631" cx="13" cy="1" r="5"/>
-                <circle className="box5631" cx="25" cy="1" r="5"/>
-                <circle className="box5631" cx="1" cy="13" r="5"/>
-                <circle className="box5631" cx="13" cy="13" r="5"/>
-                <circle className="box5631" cx="25" cy="13" r="5"/>
-                <circle className="box5631" cx="1" cy="25" r="5"/>
-                <circle className="box5631" cx="13" cy="25" r="5"/>
-                <circle className="box5631" cx="25" cy="25" r="5"/>
-                <circle className="box5631" cx="1" cy="1" r="5"/>
-              </svg>
-              <div className="loading-text">Loading data...</div>
-            </div>
-          </div>
+          <div>Loading data...</div>
         )}
       </div>
     );

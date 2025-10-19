@@ -3,6 +3,7 @@ import { useUser } from "./UserContext";
 import { createClient } from "@supabase/supabase-js";
 import { secureHash, verifySecureHash } from "./utils/passwordUtils";
 import { validatePassword, validateFullName, validateEmail, validateStation } from "./utils/validation";
+import { logProfileEvent } from "./utils/loggingUtils";
 import "./Profile.css";
 
 const SUPABASE_URL = process.env.REACT_APP_SUPABASE_URL;
@@ -149,6 +150,10 @@ function Profile() {
         station: editForm.station
       });
 
+      // Log profile update
+      const updateDetails = `Updated: ${editForm.fullName} (${editForm.email}) - Role: ${editForm.role}, Station: ${editForm.station}`;
+      await logProfileEvent.updated(updateDetails);
+
       setIsEditing(false);
       setMessage('Profile updated successfully!');
       setTimeout(() => setMessage(''), 3000);
@@ -219,6 +224,19 @@ function Profile() {
         return;
       }
 
+      // Update local user data with new hashed password
+      const updatedUserData = {
+        ...userData,
+        password: hashedNewPassword
+      };
+      setUserData(updatedUserData);
+      
+      // Update localStorage with new password hash
+      localStorage.setItem('adminData', JSON.stringify(updatedUserData));
+
+      // Log password change
+      await logProfileEvent.passwordChanged();
+
       setMessage('Password updated successfully!');
       setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
       setTimeout(() => setMessage(''), 3000);
@@ -279,12 +297,6 @@ function Profile() {
             >
               Security
             </div>
-            <div
-              className={activeTab === "activity" ? "tab active" : "tab"}
-              onClick={() => handleTabChange("activity")}
-            >
-              Activity
-            </div>
           </div>
 
           {/* Overview Tab */}
@@ -335,7 +347,6 @@ function Profile() {
                     required
                   >
                     <option value="">Select Role</option>
-                    <option value="Administrator">Administrator</option>
                     <option value="Officer">Officer</option>
                     <option value="Supervisor">Supervisor</option>
                     <option value="Analyst">Analyst</option>
@@ -413,20 +424,6 @@ function Profile() {
             </div>
           )}
 
-          {/* Activity Tab */}
-          {activeTab === "activity" && (
-            <div className="tab-section">
-              <h3 className="tab-title">Activity Log</h3>
-              <ul className="activity-log">
-                <li>✔️ Logged in from IP 192.168.1.25 — Aug 18, 2025</li>
-                <li>⚙️ Changed password — Aug 10, 2025</li>
-                <li>📝 Updated user role for Jane Smith — Aug 8, 2025</li>
-                <li>🚪 Logged out — Aug 7, 2025</li>
-                <li>📊 Generated monthly report — Aug 5, 2025</li>
-                <li>🔄 Updated profile information — Aug 4, 2025</li>
-              </ul>
-            </div>
-          )}
         </div>
 
         {/* Buttons at the very bottom of the card */}
