@@ -4,12 +4,20 @@
    ============================== */
 
 /* Scroll wrapper (keeps page centered and allows for glass background) */
-.scroll-wrapper {
+/* .admindash-scroll-wrapper {
   padding: 24px;
   background: linear-gradient(180deg, rgba(6,21,40,0.5), rgba(3,10,25,0.45));
   min-height: 100vh;
   box-sizing: border-box;
-}
+} */
+
+/* 
+
+HELLLOOOOO Paayos sana ung ccs  
+i think nagkakagulo sila kasi 
+same same name ng containers.
+
+*/
 
 /* Container */
 .admin-dashboard-container {
@@ -24,14 +32,15 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1.25rem;
-  flex-wrap: wrap;
+  margin-bottom: 1.5rem; 
+  flex-wrap: wrap; 
 }
 
 .page-title-container {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 6px;
+  position: relative; 
 }
 
 .page-logo {
@@ -69,9 +78,9 @@
 
 .page-title {
   margin: 0;
-  font-size: clamp(1.5rem, 4vw, 2.25rem);
+  font-size: clamp(1.5rem, 4vw, 2.5rem);
   font-weight: 700;
-  color: #e6f2ff;
+  color: white;
   text-shadow: 0 0 12px rgba(0, 133, 255, 0.35);
 }
 

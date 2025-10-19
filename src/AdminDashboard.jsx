@@ -226,7 +226,7 @@ function AdminDashboard() {
 
   if (isLoading) {
     return (
-      <div className="scroll-wrapper">
+      <div className="admindash-scroll-wrapper">
         <div className="admin-dashboard-container">
           <div className="loading">
             <Activity className="loading-icon" size={32} />
@@ -239,7 +239,7 @@ function AdminDashboard() {
 
   if (accessDenied) {
     return (
-      <div className="scroll-wrapper">
+      <div className="admindash-scroll-wrapper">
         <div className="admin-dashboard-container">
           <div className="access-denied">
             <Shield size={48} className="access-denied-icon" />
@@ -252,7 +252,7 @@ function AdminDashboard() {
   }
 
   return (
-    <div className="scroll-wrapper">
+    <div className="admindash-scroll-wrapper">
       <div className="admin-dashboard-container">
         <div className="page-header">
           <div className="page-title-container">
