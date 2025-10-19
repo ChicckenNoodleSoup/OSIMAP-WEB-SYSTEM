@@ -118,7 +118,7 @@
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.2s ease;
-  z-index: 10;
+  z-index: 100;
   transform: translateX(-50%);
 }
 
@@ -256,7 +256,7 @@
 .control-filter-bar {
   display: flex;
   flex-wrap: wrap;
-  gap: 15px;
+  gap: 8px;
   align-items: center;
   background: rgba(255, 255, 255, 0.08);
   backdrop-filter: blur(12px);
@@ -318,10 +318,22 @@
 }
 
 .filter-dropdown option {
-  background: rgba(30, 30, 30, 0.95);
+  background: rgba(255, 255, 255, 0.15);  /* Light transparent white */
+  backdrop-filter: blur(10px);
   color: #fff;
-  padding: 8px;
-  border: none;
+  padding: 10px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  font-size: 0.9rem;
+}
+
+.filter-dropdown option:hover {
+  background: rgba(0, 133, 255, 0.3);     /* Blue tint on hover */
+}
+
+.filter-dropdown option:checked {
+  background: rgba(0, 133, 255, 0.5);     /* Brighter blue when selected */
+  color: #fff;
+  font-weight: 500;
 }
 
 /* Card styling */
