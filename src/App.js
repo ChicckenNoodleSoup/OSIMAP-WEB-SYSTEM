@@ -17,6 +17,7 @@ import AccountStatusChecker from './components/AccountStatusChecker';
 import { UserProvider } from './UserContext';
 import { isAuthenticated, clearUserData, extendSession } from './utils/authUtils';
 import './App.css';
+import ResetPassword from './ResetPassword';
 
 function ProtectedRoute({ isAuthenticated, children }) {
   return isAuthenticated ? children : <Navigate to="/signin" />;
@@ -79,6 +80,10 @@ function App() {
           <Route
             path="/forgot-password"
             element={<ForgotPassword />}
+          />
+          <Route
+            path="/reset-password"
+            element={<ResetPassword />}
           />
 
           {/* Protected routes */}

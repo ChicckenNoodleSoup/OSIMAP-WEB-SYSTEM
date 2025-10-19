@@ -2,6 +2,11 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";  
 import "./ForgotPassword.css";
 import { validateEmail } from './utils/validation';
+import { createClient } from "@supabase/supabase-js";
+
+const SUPABASE_URL = process.env.REACT_APP_SUPABASE_URL;
+const SUPABASE_KEY = process.env.REACT_APP_SUPABASE_KEY;
+const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 function ForgotPassword() {
   const navigate = useNavigate();  
@@ -29,16 +34,26 @@ function ForgotPassword() {
     return !emailErr;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    if (!validateForm()) {
-      return;
+  
+    if (!validateForm()) return;
+  
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+  
+      if (error) {
+        setEmailError(error.message);
+      } else {
+        setSent(true);
+      }
+    } catch (err) {
+      setEmailError("An unexpected error occurred.");
+      console.error(err);
     }
-
-    console.log("Reset link sent!");
-    setSent(true);
-  };
+  };  
 
   return (
     <div className="forgot-container">
