@@ -12,7 +12,10 @@ import Print from './Print';
 import Profile from './Profile';
 import ForgotPassword from './ForgotPassword';
 import AdminDashboard from './AdminDashboard';
+import SessionTimeout from './components/SessionTimeout';
+import AccountStatusChecker from './components/AccountStatusChecker';
 import { UserProvider } from './UserContext';
+import { isAuthenticated, clearUserData, extendSession } from './utils/authUtils';
 import './App.css';
 
 function ProtectedRoute({ isAuthenticated, children }) {
@@ -20,24 +23,40 @@ function ProtectedRoute({ isAuthenticated, children }) {
 }
 
 function App() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [authState, setAuthState] = useState(isAuthenticated());
   const [authReady, setAuthReady] = useState(false);
 
   useEffect(() => {
-    const storedAuth = localStorage.getItem('isAuthenticated');
-    if (storedAuth === 'true') {
-      setIsAuthenticated(true);
-    }
-    setAuthReady(true);
+    // Check authentication status on app load
+    const checkAuth = () => {
+      const authStatus = isAuthenticated();
+      console.log('Auth check - status:', authStatus);
+      setAuthState(authStatus);
+      setAuthReady(true);
+    };
+    
+    checkAuth();
+    
+    // Extend session on user activity
+    const handleUserActivity = () => {
+      if (isAuthenticated()) {
+        extendSession();
+      }
+    };
+    
+    // Add event listeners for user activity
+    document.addEventListener('click', handleUserActivity);
+    document.addEventListener('keypress', handleUserActivity);
+    
+    return () => {
+      document.removeEventListener('click', handleUserActivity);
+      document.removeEventListener('keypress', handleUserActivity);
+    };
   }, []);
 
-  useEffect(() => {
-    localStorage.setItem('isAuthenticated', isAuthenticated);
-  }, [isAuthenticated]);
-
   const handleLogout = () => {
-    setIsAuthenticated(false);
-    localStorage.removeItem('isAuthenticated');
+    clearUserData();
+    setAuthState(false);
   };
 
   if (!authReady) {
@@ -51,7 +70,7 @@ function App() {
           {/* Public routes */}
           <Route
             path="/signin"
-            element={<SignIn setIsAuthenticated={setIsAuthenticated} />}
+            element={<SignIn setIsAuthenticated={setAuthState} />}
           />
           <Route
             path="/create-account"
@@ -66,12 +85,15 @@ function App() {
           <Route
             path="/*"
             element={
-              <ProtectedRoute isAuthenticated={isAuthenticated}>
-                <>
-                  <img src="/background-image.png" alt="Background" className="bg-image" />
-                  <div style={{ display: 'flex', minHeight: '100vh', position: 'relative' }}>
-                    <Sidebar onLogout={handleLogout} />
-                    <div className="main-content">
+              <>
+                <ProtectedRoute isAuthenticated={authState}>
+                  <>
+                    <img src="/background-image.png" alt="Background" className="bg-image" />
+                    <SessionTimeout />
+                    <AccountStatusChecker />
+                    <div style={{ display: 'flex', minHeight: '100vh', position: 'relative' }}>
+                      <Sidebar onLogout={handleLogout} />
+                      <div className="main-content">
                       <Routes>
                         <Route path="/" element={<Dashboard />} />
                         <Route path="/dashboard" element={<Dashboard />} />
@@ -88,11 +110,13 @@ function App() {
                   </div>
                 </>
               </ProtectedRoute>
-            }
-          />
-        </Routes>
-      </UserProvider>
-    </BrowserRouter>
+              <SessionTimeout />
+            </>
+          }
+        />
+      </Routes>
+    </UserProvider>
+  </BrowserRouter>
   );
 }
 

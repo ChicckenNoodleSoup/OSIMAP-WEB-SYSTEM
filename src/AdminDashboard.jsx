@@ -12,7 +12,7 @@ const SUPABASE_KEY = process.env.REACT_APP_SUPABASE_KEY;
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 function AdminDashboard() {
-  const [pendingAccounts, setPendingAccounts] = useState([]);
+  const [allAccounts, setAllAccounts] = useState([]);
   const [userLogs, setUserLogs] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [logsLoading, setLogsLoading] = useState(false);
@@ -27,7 +27,7 @@ function AdminDashboard() {
       setIsLoading(false);
       return;
     }
-    fetchPendingAccounts();
+    fetchAllAccounts();
   }, []);
 
   // Fetch user logs when logs tab is active
@@ -37,24 +37,28 @@ function AdminDashboard() {
     }
   }, [activeTab]);
 
-  const fetchPendingAccounts = async () => {
+  const fetchAllAccounts = async () => {
     try {
       const { data, error } = await supabase
         .from('police')
         .select('*')
-        .eq('status', 'pending')
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('Error fetching pending accounts:', error);
-        setMessage('Error loading pending accounts');
+        console.error('Error fetching accounts:', error);
+        setMessage('Error loading accounts');
         return;
       }
 
-      setPendingAccounts(data || []);
+      // Show all accounts except administrators
+      const filteredAccounts = (data || []).filter(account => 
+        account.role !== 'Administrator'
+      );
+
+      setAllAccounts(filteredAccounts);
     } catch (error) {
       console.error('Error:', error);
-      setMessage('Error loading pending accounts');
+      setMessage('Error loading accounts');
     } finally {
       setIsLoading(false);
     }
@@ -90,9 +94,36 @@ function AdminDashboard() {
     }
   };
 
-  const handleApproval = async (accountId, action) => {
+  const handleAccountAction = async (accountId, action) => {
     try {
-      const newStatus = action === 'approve' ? 'approved' : 'rejected';
+      let newStatus;
+      let actionText;
+      
+      if (action === 'approve') {
+        newStatus = 'approved';
+        actionText = 'approved';
+      } else if (action === 'reject') {
+        newStatus = 'rejected';
+        actionText = 'rejected';
+      } else if (action === 'revoke') {
+        newStatus = 'revoked';
+        actionText = 'revoked';
+      } else if (action === 'undo') {
+        // Get the account to determine its previous status
+        const account = allAccounts.find(acc => acc.id === accountId);
+        if (account && account.status === 'revoked') {
+          newStatus = 'approved';
+        } else if (account && account.status === 'approved') {
+          newStatus = 'pending';
+        } else {
+          newStatus = 'pending';
+        }
+        actionText = 'undone';
+      } else if (action === 'delete') {
+        // Handle delete action separately
+        await handleDeleteAccount(accountId);
+        return;
+      }
       
       const { error } = await supabase
         .from('police')
@@ -112,13 +143,59 @@ function AdminDashboard() {
       await sendEmailNotification(accountId, newStatus);
       
       // Refresh the list
-      await fetchPendingAccounts();
+      await fetchAllAccounts();
       
-      setMessage(`Account ${action === 'approve' ? 'approved' : 'rejected'} successfully`);
+      setMessage(`Account ${actionText} successfully`);
       setTimeout(() => setMessage(''), 3000);
     } catch (error) {
       console.error('Error:', error);
       setMessage('Error processing request');
+    }
+  };
+
+  const canUndo = (reviewedAt) => {
+    if (!reviewedAt) return false;
+    const reviewTime = new Date(reviewedAt).getTime();
+    const currentTime = new Date().getTime();
+    const timeDifference = currentTime - reviewTime;
+    // Allow undo within 24 hours (24 * 60 * 60 * 1000 milliseconds)
+    return timeDifference <= 24 * 60 * 60 * 1000;
+  };
+
+  const handleDeleteAccount = async (accountId) => {
+    // Get account details for confirmation
+    const account = allAccounts.find(acc => acc.id === accountId);
+    const accountName = account ? account.full_name : 'this account';
+    
+    // Show confirmation dialog
+    const confirmed = window.confirm(
+      `Are you sure you want to permanently delete ${accountName}? This action cannot be undone.`
+    );
+    
+    if (!confirmed) {
+      return; // User cancelled the deletion
+    }
+
+    try {
+      const { error } = await supabase
+        .from('police')
+        .delete()
+        .eq('id', accountId);
+
+      if (error) {
+        console.error('Error deleting account:', error);
+        setMessage('Error deleting account');
+        return;
+      }
+
+      // Refresh the list
+      await fetchAllAccounts();
+      
+      setMessage(`${accountName} deleted successfully`);
+      setTimeout(() => setMessage(''), 3000);
+    } catch (error) {
+      console.error('Error:', error);
+      setMessage('Error deleting account');
     }
   };
 
@@ -153,7 +230,7 @@ function AdminDashboard() {
         <div className="admin-dashboard-container">
           <div className="loading">
             <Activity className="loading-icon" size={32} />
-            <p>Loading pending accounts...</p>
+            <p>Loading accounts...</p>
           </div>
         </div>
       </div>
@@ -199,8 +276,8 @@ function AdminDashboard() {
             onClick={() => setActiveTab('accounts')}
           >
             <Users size={18} />
-            <span>Pending Accounts</span>
-            <span className="tab-badge">{pendingAccounts.length}</span>
+            <span>Account Management</span>
+            <span className="tab-badge">{allAccounts.length}</span>
           </button>
           <button
             className={`tab-btn ${activeTab === 'logs' ? 'active' : ''}`}
@@ -214,54 +291,128 @@ function AdminDashboard() {
         {/* Accounts Tab */}
         {activeTab === 'accounts' && (
           <>
-            {pendingAccounts.length === 0 ? (
+            {allAccounts.length === 0 ? (
               <div className="no-data">
                 <Users size={48} className="no-data-icon" />
-                <p>No pending accounts to review</p>
+                <p>No accounts found</p>
               </div>
             ) : (
-              <div className="accounts-list">
-                {pendingAccounts.map((account) => (
-                  <div key={account.id} className="account-card">
-                    <div className="account-info">
-                      <div className="account-header">
-                        <User size={20} className="account-icon" />
-                        <h3>{account.full_name}</h3>
+              <div className="accounts-table-container">
+                <div className="accounts-table-header">
+                  <div className="header-name">Name</div>
+                  <div className="header-status">Status</div>
+                  <div className="header-actions">Actions</div>
+                </div>
+                <div className="accounts-table-body">
+                  {allAccounts.map((account) => (
+                    <div key={account.id} className="account-row">
+                      <div className="account-name">
+                        <div className="account-name-inner">
+                          <User size={16} className="mr-2" />
+                          <div>
+                            <div className="account-position">
+                              {account.role || 'New User'}
+                            </div>
+                            <div className="account-full-name">
+                              {account.full_name}
+                            </div>
+                            <div className="account-email">
+                              {account.email}
+                            </div>
+                          </div>
+                        </div>
                       </div>
-                      <div className="account-details">
-                        <div className="detail-item">
-                          <Mail size={18} />
-                          <span>{account.email}</span>
-                        </div>
-                        <div className="detail-item">
-                          <Clock size={18} />
-                          <span>{new Date(account.created_at).toLocaleDateString('en-US', { 
-                            year: 'numeric', 
-                            month: 'long', 
-                            day: 'numeric' 
-                          })}</span>
-                        </div>
+                      <div className="account-status">
+                        <span className={`status-badge ${account.status?.toLowerCase()}`}>
+                          {account.status === 'pending' ? 'Pending' : 
+                           account.status === 'approved' ? 'Verified' :
+                           account.status === 'rejected' ? 'Rejected' :
+                           account.status === 'revoked' ? 'Revoked' : account.status}
+                        </span>
+                      </div>
+                      <div className="account-actions">
+                        {account.status === 'pending' && (
+                          <>
+                            <button
+                              className="approve-btn"
+                              onClick={() => handleAccountAction(account.id, 'approve')}
+                            >
+                              <CheckCircle size={14} />
+                              <span>Approve</span>
+                            </button>
+                            <button
+                              className="reject-btn"
+                              onClick={() => handleAccountAction(account.id, 'reject')}
+                            >
+                              <XCircle size={14} />
+                              <span>Reject</span>
+                            </button>
+                          </>
+                        )}
+                        {account.status === 'approved' && (
+                          <>
+                            {canUndo(account.reviewed_at) && (
+                              <button
+                                className="undo-btn"
+                                onClick={() => handleAccountAction(account.id, 'undo')}
+                              >
+                                <Clock size={14} />
+                                <span>Undo</span>
+                              </button>
+                            )}
+                            <button
+                              className="revoke-btn"
+                              onClick={() => handleAccountAction(account.id, 'revoke')}
+                            >
+                              <XCircle size={14} />
+                              <span>Revoke Verification</span>
+                            </button>
+                          </>
+                        )}
+                        {account.status === 'rejected' && (
+                          <>
+                            {canUndo(account.reviewed_at) ? (
+                              <button
+                                className="undo-btn"
+                                onClick={() => handleAccountAction(account.id, 'undo')}
+                              >
+                                <Clock size={14} />
+                                <span>Undo</span>
+                              </button>
+                            ) : null}
+                            <button
+                              className="delete-btn"
+                              onClick={() => handleAccountAction(account.id, 'delete')}
+                            >
+                              <XCircle size={14} />
+                              <span>Delete</span>
+                            </button>
+                          </>
+                        )}
+                        {account.status === 'revoked' && (
+                          <>
+                            {canUndo(account.reviewed_at) ? (
+                              <button
+                                className="undo-btn"
+                                onClick={() => handleAccountAction(account.id, 'undo')}
+                              >
+                                <Clock size={14} />
+                                <span>Undo</span>
+                              </button>
+                            ) : null}
+                            <button
+                              className="delete-btn"
+                              onClick={() => handleAccountAction(account.id, 'delete')}
+                            >
+                              <XCircle size={14} />
+                              <span>Delete</span>
+                            </button>
+                          </>
+                        )}
                       </div>
                     </div>
-                    
-                    <div className="account-actions">
-                      <button
-                        className="approve-btn"
-                        onClick={() => handleApproval(account.id, 'approve')}
-                      >
-                        <CheckCircle size={18} />
-                        <span>Approve</span>
-                      </button>
-                      <button
-                        className="reject-btn"
-                        onClick={() => handleApproval(account.id, 'reject')}
-                      >
-                        <XCircle size={18} />
-                        <span>Reject</span>
-                      </button>
-                    </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
             )}
           </>

@@ -11,7 +11,8 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 function Dashboard() {
   const navigate = useNavigate();
-  const { user } = useUser(); // Only new line added here
+  const { user } = useUser();
+  const [userData, setUserData] = useState(null);
   const currentYearDefault = new Date().getFullYear();
   const [year, setYear] = useState(currentYearDefault);
   const [count, setCount] = useState(null);
@@ -24,6 +25,19 @@ function Dashboard() {
   const [loadingSeverity, setLoadingSeverity] = useState(false);
 
   const [barangayCounts, setBarangayCounts] = useState({});
+
+  // Fetch current user data from localStorage
+  const fetchUserData = () => {
+    try {
+      const adminData = localStorage.getItem('adminData');
+      if (adminData) {
+        const userData = JSON.parse(adminData);
+        setUserData(userData);
+      }
+    } catch (error) {
+      console.error('Error fetching user data:', error);
+    }
+  };
 
   // Fetch total accidents for year
   const fetchCountForYear = async (y) => {
@@ -119,11 +133,12 @@ function Dashboard() {
     }
   };
 
-  useEffect(()=>{
+  useEffect(() => {
+    fetchUserData();
     fetchCountForYear(year);
     fetchClusteredAccidentCount(year);
     fetchSeverityCounts(year);
-  },[year]);
+  }, [year]);
 
   return (
     <div className="dashboard">
@@ -195,10 +210,12 @@ function Dashboard() {
               <h2>🧑‍✈️ User Profile</h2>
 
               <div className="profile-details">
-                <div className="username">{user.fullName}</div>
+                <div className="username">
+                  {userData?.full_name || 'User'}
+                </div>
                 <div className="profile-info">
-                  <div>{user.station}</div>
-                  <div>{user.role}</div>
+                  <div>{userData?.station || 'Station'}</div>
+                  <div>{userData?.role || 'Role'}</div>
                 </div>
               </div>
             </div>

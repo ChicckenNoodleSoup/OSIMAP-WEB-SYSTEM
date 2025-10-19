@@ -23,6 +23,74 @@ export default function AddRecord() {
     setCurrentStep(0);
   };
 
+  // Function to poll backend status
+  const pollBackendStatus = () => {
+    let pollAttempts = 0;
+    const maxPollAttempts = 10;
+    
+    const pollInterval = setInterval(() => {
+      fetch("http://localhost:5000/status")
+        .then((res) => {
+          if (!res.ok) {
+            throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+          }
+          return res.json();
+        })
+        .then((statusData) => {
+          console.log("Backend status:", statusData);
+          pollAttempts = 0; // Reset attempts on successful request
+          
+          if (statusData.status === "error") {
+            // Processing failed
+            clearInterval(pollInterval);
+            setProcessingStage("error");
+            setUploadStatus(`❌ Processing failed: ${statusData.processingError || "Unknown error"}`);
+          } else if (!statusData.isProcessing && statusData.status === "idle") {
+            // Processing is complete
+            clearInterval(pollInterval);
+            setProcessingStage("complete");
+            setCurrentStep(4);
+            setUploadStatus("✅ Pipeline completed successfully!");
+          } else if (statusData.isProcessing) {
+            // Still processing, update progress based on time
+            const processingTime = statusData.processingTime || 0;
+            
+            if (processingTime < 3) {
+              setCurrentStep(2);
+              setUploadStatus("📊 Processing data through pipeline...");
+            } else if (processingTime < 6) {
+              setCurrentStep(3);
+              setUploadStatus("🗺️ Converting to GeoJSON...");
+            } else {
+              setCurrentStep(3);
+              setUploadStatus(`🔄 Still processing... (${processingTime}s elapsed)`);
+            }
+          }
+        })
+        .catch((err) => {
+          console.error("Error polling status:", err);
+          pollAttempts++;
+          
+          if (pollAttempts >= maxPollAttempts) {
+            clearInterval(pollInterval);
+            setProcessingStage("error");
+            setUploadStatus(`❌ Failed to connect to backend after ${maxPollAttempts} attempts. Please check if the backend server is running on port 5000.`);
+          } else {
+            console.log(`Polling attempt ${pollAttempts}/${maxPollAttempts} failed, retrying...`);
+          }
+        });
+    }, 1000); // Poll every second
+
+    // Clear interval after 5 minutes as fallback
+    setTimeout(() => {
+      clearInterval(pollInterval);
+      if (processingStage === "processing") {
+        setProcessingStage("error");
+        setUploadStatus("❌ Processing timeout. Please try again.");
+      }
+    }, 300000); // 5 minutes timeout
+  };
+
   const onDrop = useCallback((acceptedFiles) => {
     if (acceptedFiles.length === 0) return;
 
@@ -48,16 +116,8 @@ export default function AddRecord() {
           setCurrentStep(2);
           setUploadStatus("📊 Processing data through pipeline...");
 
-          setTimeout(() => {
-            setCurrentStep(3);
-            setUploadStatus("🗺️ Converting to GeoJSON...");
-          }, 3000);
-
-          setTimeout(() => {
-            setProcessingStage("complete");
-            setCurrentStep(4);
-            setUploadStatus("✅ Pipeline completed successfully!");
-          }, 6000);
+          // Start polling backend status
+          pollBackendStatus();
         })
         .catch((err) => {
           console.error(err);

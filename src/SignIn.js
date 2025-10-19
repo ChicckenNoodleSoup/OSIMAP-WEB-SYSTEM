@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import './SignIn.css';
 import { createClient } from "@supabase/supabase-js";
-import { setUserData } from './utils/authUtils';
+import { setUserData, isAuthenticated } from './utils/authUtils';
 import { verifySecureHash } from './utils/passwordUtils';
 
 const SUPABASE_URL = process.env.REACT_APP_SUPABASE_URL;
@@ -21,8 +21,7 @@ function SignIn({ setIsAuthenticated }) {
 
   // If already authenticated, redirect to dashboard immediately
   useEffect(() => {
-    const storedAuth = localStorage.getItem('isAuthenticated');
-    if (storedAuth === 'true') {
+    if (isAuthenticated()) {
       navigate('/');
     }
   }, [navigate]);
@@ -118,6 +117,11 @@ function SignIn({ setIsAuthenticated }) {
           
           if (data.status === 'rejected') {
             setErrorMessage('Your account has been rejected. Please contact the administrator.');
+            return;
+          }
+          
+          if (data.status === 'revoked') {
+            setErrorMessage('Your account has been revoked. Please contact the administrator.');
             return;
           }
           
