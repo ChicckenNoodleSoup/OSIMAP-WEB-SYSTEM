@@ -21,37 +21,30 @@
   }
 }
 
-/* Spinner used when filters are applied and data is loading */
-.spinner,
-.simple-spinner {
-  width: 48px;
-  height: 48px;
-  border: 5px solid rgba(255,255,255,0.1);
-  border-top-color: #2563eb;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
 /* Centered loading wrapper */
 .loading-center {
   display: flex;
-  align-items: center;
   justify-content: center;
-  min-height: 200px;
+  align-items: center;
+  min-height: 100vh;
 }
 
 .loading-text {
-  font-size: 1.1rem;
-  color: #eaf6ff;
-  background: rgba(255,255,255,0.03);
-  padding: 12px 18px;
-  border-radius: 12px;
-  box-shadow: 0 8px 20px rgba(0,0,0,0.35);
+  font-size: 1rem;
+  font-weight: 500;
+  color: #ffffff;
+  animation: pulse 1.5s ease-in-out infinite;
 }
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
 
 /* Print tweaks: remove backdrop-filter for printed output to avoid issues */
 @media print {
