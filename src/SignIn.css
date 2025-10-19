@@ -335,7 +335,7 @@ h6 {
 }
 
 /* Loading spinner */
-.loading-spinner {
+.loading-spinner-signin {
   width: 20px;
   height: 20px;
   border: 2px solid rgba(255, 255, 255, 0.3);
