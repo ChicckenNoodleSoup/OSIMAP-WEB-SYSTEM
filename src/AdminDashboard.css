@@ -1,304 +1,392 @@
 .admin-dashboard-container {
-    padding: 20px;
-    max-width: 1200px;
-    margin: 0 auto;
-  }
-  
-  .admin-dashboard-header {
-    margin-bottom: 30px;
-    text-align: center;
-  }
-  
-  .admin-dashboard-header h1 {
-    color: #333;
-    margin-bottom: 10px;
-  }
-  
-  .admin-dashboard-header p {
-    color: #666;
-    font-size: 16px;
-  }
-  
-  /* Tab Navigation */
-  .tab-navigation {
-    display: flex;
-    gap: 10px;
-    margin-bottom: 30px;
-    border-bottom: 2px solid #eee;
-  }
-  
-  .tab-btn {
-    padding: 12px 24px;
-    border: none;
-    background: transparent;
-    color: #666;
-    font-size: 16px;
-    font-weight: 500;
-    cursor: pointer;
-    border-bottom: 3px solid transparent;
-    transition: all 0.3s ease;
-  }
-  
-  .tab-btn:hover {
-    color: #333;
-    background: #f8f9fa;
-  }
-  
-  .tab-btn.active {
-    color: #007bff;
-    border-bottom-color: #007bff;
-    background: #f8f9fa;
-  }
-  
-  .message {
-    padding: 15px;
-    margin-bottom: 20px;
-    border-radius: 5px;
-    text-align: center;
-  }
-  
-  .message.success {
-    background-color: #d4edda;
-    color: #155724;
-    border: 1px solid #c3e6cb;
-  }
-  
-  .message.error {
-    background-color: #f8d7da;
-    color: #721c24;
-    border: 1px solid #f5c6cb;
-  }
-  
-  .loading {
-    text-align: center;
-    padding: 50px;
-    font-size: 18px;
-    color: #666;
-  }
-  
-  .access-denied {
-    text-align: center;
-    padding: 50px;
-    background: white;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    max-width: 500px;
-    margin: 50px auto;
-  }
-  
-  .access-denied h2 {
-    color: #dc3545;
-    margin-bottom: 15px;
-  }
-  
-  .access-denied p {
-    color: #666;
-    font-size: 16px;
-    line-height: 1.5;
-  }
-  
-  .no-accounts, .no-logs {
-    text-align: center;
-    padding: 50px;
-    color: #666;
-    font-size: 18px;
-  }
-  
-  .accounts-list {
-    display: grid;
-    gap: 20px;
-  }
-  
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.admin-dashboard-header {
+  margin-bottom: 30px;
+  text-align: center;
+}
+
+.admin-dashboard-header h1 {
+  color: #333;
+  margin-bottom: 10px;
+}
+
+.admin-dashboard-header p {
+  color: #666;
+  font-size: 16px;
+}
+
+/* Tab Navigation */
+.tab-navigation {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 30px;
+  border-bottom: 2px solid #eee;
+}
+
+.tab-btn {
+  padding: 12px 24px;
+  border: none;
+  background: transparent;
+  color: #666;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  border-bottom: 3px solid transparent;
+  transition: all 0.3s ease;
+}
+
+.tab-btn:hover {
+  color: #333;
+  background: #f8f9fa;
+}
+
+.tab-btn.active {
+  color: #007bff;
+  border-bottom-color: #007bff;
+  background: #f8f9fa;
+}
+
+.message {
+  padding: 15px;
+  margin-bottom: 20px;
+  border-radius: 5px;
+  text-align: center;
+}
+
+.message.success {
+  background-color: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
+}
+
+.message.error {
+  background-color: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
+}
+
+.loading {
+  text-align: center;
+  padding: 50px;
+  font-size: 18px;
+  color: #666;
+}
+
+.access-denied {
+  text-align: center;
+  padding: 50px;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  max-width: 500px;
+  margin: 50px auto;
+}
+
+.access-denied h2 {
+  color: #dc3545;
+  margin-bottom: 15px;
+}
+
+.access-denied p {
+  color: #666;
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+.no-accounts, .no-logs {
+  text-align: center;
+  padding: 50px;
+  color: #666;
+  font-size: 18px;
+}
+
+.accounts-table-container {
+  background: white;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.accounts-table-header {
+  display: grid;
+  grid-template-columns: 1fr 120px 200px;
+  background: #f8f9fa;
+  padding: 16px 20px;
+  font-weight: 600;
+  color: #495057;
+  border-bottom: 1px solid #dee2e6;
+}
+
+.header-name {
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.header-status {
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.header-actions {
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.accounts-table-body {
+  display: flex;
+  flex-direction: column;
+}
+
+.account-row {
+  display: grid;
+  grid-template-columns: 1fr 120px 200px;
+  padding: 20px;
+  border-bottom: 1px solid #f1f3f4;
+  align-items: center;
+  transition: background-color 0.2s ease;
+}
+
+.account-row:hover {
+  background-color: #f8f9fa;
+}
+
+.account-row:last-child {
+  border-bottom: none;
+}
+
+.account-name {
+  font-size: 16px;
+  font-weight: 500;
+  color: #333;
+}
+
+.account-status {
+  display: flex;
+  justify-content: center;
+}
+
+.status-badge {
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.status-badge.pending {
+  background-color: #fff3cd;
+  color: #856404;
+  border: 1px solid #ffeaa7;
+}
+
+.status-badge.approved {
+  background-color: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
+}
+
+.status-badge.rejected {
+  background-color: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
+}
+
+.account-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+
+.approve-btn, .reject-btn, .revoke-btn, .delete-btn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 12px;
+  transition: background-color 0.3s;
+}
+
+.approve-btn {
+  background-color: #28a745;
+  color: white;
+}
+
+.approve-btn:hover {
+  background-color: #218838;
+}
+
+.reject-btn {
+  background-color: #dc3545;
+  color: white;
+}
+
+.reject-btn:hover {
+  background-color: #c82333;
+}
+
+.revoke-btn {
+  background-color: #fd7e14;
+  color: white;
+}
+
+.revoke-btn:hover {
+  background-color: #e8681c;
+}
+
+.delete-btn {
+  background-color: #dc3545;
+  color: white;
+}
+
+.delete-btn:hover {
+  background-color: #c82333;
+}
+
+@media (max-width: 768px) {
   .account-card {
-    background: white;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    padding: 20px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-  
-  .account-info h3 {
-    margin: 0 0 10px 0;
-    color: #333;
-    font-size: 20px;
-  }
-  
-  .account-info p {
-    margin: 5px 0;
-    color: #666;
-  }
-  
-  .account-actions {
-    display: flex;
-    gap: 10px;
-  }
-  
-  .approve-btn, .reject-btn {
-    padding: 10px 20px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    font-weight: bold;
-    transition: background-color 0.3s;
-  }
-  
-  .approve-btn {
-    background-color: #28a745;
-    color: white;
-  }
-  
-  .approve-btn:hover {
-    background-color: #218838;
-  }
-  
-  .reject-btn {
-    background-color: #dc3545;
-    color: white;
-  }
-  
-  .reject-btn:hover {
-    background-color: #c82333;
-  }
-  
-  @media (max-width: 768px) {
-    .account-card {
-      flex-direction: column;
-      align-items: flex-start;
-    }
-    
-    .account-actions {
-      width: 100%;
-      justify-content: space-between;
-      margin-top: 15px;
-    }
-    
-    .approve-btn, .reject-btn {
-      flex: 1;
-      margin: 0 5px;
-    }
-  }
-  
-  /* Logs Section */
-  .logs-list {
-    display: grid;
-    gap: 15px;
-  }
-  
-  .log-card {
-    background: white;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    padding: 20px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    display: flex;
-    justify-content: space-between;
+    flex-direction: column;
     align-items: flex-start;
   }
   
-  .log-info {
+  .account-actions {
+    width: 100%;
+    justify-content: space-between;
+    margin-top: 15px;
+  }
+  
+  .approve-btn, .reject-btn {
     flex: 1;
+    margin: 0 5px;
+  }
+}
+
+/* Logs Section */
+.logs-list {
+  display: grid;
+  gap: 15px;
+}
+
+.log-card {
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.log-info {
+  flex: 1;
+}
+
+.log-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.log-header h4 {
+  margin: 0;
+  color: #333;
+  font-size: 18px;
+}
+
+.log-time {
+  color: #666;
+  font-size: 14px;
+}
+
+.log-email {
+  color: #666;
+  margin: 5px 0;
+  font-size: 14px;
+}
+
+.log-activity {
+  margin: 10px 0;
+  color: #333;
+}
+
+.log-details {
+  margin: 5px 0;
+  color: #666;
+  font-size: 14px;
+}
+
+.log-ip {
+  margin: 5px 0;
+  color: #999;
+  font-size: 12px;
+}
+
+.log-type {
+  display: flex;
+  align-items: center;
+}
+
+.log-type-badge {
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: bold;
+  text-transform: uppercase;
+}
+
+.log-type-badge.info {
+  background-color: #e3f2fd;
+  color: #1976d2;
+}
+
+.log-type-badge.warning {
+  background-color: #fff3e0;
+  color: #f57c00;
+}
+
+.log-type-badge.error {
+  background-color: #ffebee;
+  color: #d32f2f;
+}
+
+.log-type-badge.success {
+  background-color: #e8f5e8;
+  color: #388e3c;
+}
+
+.log-type-badge.login {
+  background-color: #f3e5f5;
+  color: #7b1fa2;
+}
+
+.log-type-badge.logout {
+  background-color: #e0f2f1;
+  color: #00695c;
+}
+
+@media (max-width: 768px) {
+  .log-card {
+    flex-direction: column;
+    align-items: flex-start;
   }
   
   .log-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 10px;
-  }
-  
-  .log-header h4 {
-    margin: 0;
-    color: #333;
-    font-size: 18px;
+    flex-direction: column;
+    align-items: flex-start;
   }
   
   .log-time {
-    color: #666;
-    font-size: 14px;
+    margin-top: 5px;
   }
-  
-  .log-email {
-    color: #666;
-    margin: 5px 0;
-    font-size: 14px;
-  }
-  
-  .log-activity {
-    margin: 10px 0;
-    color: #333;
-  }
-  
-  .log-details {
-    margin: 5px 0;
-    color: #666;
-    font-size: 14px;
-  }
-  
-  .log-ip {
-    margin: 5px 0;
-    color: #999;
-    font-size: 12px;
-  }
-  
-  .log-type {
-    display: flex;
-    align-items: center;
-  }
-  
-  .log-type-badge {
-    padding: 4px 12px;
-    border-radius: 20px;
-    font-size: 12px;
-    font-weight: bold;
-    text-transform: uppercase;
-  }
-  
-  .log-type-badge.info {
-    background-color: #e3f2fd;
-    color: #1976d2;
-  }
-  
-  .log-type-badge.warning {
-    background-color: #fff3e0;
-    color: #f57c00;
-  }
-  
-  .log-type-badge.error {
-    background-color: #ffebee;
-    color: #d32f2f;
-  }
-  
-  .log-type-badge.success {
-    background-color: #e8f5e8;
-    color: #388e3c;
-  }
-  
-  .log-type-badge.login {
-    background-color: #f3e5f5;
-    color: #7b1fa2;
-  }
-  
-  .log-type-badge.logout {
-    background-color: #e0f2f1;
-    color: #00695c;
-  }
-  
-  @media (max-width: 768px) {
-    .log-card {
-      flex-direction: column;
-      align-items: flex-start;
-    }
-    
-    .log-header {
-      flex-direction: column;
-      align-items: flex-start;
-    }
-    
-    .log-time {
-      margin-top: 5px;
-    }
-  }
+}

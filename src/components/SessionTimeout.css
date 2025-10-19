@@ -1,0 +1,84 @@
+.session-timeout-overlay {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    background-color: rgba(0, 0, 0, 0.5) !important;
+    backdrop-filter: blur(5px) !important;
+    -webkit-backdrop-filter: blur(5px) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    z-index: 99999 !important;
+    pointer-events: auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+  
+  .session-timeout-modal {
+    background: white !important;
+    border-radius: 8px !important;
+    padding: 24px !important;
+    max-width: 400px !important;
+    width: 90% !important;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2) !important;
+    position: relative !important;
+    z-index: 100000 !important;
+    margin: 0 !important;
+  }
+  
+  .session-timeout-header h3 {
+    margin: 0 0 16px 0;
+    color: #333;
+    font-size: 18px;
+    font-weight: 600;
+  }
+  
+  .session-timeout-body {
+    margin-bottom: 24px;
+  }
+  
+  .session-timeout-body p {
+    margin: 0 0 12px 0;
+    color: #666;
+    line-height: 1.5;
+  }
+  
+  .session-timeout-body p:last-child {
+    margin-bottom: 0;
+  }
+  
+  .session-timeout-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+  }
+  
+  .session-timeout-actions .btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+  }
+  
+  .session-timeout-actions .btn--primary {
+    background-color: #007bff;
+    color: white;
+  }
+  
+  .session-timeout-actions .btn--primary:hover {
+    background-color: #0056b3;
+  }
+  
+  .session-timeout-actions .btn--secondary {
+    background-color: #6c757d;
+    color: white;
+  }
+  
+  .session-timeout-actions .btn--secondary:hover {
+    background-color: #545b62;
+  }

@@ -10,7 +10,7 @@ const SUPABASE_KEY = process.env.REACT_APP_SUPABASE_KEY;
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 function AdminDashboard() {
-  const [pendingAccounts, setPendingAccounts] = useState([]);
+  const [allAccounts, setAllAccounts] = useState([]);
   const [userLogs, setUserLogs] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [logsLoading, setLogsLoading] = useState(false);
@@ -25,7 +25,7 @@ function AdminDashboard() {
       setIsLoading(false);
       return;
     }
-    fetchPendingAccounts();
+    fetchAllAccounts();
   }, []);
 
   // Fetch user logs when logs tab is active
@@ -35,24 +35,32 @@ function AdminDashboard() {
     }
   }, [activeTab]);
 
-  const fetchPendingAccounts = async () => {
+  const fetchAllAccounts = async () => {
     try {
+      // Get current user's email from localStorage
+      const adminData = localStorage.getItem('adminData');
+      const currentUserEmail = adminData ? JSON.parse(adminData).email : null;
+
       const { data, error } = await supabase
         .from('police')
         .select('*')
-        .eq('status', 'pending')
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('Error fetching pending accounts:', error);
-        setMessage('Error loading pending accounts');
+        console.error('Error fetching accounts:', error);
+        setMessage('Error loading accounts');
         return;
       }
 
-      setPendingAccounts(data || []);
+      // Filter out the current admin user
+      const filteredAccounts = (data || []).filter(account => 
+        account.email !== currentUserEmail
+      );
+
+      setAllAccounts(filteredAccounts);
     } catch (error) {
       console.error('Error:', error);
-      setMessage('Error loading pending accounts');
+      setMessage('Error loading accounts');
     } finally {
       setIsLoading(false);
     }
@@ -88,9 +96,25 @@ function AdminDashboard() {
     }
   };
 
-  const handleApproval = async (accountId, action) => {
+  const handleAccountAction = async (accountId, action) => {
     try {
-      const newStatus = action === 'approve' ? 'approved' : 'rejected';
+      let newStatus;
+      let actionText;
+      
+      if (action === 'approve') {
+        newStatus = 'approved';
+        actionText = 'approved';
+      } else if (action === 'reject') {
+        newStatus = 'rejected';
+        actionText = 'rejected';
+      } else if (action === 'revoke') {
+        newStatus = 'rejected';
+        actionText = 'revoked';
+      } else if (action === 'delete') {
+        // Handle delete action separately
+        await handleDeleteAccount(accountId);
+        return;
+      }
       
       const { error } = await supabase
         .from('police')
@@ -110,13 +134,37 @@ function AdminDashboard() {
       await sendEmailNotification(accountId, newStatus);
       
       // Refresh the list
-      await fetchPendingAccounts();
+      await fetchAllAccounts();
       
-      setMessage(`Account ${action === 'approve' ? 'approved' : 'rejected'} successfully`);
+      setMessage(`Account ${actionText} successfully`);
       setTimeout(() => setMessage(''), 3000);
     } catch (error) {
       console.error('Error:', error);
       setMessage('Error processing request');
+    }
+  };
+
+  const handleDeleteAccount = async (accountId) => {
+    try {
+      const { error } = await supabase
+        .from('police')
+        .delete()
+        .eq('id', accountId);
+
+      if (error) {
+        console.error('Error deleting account:', error);
+        setMessage('Error deleting account');
+        return;
+      }
+
+      // Refresh the list
+      await fetchAllAccounts();
+      
+      setMessage('Account deleted successfully');
+      setTimeout(() => setMessage(''), 3000);
+    } catch (error) {
+      console.error('Error:', error);
+      setMessage('Error deleting account');
     }
   };
 
@@ -148,7 +196,7 @@ function AdminDashboard() {
   if (isLoading) {
     return (
       <div className="admin-dashboard-container">
-        <div className="loading">Loading pending accounts...</div>
+        <div className="loading">Loading accounts...</div>
       </div>
     );
   }
@@ -183,7 +231,7 @@ function AdminDashboard() {
           className={`tab-btn ${activeTab === 'accounts' ? 'active' : ''}`}
           onClick={() => setActiveTab('accounts')}
         >
-          Pending Accounts ({pendingAccounts.length})
+          Account Management ({allAccounts.length})
         </button>
         <button
           className={`tab-btn ${activeTab === 'logs' ? 'active' : ''}`}
@@ -196,36 +244,75 @@ function AdminDashboard() {
       {/* Accounts Tab */}
       {activeTab === 'accounts' && (
         <>
-          {pendingAccounts.length === 0 ? (
+          {allAccounts.length === 0 ? (
             <div className="no-accounts">
-              <p>No pending accounts to review</p>
+              <p>No accounts found</p>
             </div>
           ) : (
-            <div className="accounts-list">
-              {pendingAccounts.map((account) => (
-                <div key={account.id} className="account-card">
-                  <div className="account-info">
-                    <h3>{account.full_name}</h3>
-                    <p><strong>Email:</strong> {account.email}</p>
-                    <p><strong>Submitted:</strong> {new Date(account.created_at).toLocaleDateString()}</p>
+            <div className="accounts-table-container">
+              <div className="accounts-table-header">
+                <div className="header-name">Name</div>
+                <div className="header-status">Status</div>
+                <div className="header-actions">Actions</div>
+              </div>
+              <div className="accounts-table-body">
+                {allAccounts.map((account) => (
+                  <div key={account.id} className="account-row">
+                    <div className="account-name">
+                      {account.full_name}
+                    </div>
+                    <div className="account-status">
+                      <span className={`status-badge ${account.status?.toLowerCase()}`}>
+                        {account.status === 'pending' ? 'Pending' : 
+                         account.status === 'approved' ? 'Verified' :
+                         account.status === 'rejected' ? 'Rejected' : account.status}
+                      </span>
+                    </div>
+                    <div className="account-actions">
+                      {account.status === 'pending' && (
+                        <>
+                          <button
+                            className="approve-btn"
+                            onClick={() => handleAccountAction(account.id, 'approve')}
+                          >
+                            Approve
+                          </button>
+                          <button
+                            className="reject-btn"
+                            onClick={() => handleAccountAction(account.id, 'reject')}
+                          >
+                            Reject
+                          </button>
+                        </>
+                      )}
+                      {account.status === 'approved' && (
+                        <button
+                          className="revoke-btn"
+                          onClick={() => handleAccountAction(account.id, 'revoke')}
+                        >
+                          Revoke Verification
+                        </button>
+                      )}
+                      {account.status === 'rejected' && (
+                        <>
+                          <button
+                            className="approve-btn"
+                            onClick={() => handleAccountAction(account.id, 'approve')}
+                          >
+                            Approve
+                          </button>
+                          <button
+                            className="delete-btn"
+                            onClick={() => handleAccountAction(account.id, 'delete')}
+                          >
+                            Delete
+                          </button>
+                        </>
+                      )}
+                    </div>
                   </div>
-                  
-                  <div className="account-actions">
-                    <button
-                      className="approve-btn"
-                      onClick={() => handleApproval(account.id, 'approve')}
-                    >
-                      Approve
-                    </button>
-                    <button
-                      className="reject-btn"
-                      onClick={() => handleApproval(account.id, 'reject')}
-                    >
-                      Reject
-                    </button>
-                  </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           )}
         </>
