@@ -39,10 +39,6 @@ function AdminDashboard() {
 
   const fetchAllAccounts = async () => {
     try {
-      // Get current user's email from localStorage
-      const adminData = localStorage.getItem('adminData');
-      const currentUserEmail = adminData ? JSON.parse(adminData).email : null;
-
       const { data, error } = await supabase
         .from('police')
         .select('*')
@@ -54,9 +50,9 @@ function AdminDashboard() {
         return;
       }
 
-      // Filter out the current admin user
+      // Show all accounts except administrators
       const filteredAccounts = (data || []).filter(account => 
-        account.email !== currentUserEmail
+        account.role !== 'Administrator'
       );
 
       setAllAccounts(filteredAccounts);
@@ -110,8 +106,19 @@ function AdminDashboard() {
         newStatus = 'rejected';
         actionText = 'rejected';
       } else if (action === 'revoke') {
-        newStatus = 'rejected';
+        newStatus = 'revoked';
         actionText = 'revoked';
+      } else if (action === 'undo') {
+        // Get the account to determine its previous status
+        const account = allAccounts.find(acc => acc.id === accountId);
+        if (account && account.status === 'revoked') {
+          newStatus = 'approved';
+        } else if (account && account.status === 'approved') {
+          newStatus = 'pending';
+        } else {
+          newStatus = 'pending';
+        }
+        actionText = 'undone';
       } else if (action === 'delete') {
         // Handle delete action separately
         await handleDeleteAccount(accountId);
@@ -146,7 +153,29 @@ function AdminDashboard() {
     }
   };
 
+  const canUndo = (reviewedAt) => {
+    if (!reviewedAt) return false;
+    const reviewTime = new Date(reviewedAt).getTime();
+    const currentTime = new Date().getTime();
+    const timeDifference = currentTime - reviewTime;
+    // Allow undo within 24 hours (24 * 60 * 60 * 1000 milliseconds)
+    return timeDifference <= 24 * 60 * 60 * 1000;
+  };
+
   const handleDeleteAccount = async (accountId) => {
+    // Get account details for confirmation
+    const account = allAccounts.find(acc => acc.id === accountId);
+    const accountName = account ? account.full_name : 'this account';
+    
+    // Show confirmation dialog
+    const confirmed = window.confirm(
+      `Are you sure you want to permanently delete ${accountName}? This action cannot be undone.`
+    );
+    
+    if (!confirmed) {
+      return; // User cancelled the deletion
+    }
+
     try {
       const { error } = await supabase
         .from('police')
@@ -162,7 +191,7 @@ function AdminDashboard() {
       // Refresh the list
       await fetchAllAccounts();
       
-      setMessage('Account deleted successfully');
+      setMessage(`${accountName} deleted successfully`);
       setTimeout(() => setMessage(''), 3000);
     } catch (error) {
       console.error('Error:', error);
@@ -281,8 +310,15 @@ function AdminDashboard() {
                         <div className="account-name-inner">
                           <User size={16} className="mr-2" />
                           <div>
-                            <div className="account-fullname">{account.full_name}</div>
-                            <div className="account-email-small">{account.email}</div>
+                            <div className="account-position">
+                              {account.role || 'New User'}
+                            </div>
+                            <div className="account-full-name">
+                              {account.full_name}
+                            </div>
+                            <div className="account-email">
+                              {account.email}
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -290,7 +326,8 @@ function AdminDashboard() {
                         <span className={`status-badge ${account.status?.toLowerCase()}`}>
                           {account.status === 'pending' ? 'Pending' : 
                            account.status === 'approved' ? 'Verified' :
-                           account.status === 'rejected' ? 'Rejected' : account.status}
+                           account.status === 'rejected' ? 'Rejected' :
+                           account.status === 'revoked' ? 'Revoked' : account.status}
                         </span>
                       </div>
                       <div className="account-actions">
@@ -313,23 +350,56 @@ function AdminDashboard() {
                           </>
                         )}
                         {account.status === 'approved' && (
-                          <button
-                            className="revoke-btn"
-                            onClick={() => handleAccountAction(account.id, 'revoke')}
-                          >
-                            <XCircle size={14} />
-                            <span>Revoke Verification</span>
-                          </button>
+                          <>
+                            {canUndo(account.reviewed_at) && (
+                              <button
+                                className="undo-btn"
+                                onClick={() => handleAccountAction(account.id, 'undo')}
+                              >
+                                <Clock size={14} />
+                                <span>Undo</span>
+                              </button>
+                            )}
+                            <button
+                              className="revoke-btn"
+                              onClick={() => handleAccountAction(account.id, 'revoke')}
+                            >
+                              <XCircle size={14} />
+                              <span>Revoke Verification</span>
+                            </button>
+                          </>
                         )}
                         {account.status === 'rejected' && (
                           <>
+                            {canUndo(account.reviewed_at) ? (
+                              <button
+                                className="undo-btn"
+                                onClick={() => handleAccountAction(account.id, 'undo')}
+                              >
+                                <Clock size={14} />
+                                <span>Undo</span>
+                              </button>
+                            ) : null}
                             <button
-                              className="approve-btn"
-                              onClick={() => handleAccountAction(account.id, 'approve')}
+                              className="delete-btn"
+                              onClick={() => handleAccountAction(account.id, 'delete')}
                             >
-                              <CheckCircle size={14} />
-                              <span>Approve</span>
+                              <XCircle size={14} />
+                              <span>Delete</span>
                             </button>
+                          </>
+                        )}
+                        {account.status === 'revoked' && (
+                          <>
+                            {canUndo(account.reviewed_at) ? (
+                              <button
+                                className="undo-btn"
+                                onClick={() => handleAccountAction(account.id, 'undo')}
+                              >
+                                <Clock size={14} />
+                                <span>Undo</span>
+                              </button>
+                            ) : null}
                             <button
                               className="delete-btn"
                               onClick={() => handleAccountAction(account.id, 'delete')}
