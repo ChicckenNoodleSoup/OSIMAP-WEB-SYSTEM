@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import './Print.css';
 import { createClient } from '@supabase/supabase-js';
 import { DateTime } from './DateTime';
@@ -39,6 +39,107 @@ const fetchAllRecords = async (tableName, orderField = 'id', filters = {}) => {
   }
 
   return allData;
+};
+
+// Custom Dropdown Component
+const CustomDropdown = ({ options, value, onChange, allLabel = "All" }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  useEffect(() => {
+    const handleEscape = (event) => {
+      if (event.key === 'Escape' && isOpen) {
+        setIsOpen(false);
+      }
+    };
+
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [isOpen]);
+
+  const handleToggle = () => setIsOpen(!isOpen);
+
+  const handleOptionClick = (val) => {
+    onChange({ target: { value: val } });
+    setIsOpen(false);
+  };
+
+  const getDisplayText = () => {
+    if (!value) return allLabel;
+    return value;
+  };
+
+  return (
+    <div className="print-custom-dropdown" ref={dropdownRef}>
+      <div 
+        className="print-dropdown-trigger" 
+        onClick={handleToggle}
+        role="button"
+        aria-haspopup="listbox"
+        aria-expanded={isOpen}
+        tabIndex={0}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            handleToggle();
+          }
+        }}
+      >
+        <span className="print-dropdown-text">{getDisplayText()}</span>
+        <span className={`print-dropdown-arrow ${isOpen ? 'open' : ''}`}>▼</span>
+      </div>
+      
+      {isOpen && (
+        <div className="print-dropdown-options" role="listbox">
+          <div 
+            className={`print-dropdown-option ${!value ? 'selected' : ''}`}
+            onClick={() => handleOptionClick('')}
+            role="option"
+            aria-selected={!value}
+            tabIndex={0}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                handleOptionClick('');
+              }
+            }}
+          >
+            <span>{allLabel}</span>
+          </div>
+          
+          {options.map((option) => (
+            <div 
+              key={option}
+              className={`print-dropdown-option ${value === option ? 'selected' : ''}`}
+              onClick={() => handleOptionClick(option)}
+              role="option"
+              aria-selected={value === option}
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  handleOptionClick(option);
+                }
+              }}
+            >
+              <span>{option}</span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
 };
 
 function Print() {
@@ -116,7 +217,6 @@ function Print() {
   };
 
   const handlePrint = async () => {
-    // Log the print action
     await logSystemEvent.printReport('accident data report');
     window.print();
   };
@@ -143,7 +243,6 @@ function Print() {
     .sort((a, b) => a[0].localeCompare(b[0]));
 
   if (loading) {
-    // If filters are applied show simple spinner + text, otherwise simple loading text
     return (
       <div className="p-8">
         {filtersApplied ? (
@@ -219,37 +318,27 @@ function Print() {
           </div>
           <div>
             <label className="block text-sm font-medium mb-2">Barangay</label>
-            <select
+            <CustomDropdown
+              options={barangayList}
               value={pendingBarangay}
               onChange={(e) => {
                 setPendingBarangay(e.target.value);
                 setFiltersApplied(false);
               }}
-              className="filter-input"
-            >
-              <option value="">All Barangays</option>
-              {barangayList.map(b => (
-                <option key={b} value={b}>{b}</option>
-              ))}
-            </select>
+              allLabel="All Barangays"
+            />
           </div>
           <div>
             <label className="block text-sm font-medium mb-2">Severity</label>
-            <select
+            <CustomDropdown
+              options={['Critical', 'High', 'Medium', 'Low', 'Minor']}
               value={selectedSeverity}
               onChange={(e) => {
                 setSelectedSeverity(e.target.value);
                 setFiltersApplied(false);
               }}
-              className="filter-input"
-            >
-              <option value="">All Severities</option>
-              <option value="Critical">Critical</option>
-              <option value="High">High</option>
-              <option value="Medium">Medium</option>
-              <option value="Low">Low</option>
-              <option value="Minor">Minor</option>
-            </select>
+              allLabel="All Severities"
+            />
           </div>
             </div>
             <div className="mt-4">
@@ -491,7 +580,7 @@ function Print() {
         
           .print-only {
             padding: 1cm !important;
-            position: absolute !important; /* Default: Chrome/Edge isolation */
+            position: absolute !important;
             left: 0 !important;
             top: 0 !important;
             width: 100% !important;
@@ -517,7 +606,6 @@ function Print() {
             opacity: 0 !important;
           }
         
-          /* allow content to break across pages */
           .print-section,
           section,
           table,
@@ -532,10 +620,9 @@ function Print() {
             background: #fff !important;
           }
         
-          /* Firefox-specific patch */
           @-moz-document url-prefix() {
             .print-only {
-              position: static !important; /* Prevent blank pages */
+              position: static !important;
               width: 100% !important;
               margin: 0 auto !important;
             }

@@ -23,6 +23,18 @@ const MultiSelectDropdown = ({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  // Close on Escape key
+  useEffect(() => {
+    const handleEscape = (event) => {
+      if (event.key === 'Escape' && isOpen) {
+        setIsOpen(false);
+      }
+    };
+
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [isOpen]);
+
   const handleToggle = () => {
     setIsOpen(!isOpen);
   };
@@ -65,16 +77,38 @@ const MultiSelectDropdown = ({
 
   return (
     <div className="multi-select-dropdown" ref={dropdownRef}>
-      <div className="multi-select-trigger" onClick={handleToggle}>
+      <div 
+        className="multi-select-trigger" 
+        onClick={handleToggle}
+        role="button"
+        aria-haspopup="listbox"
+        aria-expanded={isOpen}
+        tabIndex={0}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            handleToggle();
+          }
+        }}
+      >
         <span className="multi-select-text">{getDisplayText()}</span>
         <span className={`multi-select-arrow ${isOpen ? 'open' : ''}`}>▼</span>
       </div>
       
       {isOpen && (
-        <div className="multi-select-options">
+        <div className="multi-select-options" role="listbox">
           <div 
             className={`multi-select-option ${selectedValues.length === 0 ? 'selected' : ''}`}
             onClick={handleSelectAll}
+            role="option"
+            aria-selected={selectedValues.length === 0}
+            tabIndex={0}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                handleSelectAll();
+              }
+            }}
           >
             <input 
               type="checkbox" 
@@ -91,6 +125,15 @@ const MultiSelectDropdown = ({
                 key={option}
                 className={`multi-select-option ${selectedValues.includes(optionStr) ? 'selected' : ''}`}
                 onClick={() => handleOptionClick(option)}
+                role="option"
+                aria-selected={selectedValues.includes(optionStr)}
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    handleOptionClick(option);
+                  }
+                }}
               >
                 <input 
                   type="checkbox" 

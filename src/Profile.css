@@ -232,3 +232,38 @@
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.08);
 }
+
+/* SingleSelectDropdown styling to match profile inputs */
+.profile-item .single-select-dropdown {
+  width: 80%;
+  min-width: unset;
+}
+
+.profile-item .single-select-trigger {
+  width: 100%;
+  padding: 0.5rem 0.8rem;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  font-size: 0.95rem;
+  min-width: unset;
+  text-align: right;
+  backdrop-filter: none;
+}
+
+.profile-item .single-select-trigger:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.3);
+  box-shadow: none;
+}
+
+.profile-item .single-select-trigger:focus {
+  border-color: #00aaff;
+  background: rgba(255, 255, 255, 0.25);
+  box-shadow: none;
+}
+
+.profile-item .single-select-text {
+  text-align: right;
+}

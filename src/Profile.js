@@ -4,6 +4,7 @@ import { createClient } from "@supabase/supabase-js";
 import { secureHash, verifySecureHash } from "./utils/passwordUtils";
 import { validatePassword, validateFullName, validateEmail, validateStation } from "./utils/validation";
 import { logProfileEvent } from "./utils/loggingUtils";
+import SingleSelectDropdown from "./SingleSelectDropdown";
 import "./Profile.css";
 
 const SUPABASE_URL = process.env.REACT_APP_SUPABASE_URL;
@@ -340,17 +341,14 @@ function Profile() {
               <div className="profile-item">
                 <p className="profile-label">🧑🏻‍✈️ Role</p>
                 {isEditing ? (
-                  <select
-                    value={editForm.role || ''}
-                    onChange={(e) => setEditForm({ ...editForm, role: e.target.value })}
-                    className="profile-edit-select"
-                    required
-                  >
-                    <option value="">Select Role</option>
-                    <option value="Officer">Officer</option>
-                    <option value="Supervisor">Supervisor</option>
-                    <option value="Analyst">Analyst</option>
-                  </select>
+                  <SingleSelectDropdown
+                    options={["Officer", "Supervisor", "Analyst"]}
+                    selectedValue={editForm.role || ''}
+                    onChange={(value) => setEditForm({ ...editForm, role: value })}
+                    placeholder="Select Role"
+                    allLabel="Select Role"
+                    allValue=""
+                  />
                 ) : (
                   <p className="profile-value">{userData.role}</p>
                 )}

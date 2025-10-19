@@ -242,3 +242,174 @@
 /* Print button convenience classes */
 .apply-btn { background: linear-gradient(180deg,#28a745,#1f7a35); color: white; margin-top: 1rem; }
 .print-btn { background: linear-gradient(180deg,#2563eb,#1e47b7); color: white; margin-top: 1rem; margin-left: 1rem; }
+
+/* ===================================
+   Print Page Custom Dropdown Styles
+   (Integrated from SingleSelectDropdown)
+   =================================== */
+
+/* Container */
+.print-custom-dropdown {
+  position: relative;
+  min-width: 120px;
+  user-select: none;
+  width: 100%;
+}
+
+/* Trigger button */
+.print-dropdown-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 15px;
+  
+  color: #fff;
+  padding: 10px 12px;
+  font-size: 0.95rem;
+  width: 100%;
+  
+  cursor: pointer;
+  transition: all 0.3s ease;
+  user-select: none;
+}
+
+.print-dropdown-trigger:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(0, 133, 255, 0.5);
+  box-shadow: 0 0 8px rgba(0, 133, 255, 0.3);
+}
+
+.print-dropdown-trigger:focus {
+  outline: none;
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(0, 133, 255, 0.8);
+  box-shadow: 0 0 12px rgba(0, 133, 255, 0.5);
+}
+
+/* Display text */
+.print-dropdown-text {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: left;
+}
+
+/* Arrow indicator */
+.print-dropdown-arrow {
+  font-size: 0.7rem;
+  transition: transform 0.3s ease;
+  flex-shrink: 0;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.print-dropdown-arrow.open {
+  transform: rotate(180deg);
+}
+
+/* Options Dropdown - GLASS STYLE */
+.print-dropdown-options {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  
+  background: linear-gradient(
+    135deg,
+    rgba(70, 75, 85, 0.85) 0%,
+    rgba(55, 60, 70, 0.85) 50%,
+    rgba(70, 75, 85, 0.85) 100%
+  );
+  backdrop-filter: blur(24px) saturate(200%) brightness(1.3);
+  -webkit-backdrop-filter: blur(24px) saturate(200%) brightness(1.3);
+  border: 2px solid;
+  border-color: rgba(255, 255, 255, 0.4) rgba(255, 255, 255, 0.22) rgba(255, 255, 255, 0.12) rgba(255, 255, 255, 0.22);
+  border-radius: 16px;
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.4),
+    0 2px 8px rgba(0, 0, 0, 0.2),
+    inset 0 2px 4px rgba(255, 255, 255, 0.5),
+    inset 0 -2px 2px rgba(0, 0, 0, 0.15);
+  
+  max-height: 250px;
+  overflow-y: auto;
+  z-index: 99999;
+  padding: 6px;
+  
+  animation: printDropdownFadeIn 0.2s ease-out;
+}
+
+@keyframes printDropdownFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Individual option */
+.print-dropdown-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  
+  padding: 10px 12px;
+  color: #ffffff;
+  font-size: 0.9rem;
+
+  border-radius: 10px;
+  
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
+  margin-bottom: 2px;
+}
+
+.print-dropdown-option:last-child {
+  margin-bottom: 0;
+}
+
+.print-dropdown-option:hover {
+  background: rgba(0, 133, 255, 0.3);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.print-dropdown-option.selected {
+  background: rgba(0, 133, 255, 0.2);
+  font-weight: 500;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.print-dropdown-option:focus {
+  outline: none;
+  background: rgba(0, 133, 255, 0.3);
+}
+
+/* Custom scrollbar */
+.print-dropdown-options::-webkit-scrollbar {
+  width: 10px;
+}
+
+.print-dropdown-options::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 5px;
+  margin: 4px;
+}
+
+.print-dropdown-options::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 0.25));
+  border-radius: 5px;
+  border: 2px solid rgba(255, 255, 255, 0.1);
+}
+
+.print-dropdown-options::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0.35));
+}

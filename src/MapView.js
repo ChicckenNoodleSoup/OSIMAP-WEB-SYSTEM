@@ -18,6 +18,7 @@ import L from "leaflet";
 import { useLocation } from "react-router-dom";
 import FullscreenFilters from './FullscreenFilters';
 import MultiSelectDropdown from './MultiSelectDropdown';
+import SingleSelectDropdown from './SingleSelectDropdown';
 
 // Cluster colors
 const getClusterColor = (clusterId) => {
@@ -721,7 +722,7 @@ export default function MapView() {
           <DateTime />
         </div>
 
-        {/* CHANGED: Year filter now uses MultiSelectDropdown */}
+        {/* FILTER DROPDOWNS */}
         <div className="control-filter-bar">
           <div className="filter-group">
             <label htmlFor="year-select" className="filter-label">Year:</label>
@@ -736,47 +737,35 @@ export default function MapView() {
 
           <div className="filter-group">
             <label htmlFor="location-select" className="filter-label">Location:</label>
-            <select
-              id="location-select"
-              className="filter-dropdown"
-              value={selectedLocation}
-              onChange={(e) => setSelectedLocation(e.target.value)}
-            >
-              <option value="all">All Locations</option>
-              {availableLocations.map(location => (
-                <option key={location} value={location}>{location}</option>
-              ))}
-            </select>
+            <SingleSelectDropdown
+              options={availableLocations}
+              selectedValue={selectedLocation}
+              onChange={setSelectedLocation}
+              allLabel="All Locations"
+              allValue="all"
+            />
           </div>
 
           <div className="filter-group">
             <label htmlFor="offense-select" className="filter-label">Offense:</label>
-            <select
-              id="offense-select"
-              className="filter-dropdown"
-              value={selectedOffenseType}
-              onChange={(e) => setSelectedOffenseType(e.target.value)}
-            >
-              <option value="all">All Offenses</option>
-              {availableOffenseTypes.map(offense => (
-                <option key={offense} value={offense}>{offense}</option>
-              ))}
-            </select>
+            <SingleSelectDropdown
+              options={availableOffenseTypes}
+              selectedValue={selectedOffenseType}
+              onChange={setSelectedOffenseType}
+              allLabel="All Offenses"
+              allValue="all"
+            />
           </div>
 
           <div className="filter-group">
             <label htmlFor="severity-select" className="filter-label">Severity:</label>
-            <select
-              id="severity-select"
-              className="filter-dropdown"
-              value={selectedSeverity}
-              onChange={(e) => setSelectedSeverity(e.target.value)}
-            >
-              <option value="all">All Severities</option>
-              {availableSeverities.map(severity => (
-                <option key={severity} value={severity}>{severity}</option>
-              ))}
-            </select>
+            <SingleSelectDropdown
+              options={availableSeverities}
+              selectedValue={selectedSeverity}
+              onChange={setSelectedSeverity}
+              allLabel="All Severities"
+              allValue="all"
+            />
           </div>
         </div>
 
@@ -799,7 +788,7 @@ export default function MapView() {
             </div>
           )}
         </div>
-        
+
         <div className="map-card">
           <div className="mapview-wrapper">
             <MapContainer
@@ -815,46 +804,6 @@ export default function MapView() {
               maxBounds={sanFernandoBounds}
               maxBoundsViscosity={1.0}
             >
-              <div className="simple-corner-search" ref={searchInputRef}>
-                <input
-                  type="text"
-                  placeholder="Search barangay..."
-                  className="simple-search-input"
-                  value={searchTerm}
-                  onChange={handleSearchInputChange}
-                  onKeyDown={handleSearchKeyDown}
-                  onFocus={() => {
-                    if (searchResults.length > 0) setShowSearchDropdown(true);
-                  }}
-                />
-                
-                {showSearchDropdown && searchResults.length > 0 && (
-                  <div className="search-dropdown">
-                    {searchResults.map((result, index) => (
-                      <div
-                        key={result.id || index}
-                        className={`search-dropdown-item ${
-                          index === selectedSearchIndex ? 'selected' : ''
-                        }`}
-                        onClick={() => handleSearchResultSelect(result)}
-                      >
-                        <div className="search-item-main">
-                          {result.type === 'barangay' ? (
-                            <span className="search-barangay">📍 {result.name} (Barangay)</span>
-                          ) : (
-                            <span>{result.location}</span>
-                          )}
-                        </div>
-                        {result.type === 'record' && (
-                          <div className="search-item-meta">
-                            {result.offense_type} • {result.severity} • {result.year}
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
 
               <SearchZoomControl 
                 searchTerm={searchTerm}
@@ -886,6 +835,18 @@ export default function MapView() {
                 onToggleClusters={(checked) => setShowClusters(checked)}
                 onToggleMarkers={(checked) => setShowMarkers(checked)}
                 stats={filteredData.stats}
+                // search props
+                searchTerm={searchTerm}
+                searchResults={searchResults}
+                showSearchDropdown={showSearchDropdown}
+                selectedSearchIndex={selectedSearchIndex}
+                searchInputRef={searchInputRef}
+                onSearchChange={handleSearchInputChange}
+                onSearchKeyDown={handleSearchKeyDown}
+                onSearchFocus={() => {
+                  if (searchResults.length > 0) setShowSearchDropdown(true);
+                }}
+                onSearchResultSelect={handleSearchResultSelect}
               />
               
               {selectedRecord && <RecordPopup record={selectedRecord} />}
