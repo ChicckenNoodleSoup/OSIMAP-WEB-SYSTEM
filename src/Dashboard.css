@@ -24,7 +24,7 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  position: relative; /* Add this */
+  position: relative; 
 }
 
 /* ✅ Logo (soft wide glow to the right) */
