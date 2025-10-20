@@ -244,6 +244,16 @@ function AdminDashboard() {
     }
 
     try {
+      // Send email notification before deleting the account
+      if (account) {
+        const result = await sendAccountStatusEmail(account.email, account.full_name, 'deleted');
+        if (result.success) {
+          console.log(`Deletion email sent to ${account.email}`);
+        } else {
+          console.error('Failed to send deletion email:', result.error);
+        }
+      }
+
       const { error } = await supabase
         .from('police')
         .delete()
