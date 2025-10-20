@@ -1,31 +1,38 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { useLocation } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { createClient } from "@supabase/supabase-js";
-import { validatePassword, validateConfirmPassword } from './utils/validation';
-import "./ForgotPassword.css"; // CHANGE TO ResetPassword.css LATER
+import { validatePassword, validateConfirmPassword } from "./utils/validation";
+import "./ForgotPassword.css"; // Change to ResetPassword.css later
 
-const SUPABASE_URL = process.env.REACT_APP_SUPABASE_URL;
-const SUPABASE_KEY = process.env.REACT_APP_SUPABASE_KEY;
-const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+const supabase = createClient(
+  process.env.REACT_APP_SUPABASE_URL,
+  process.env.REACT_APP_SUPABASE_KEY
+);
 
 function ResetPassword() {
   const navigate = useNavigate();
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
   const accessToken = searchParams.get("access_token");
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [passwordError, setPasswordError] = useState('');
-  const [confirmPasswordError, setConfirmPasswordError] = useState('');
-  const [error, setError] = useState('');
+
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [passwordError, setPasswordError] = useState("");
+  const [confirmPasswordError, setConfirmPasswordError] = useState("");
+  const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
+  useEffect(() => {
+    if (!accessToken) {
+      setError("Invalid or missing reset token.");
+    }
+  }, [accessToken]);
+
   const handleInputChange = (setter, errorSetter) => (e) => {
     setter(e.target.value);
-    errorSetter('');
-    setError('');
+    errorSetter("");
+    setError("");
   };
 
   const validateForm = () => {
@@ -41,34 +48,25 @@ function ResetPassword() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!validateForm()) return;
+    if (!validateForm() || !accessToken) return;
 
     setIsLoading(true);
 
     try {
-      if (!accessToken) {
-        setError("Invalid or missing reset token.");
-        setIsLoading(false);
-        return;
-      }
-      
-      // Create a temporary session
+      // Create temporary session using token
       await supabase.auth.setSession({ access_token: accessToken });
-      
+
       const { error } = await supabase.auth.updateUser({ password });
 
       if (error) {
         setError(error.message);
       } else {
         setSuccess(true);
-        setTimeout(() => {
-          navigate('/signin');
-        }, 3000);
-
+        setTimeout(() => navigate("/signin"), 3000);
       }
     } catch (err) {
-      setError('An unexpected error occurred.');
       console.error(err);
+      setError("An unexpected error occurred.");
     } finally {
       setIsLoading(false);
     }
@@ -77,19 +75,15 @@ function ResetPassword() {
   return (
     <div className="forgot-container">
       <div className="forgot-wrapper">
-        {/* Left Side */}
         <div className="forgot-image-side">
           <img src="/signin-image.png" alt="Background" className="signin-bg-image" />
           <img src="/signin-logo.png" alt="Overlay" className="overlay-image" />
         </div>
 
-        {/* Right Side Form */}
         <div className="forgot-form-side">
           <div className="frosted-right"></div>
-
           <div className="forgot-card">
             <img src="/signin-icon.png" alt="Card Logo" className="signin-card-logo" />
-
             <h2>Reset Password</h2>
             <p className="forgot-subtext">
               Enter your new password and confirm it below.
@@ -128,19 +122,19 @@ function ResetPassword() {
                 {error && <p className="validation-error">{error}</p>}
 
                 <button type="submit" disabled={isLoading}>
-                  {isLoading ? 'Updating...' : 'Update Password'}
+                  {isLoading ? "Updating..." : "Update Password"}
                 </button>
                 <button
                   type="button"
                   className="back-btn"
-                  onClick={() => navigate('/signin')}
+                  onClick={() => navigate("/signin")}
                 >
                   Back to Login
                 </button>
               </form>
             ) : (
               <p className="success-message">
-                Password successfully updated! You can now log in.
+                Password successfully updated! Redirecting to login...
               </p>
             )}
           </div>
