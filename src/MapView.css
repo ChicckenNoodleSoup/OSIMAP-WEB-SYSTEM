@@ -422,9 +422,22 @@
   backdrop-filter: none;
 }
 
-/* Adjust search container position to avoid overlapping with other controls */
+/* Position LayersControl and fullscreen button at topmost right in fullscreen mode */
 .fullscreen-active .leaflet-control-container .leaflet-top.leaflet-right {
-  margin-top: 80px;
+  margin-top: 0 !important;
+  top: 35px !important;
+  right: 10px !important;
+}
+
+/* Ensure fullscreen control is at the very top */
+.fullscreen-active .leaflet-control-fullscreen {
+  margin-top: 10px !important;
+  margin-bottom: 10px !important;
+}
+
+/* Ensure layers control is positioned right below fullscreen button */
+.fullscreen-active .leaflet-control-layers {
+  margin-top: 0 !important;
 }
 
 /* Move zoom controls to bottom-left in fullscreen mode */
