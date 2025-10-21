@@ -35,6 +35,20 @@ const MultiSelectDropdown = ({
     return () => document.removeEventListener('keydown', handleEscape);
   }, [isOpen]);
 
+  // Prevent parent scroll interference - NEW
+  useEffect(() => {
+    if (isOpen && dropdownRef.current) {
+      const optionsElement = dropdownRef.current.querySelector('.multi-select-options');
+      if (optionsElement) {
+        const handleWheel = (e) => {
+          e.stopPropagation();
+        };
+        optionsElement.addEventListener('wheel', handleWheel, { passive: true });
+        return () => optionsElement.removeEventListener('wheel', handleWheel);
+      }
+    }
+  }, [isOpen]);
+
   const handleToggle = () => {
     setIsOpen(!isOpen);
   };
