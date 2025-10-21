@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Confirmation Successful</title>
+  <style>
+    body {
+      margin: 0;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #0f172a, #1e293b);
+      font-family: "Segoe UI", Roboto, Arial, sans-serif;
+      color: #fff;
+      text-align: center;
+    }
+
+    .card {
+      background: rgba(255, 255, 255, 0.05);
+      padding: 50px 40px;
+      border-radius: 14px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+
+      /* ✅ Safari + iOS support */
+      -webkit-backdrop-filter: blur(6px);
+      backdrop-filter: blur(6px);
+
+      max-width: 500px;
+      width: 90%;
+    }
+
+    h1 {
+      font-size: 2.4rem;
+      margin-bottom: 15px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: #60a5fa;
+    }
+
+    p {
+      font-size: 1rem;
+      color: rgba(255, 255, 255, 0.85);
+      margin-bottom: 35px;
+    }
+
+    button {
+      background: linear-gradient(90deg, #3b82f6, #60a5fa);
+      border: none;
+      padding: 12px 26px;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      color: #fff;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    button:hover {
+      transform: scale(1.05);
+      box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
+    }
+
+    button:active {
+      transform: scale(0.97);
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>CONFIRMATION SUCCESSFUL</h1>
+    <p>You may now exit this page.</p>
+    <button onclick="closePage()">Close Page</button>
+  </div>
+
+  <script>
+    function closePage() {
+      // Try to close the tab or window (works if script-opened)
+      window.close();
+
+      // Fallback if browser blocks window.close()
+      setTimeout(() => {
+        document.body.innerHTML = `
+          <div style="height:100vh;display:flex;align-items:center;justify-content:center;text-align:center;color:#fff;font-family:sans-serif;">
+            <div>
+              <h2>It’s safe to close this tab now.</h2>
+              <p style="opacity:0.8;">If it doesn’t close automatically, please close it manually.</p>
+            </div>
+          </div>
+        `;
+      }, 250);
+    }
+  </script>
+</body>
+</html>
