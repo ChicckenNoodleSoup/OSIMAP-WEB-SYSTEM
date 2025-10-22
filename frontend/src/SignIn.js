@@ -98,7 +98,7 @@ function SignIn({ setIsAuthenticated }) {
       if (data) {
         // Verify the password
         const isPasswordValid = await verifySecureHash(password, data.password);
-        
+
         if (!isPasswordValid) {
           await logAuthEvent.failedLogin(null, username);
           throw new Error('Invalid credentials');
@@ -118,19 +118,19 @@ function SignIn({ setIsAuthenticated }) {
             setErrorMessage('Your account is still pending approval. Please wait for administrator approval.');
             return;
           }
-          
+
           if (data.status === 'rejected') {
             await logAuthEvent.loginBlockedRejected(null, username);
             setErrorMessage('Your account has been rejected. Please contact the administrator.');
             return;
           }
-          
+
           if (data.status === 'revoked') {
             await logAuthEvent.loginBlockedRejected(null, username);
             setErrorMessage('Your account has been revoked. Please contact the administrator.');
             return;
           }
-          
+
           if (data.status === 'approved') {
             // Successful authentication for regular users
             setIsAuthenticated(true);
@@ -148,7 +148,7 @@ function SignIn({ setIsAuthenticated }) {
       }
     } catch (error) {
       console.error('Login error:', error);
-      
+
       // Shake card
       const card = document.querySelector('.signin-card');
       if (card) {
@@ -157,7 +157,7 @@ function SignIn({ setIsAuthenticated }) {
           card.style.animation = '';
         }, 500);
       }
-      
+
       // Show error inside card
       setErrorMessage('Invalid username or password.');
     } finally {
@@ -286,6 +286,7 @@ function SignIn({ setIsAuthenticated }) {
 
               <button type="submit" disabled={isLoading}>
                 {isLoading && <div className="loading-spinner"></div>}
+                {isLoading && <div className="loading-spinner-signin"></div>}
                 {isLoading ? 'Signing In...' : 'Login'}
               </button>
             </form>
@@ -299,5 +300,3 @@ function SignIn({ setIsAuthenticated }) {
     </div>
   );
 }
-
-export default SignIn;
