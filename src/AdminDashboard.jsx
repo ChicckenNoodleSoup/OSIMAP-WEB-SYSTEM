@@ -8,6 +8,7 @@ import { DateTime } from './DateTime';
 import { Shield, Users, Activity, CheckCircle, XCircle, Clock, Mail, User } from 'lucide-react';
 import './AdminDashboard.css';
 import './Spinner.css';
+import './PageHeader.css';
 
 const SUPABASE_URL = process.env.REACT_APP_SUPABASE_URL;
 const SUPABASE_KEY = process.env.REACT_APP_SUPABASE_KEY;
@@ -358,6 +359,7 @@ function AdminDashboard() {
             <img src="stopLight.svg" alt="Logo" className="page-logo" />
             <h1 className="page-title">Admin Dashboard</h1>
           </div>
+
           <DateTime />
         </div>
 
