@@ -99,7 +99,7 @@ export default function AddRecord() {
       setCurrentStep(1);
       setUploadStatus("📤 Uploading file...");
 
-      fetch("http://localhost:5000/upload", {
+      fetch("https://osimap-web-system.onrender.com/status", {
         method: "POST",
         body: formData,
       })

@@ -1,5 +1,5 @@
 #!/bin/bash
-for port in 3000 3002 5000; do
+for port in 3000 3002 5000 10000; do
   if lsof -ti :$port > /dev/null 2>&1; then
     lsof -ti :$port | xargs kill -9
     echo "✅ Killed port $port"

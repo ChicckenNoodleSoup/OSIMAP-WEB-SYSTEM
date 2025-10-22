@@ -42,7 +42,7 @@ function HelpSupport() {
     setStatusMessage('');
 
     try {
-      const response = await fetch('http://localhost:3002/api/send-support-email', {
+      const response = await fetch('https://osimap-web-system.onrender.com/api/send-support-email', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
