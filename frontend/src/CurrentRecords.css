@@ -142,7 +142,7 @@
 .cr-edit-instructions {
   position: absolute;
   top: calc(100% + 8px); /* 8px below the button */
-  left: 150px; /* Center the 320px panel under the 20px button: (-320/2 + 20/2) = -150px */
+  left: 228px; /* Center the 320px panel under the 20px button: (-320/2 + 20/2) = -150px */
   width: 320px;
   max-width: 90vw;
   z-index: 60;
@@ -167,7 +167,7 @@
   content: "";
   position: absolute;
   top: -7px;
-  left: 180px; /* Center the 14px arrow under the button: (320/2 - 14/2 + adjustment if needed) ≈ 153px */
+  left: 153px; /* Center the 14px arrow under the button: (320/2 - 14/2 + adjustment if needed) ≈ 153px */
   right: auto;
   width: 14px;
   height: 14px;
