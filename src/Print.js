@@ -321,10 +321,10 @@ function Print() {
       <div className="no-print">
         <div className="frosted-container">
           <div className="dashboard-card p-6 mb-6">
-            <h2 className="text-2xl font-bold mb-4">Report Filters</h2>
+            <h2 className="text-2xl">Report Filters</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <div>
-            <label className="block text-sm font-medium mb-2">Start Date</label>
+            <label className="print-label">Start Date</label>
             <input
               type="date"
               value={pendingStartDate}
@@ -338,7 +338,7 @@ function Print() {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-2">End Date</label>
+            <label className="print-label">End Date</label>
             <input
               type="date"
               value={pendingEndDate}
@@ -352,7 +352,7 @@ function Print() {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-2">Barangay</label>
+            <label className="print-label">Barangay</label>
             <CustomDropdown
               options={barangayList}
               value={pendingBarangay}
@@ -364,7 +364,7 @@ function Print() {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-2">Severity</label>
+            <label className="print-label">Severity</label>
             <CustomDropdown
               options={['Critical', 'High', 'Medium', 'Low', 'Minor']}
               value={selectedSeverity}

@@ -1,58 +1,19 @@
+@import './PageHeader.css';
+
 .dashboard {
-  padding: 25px 2% 2% 2%;
+  padding: 24px;
   min-height: 100vh;
   box-sizing: border-box;
-  max-height: 500px; 
-  overflow-y: auto;
 }
 
 .dashboard-title {
-  margin-bottom: 20px;
-  color: white;
-}
-
-.page-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1.5rem; 
-  flex-wrap: wrap; 
-}
-
-/* ✅ Container */
-.page-title-container {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  position: relative; 
-}
-
-/* ✅ Logo (soft wide glow to the right) */
-.page-logo {
-  width: 45px;
-  height: auto;
-  object-fit: contain;
-  animation: stoplightShared 12s infinite ease-in-out;
-
-  /* Softer, wider spread */
-  filter: 
-    drop-shadow(14px 4px 24px rgba(255, 45, 45, 0.45))
-    drop-shadow(28px 6px 40px rgba(255, 45, 45, 0.25));
-}
-
-/* ✅ Title (wider glow than logo, softer) */
-.page-title {
-  margin: 0;
-  font-size: clamp(1.5rem, 4vw, 2.5rem);
-  font-weight: 700;
-  color: white;
-  animation: stoplightShared 12s infinite ease-in-out;
-
-  /* Very soft + wide glow */
-  text-shadow: 
-    0 0 18px rgba(255, 45, 45, 0.5),
-    0 0 38px rgba(255, 45, 45, 0.35),
-    20px 4px 55px rgba(255, 45, 45, 0.2);
+  padding: 0 20px;
+  max-width: 1400px;
+  margin: 0 auto 2rem auto;
+  box-sizing: border-box;
 }
 
 /* 🚦 Shared animation */

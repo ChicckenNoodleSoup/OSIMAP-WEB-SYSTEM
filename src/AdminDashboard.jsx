@@ -333,8 +333,8 @@ function AdminDashboard() {
   }
 
   return (
-    <div className="scroll-wrapper">
-      <div className="admin-dashboard-container">
+    <div className="admindash-scroll-wrapper">
+      <div className="admindash-container">
         <div className="page-header">
           <div className="page-title-container">
             <img src="stopLight.svg" alt="Logo" className="page-logo" />
