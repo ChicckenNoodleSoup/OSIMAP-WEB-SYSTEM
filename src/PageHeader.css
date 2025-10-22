@@ -1,0 +1,75 @@
+/* Shared Page Header Styles - Use across all pages */
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.page-title-container {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  position: relative;
+}
+
+.page-logo {
+  width: 45px;
+  height: auto;
+  object-fit: contain;
+  animation: stoplight 12s infinite ease-in-out;
+  filter:
+    drop-shadow(14px 4px 24px rgba(255, 45, 45, 0.45))
+    drop-shadow(28px 6px 40px rgba(255, 45, 45, 0.25));
+}
+
+@keyframes stoplight {
+  0% {
+    filter: 
+      drop-shadow(14px 4px 24px rgba(255, 45, 45, 0.45))
+      drop-shadow(28px 6px 40px rgba(255, 45, 45, 0.25));
+  }
+  33% {
+    filter: 
+      drop-shadow(14px 4px 24px rgba(255, 215, 0, 0.45))
+      drop-shadow(28px 6px 40px rgba(255, 215, 0, 0.25));
+  }
+  66% {
+    filter: 
+      drop-shadow(14px 4px 24px rgba(50, 205, 50, 0.45))
+      drop-shadow(28px 6px 40px rgba(50, 205, 50, 0.25));
+  }
+  100% {
+    filter: 
+      drop-shadow(14px 4px 24px rgba(255, 45, 45, 0.45))
+      drop-shadow(28px 6px 40px rgba(255, 45, 45, 0.25));
+  }
+}
+
+.page-title {
+  margin: 0;
+  font-size: clamp(1.5rem, 4vw, 2.25rem);
+  font-weight: 700;
+  color: #e6f2ff;
+  text-shadow: 0 0 12px rgba(0, 133, 255, 0.35);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+  
+  .page-title {
+    font-size: 1.5rem;
+  }
+  
+  .page-logo {
+    width: 38px;
+  }
+}
