@@ -28,8 +28,6 @@
 .page-header {
   display: flex;
   justify-content: space-between;
-  /* make this the positioning context for the floating panel */
-  position: relative;
   align-items: center;
   margin-bottom: 1.5rem; 
   flex-wrap: wrap; 
@@ -127,6 +125,7 @@
   transition: background 0.15s ease, transform 0.08s ease;
   padding: 0;
   font-weight: 600;
+  position: relative; /* Make this the positioning context for the instructions panel */
 }
 
 .cr-info-btn:hover {
@@ -143,7 +142,7 @@
 .cr-edit-instructions {
   position: absolute;
   top: calc(100% + 8px); /* 8px below the button */
-  right: 200; /* align to right edge of parent */
+  left: -150px; /* Center the 320px panel under the 20px button: (-320/2 + 20/2) = -150px */
   width: 320px;
   max-width: 90vw;
   z-index: 60;
@@ -168,7 +167,8 @@
   content: "";
   position: absolute;
   top: -7px;
-  right: 90px;
+  left: 153px; /* Center the 14px arrow under the button: (320/2 - 14/2 + adjustment if needed) ≈ 153px */
+  right: auto;
   width: 14px;
   height: 14px;
   background: rgba(10, 30, 60, 0.92);
@@ -415,5 +415,13 @@ input[type="time"] {
   .records-table th,
   .records-table td {
     padding: 0.5rem;
+  }
+
+  .cr-edit-instructions {
+    left: calc(50% - 160px); /* Adjust for smaller screens if needed */
+  }
+
+  .cr-edit-instructions::before {
+    left: calc(50% - 7px);
   }
 }
