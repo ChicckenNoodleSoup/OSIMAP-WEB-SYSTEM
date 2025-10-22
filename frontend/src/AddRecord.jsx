@@ -87,7 +87,7 @@ export default function AddRecord() {
       setCurrentStep(1);
       setUploadStatus("📤 Uploading file...");
 
-      fetch("http://localhost:5000/upload", { method: "POST", body: formData })
+      fetch("http://osimap-web-system.onrender.com/status", { method: "POST", body: formData })
         .then((res) => res.json())
         .then(async (data) => {
           console.log("Backend response:", data);
