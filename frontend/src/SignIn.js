@@ -300,3 +300,5 @@ function SignIn({ setIsAuthenticated }) {
     </div>
   );
 }
+
+export default SignIn;
