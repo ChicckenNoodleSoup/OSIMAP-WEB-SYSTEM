@@ -7,6 +7,7 @@ import RoleProtectedRoute from './components/RoleProtectedRoute';
 import { DateTime } from './DateTime';
 import { Shield, Users, Activity, CheckCircle, XCircle, Clock, Mail, User } from 'lucide-react';
 import './AdminDashboard.css';
+import './Spinner.css';
 
 const SUPABASE_URL = process.env.REACT_APP_SUPABASE_URL;
 const SUPABASE_KEY = process.env.REACT_APP_SUPABASE_KEY;
@@ -309,9 +310,26 @@ function AdminDashboard() {
     return (
       <div className="scroll-wrapper">
         <div className="admin-dashboard-container">
-          <div className="loading">
-            <Activity className="loading-icon" size={32} />
-            <p>Loading accounts...</p>
+          <div className="loading-center full-height" role="status" aria-live="polite">
+            <div style={{display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10}}>
+              <svg 
+                className="loading-spinner" 
+                viewBox="-13 -13 45 45" 
+                xmlns="http://www.w3.org/2000/svg"
+                aria-hidden="true"
+              >
+                <circle className="box5631" cx="13" cy="1" r="5"/>
+                <circle className="box5631" cx="25" cy="1" r="5"/>
+                <circle className="box5631" cx="1" cy="13" r="5"/>
+                <circle className="box5631" cx="13" cy="13" r="5"/>
+                <circle className="box5631" cx="25" cy="13" r="5"/>
+                <circle className="box5631" cx="1" cy="25" r="5"/>
+                <circle className="box5631" cx="13" cy="25" r="5"/>
+                <circle className="box5631" cx="25" cy="25" r="5"/>
+                <circle className="box5631" cx="1" cy="1" r="5"/>
+              </svg>
+              <div className="loading-text">Loading accounts...</div>
+            </div>
           </div>
         </div>
       </div>
@@ -573,9 +591,26 @@ function AdminDashboard() {
         {activeTab === 'logs' && (
           <>
             {logsLoading ? (
-              <div className="loading">
-                <Activity className="loading-icon" size={32} />
-                <p>Loading user activity logs...</p>
+              <div className="loading-center compact" role="status" aria-live="polite">
+                <div style={{display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10}}>
+                  <svg 
+                    className="loading-spinner" 
+                    viewBox="-13 -13 45 45" 
+                    xmlns="http://www.w3.org/2000/svg"
+                    aria-hidden="true"
+                  >
+                    <circle className="box5631" cx="13" cy="1" r="5"/>
+                    <circle className="box5631" cx="25" cy="1" r="5"/>
+                    <circle className="box5631" cx="1" cy="13" r="5"/>
+                    <circle className="box5631" cx="13" cy="13" r="5"/>
+                    <circle className="box5631" cx="25" cy="13" r="5"/>
+                    <circle className="box5631" cx="1" cy="25" r="5"/>
+                    <circle className="box5631" cx="13" cy="25" r="5"/>
+                    <circle className="box5631" cx="25" cy="25" r="5"/>
+                    <circle className="box5631" cx="1" cy="1" r="5"/>
+                  </svg>
+                  <div className="loading-text">Loading user activity logs...</div>
+                </div>
               </div>
             ) : userLogs.length === 0 ? (
               <div className="no-data">

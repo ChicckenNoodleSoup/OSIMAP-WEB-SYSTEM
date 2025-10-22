@@ -285,7 +285,7 @@ function SignIn({ setIsAuthenticated }) {
               </div>
 
               <button type="submit" disabled={isLoading}>
-                {isLoading && <div className="loading-spinner"></div>}
+                {isLoading && <div className="loading-spinner-signin"></div>}
                 {isLoading ? 'Signing In...' : 'Login'}
               </button>
             </form>

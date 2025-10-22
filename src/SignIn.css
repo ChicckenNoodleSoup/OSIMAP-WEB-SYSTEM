@@ -302,6 +302,7 @@ h6 {
     0 0 15px rgba(0, 133, 255, 0.3);
   position: relative;
   overflow: hidden;
+  gap: 8px;
 }
 
 .signin-card button::before {
@@ -336,13 +337,13 @@ h6 {
 
 /* Loading spinner */
 .loading-spinner-signin {
-  width: 20px;
-  height: 20px;
+  width: 16px;
+  height: 16px;
   border: 2px solid rgba(255, 255, 255, 0.3);
   border-top: 2px solid #F1EFEC;
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
-  margin-right: 8px;
+  flex-shrink: 0;
 }
 
 @keyframes spin {

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import './Print.css';
+import './Spinner.css';
 import { createClient } from '@supabase/supabase-js';
 import { DateTime } from './DateTime';
 import { logSystemEvent } from './utils/loggingUtils';
@@ -245,58 +246,34 @@ function Print() {
   if (loading) {
     return (
       <div className="p-8">
-        {filtersApplied ? (
-          <div className="loading-center" role="status" aria-live="polite">
-            <div style={{display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10}}>
-              <svg 
-                className="loading-spinner" 
-                viewBox="-13 -13 45 45" 
-                xmlns="http://www.w3.org/2000/svg"
-                aria-hidden="true"
-              >
-                <circle className="box5631" cx="13" cy="1" r="5"/>
-                <circle className="box5631" cx="25" cy="1" r="5"/>
-                <circle className="box5631" cx="1" cy="13" r="5"/>
-                <circle className="box5631" cx="13" cy="13" r="5"/>
-                <circle className="box5631" cx="25" cy="13" r="5"/>
-                <circle className="box5631" cx="1" cy="25" r="5"/>
-                <circle className="box5631" cx="13" cy="25" r="5"/>
-                <circle className="box5631" cx="25" cy="25" r="5"/>
-                <circle className="box5631" cx="1" cy="1" r="5"/>
-              </svg>
-              <div className="loading-text">Loading data...</div>
-            </div>
+        <div className="loading-center full-height" role="status" aria-live="polite">
+          <div style={{display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10}}>
+            <svg 
+              className="loading-spinner" 
+              viewBox="-13 -13 45 45" 
+              xmlns="http://www.w3.org/2000/svg"
+              aria-hidden="true"
+            >
+              <circle className="box5631" cx="13" cy="1" r="5"/>
+              <circle className="box5631" cx="25" cy="1" r="5"/>
+              <circle className="box5631" cx="1" cy="13" r="5"/>
+              <circle className="box5631" cx="13" cy="13" r="5"/>
+              <circle className="box5631" cx="25" cy="13" r="5"/>
+              <circle className="box5631" cx="1" cy="25" r="5"/>
+              <circle className="box5631" cx="13" cy="25" r="5"/>
+              <circle className="box5631" cx="25" cy="25" r="5"/>
+              <circle className="box5631" cx="1" cy="1" r="5"/>
+            </svg>
+            <div className="loading-text">Loading data...</div>
           </div>
-        ) : (
-          <div className="loading-center" role="status" aria-live="polite">
-            <div style={{display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10}}>
-              <svg 
-                className="loading-spinner" 
-                viewBox="-13 -13 45 45" 
-                xmlns="http://www.w3.org/2000/svg"
-                aria-hidden="true"
-              >
-                <circle className="box5631" cx="13" cy="1" r="5"/>
-                <circle className="box5631" cx="25" cy="1" r="5"/>
-                <circle className="box5631" cx="1" cy="13" r="5"/>
-                <circle className="box5631" cx="13" cy="13" r="5"/>
-                <circle className="box5631" cx="25" cy="13" r="5"/>
-                <circle className="box5631" cx="1" cy="25" r="5"/>
-                <circle className="box5631" cx="13" cy="25" r="5"/>
-                <circle className="box5631" cx="25" cy="25" r="5"/>
-                <circle className="box5631" cx="1" cy="1" r="5"/>
-              </svg>
-              <div className="loading-text">Loading data...</div>
-            </div>
-          </div>
-        )}
+        </div>
       </div>
     );
   }
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="page-header">
+      <div className="page-header" style={{ marginTop: '1rem' }}>
         <div className="page-title-container">
           <img src="stopLight.svg" alt="Logo" className="page-logo" />
           <h1 className="page-title">Print Records</h1>

@@ -129,6 +129,7 @@
   from { transform: rotate(0deg); } to { transform: rotate(360deg); }
 }
 
+
 /* Access Denied */
 .access-denied {
   display: flex;
@@ -467,11 +468,12 @@
 
 .account-position {
   font-size: 12px;
-  font-weight: 600;
-  color: #0085FF;
+  font-weight: 700;
+  color: #60a5fa;
   text-transform: uppercase;
   letter-spacing: 0.5px;
   line-height: 1;
+  text-shadow: 0 0 8px rgba(96, 165, 250, 0.6);
 }
 
 .account-full-name {
@@ -504,29 +506,37 @@
   border: 1px solid rgba(255,255,255,0.04);
 }
 
-/* Status colors (modernized but preserving meaning) */
+/* Status colors (improved visibility) */
 .status-badge.pending {
-  background: rgba(245, 158, 11, 0.12);
-  color: #f59e0b;
-  border-color: rgba(245,158,11,0.18);
+  background: rgba(245, 158, 11, 0.25);
+  color: #fbbf24;
+  border-color: rgba(245,158,11,0.4);
+  text-shadow: 0 0 4px rgba(245, 158, 11, 0.5);
+  box-shadow: 0 0 8px rgba(245, 158, 11, 0.2);
 }
 
 .status-badge.approved {
-  background: rgba(34, 197, 94, 0.10);
-  color: #16a34a;
-  border-color: rgba(34,197,94,0.18);
+  background: rgba(34, 197, 94, 0.25);
+  color: #22c55e;
+  border-color: rgba(34,197,94,0.4);
+  text-shadow: 0 0 4px rgba(34, 197, 94, 0.5);
+  box-shadow: 0 0 8px rgba(34, 197, 94, 0.2);
 }
 
 .status-badge.rejected {
-  background: rgba(239, 68, 68, 0.10);
-  color: #ef4444;
-  border-color: rgba(239,68,68,0.18);
+  background: rgba(239, 68, 68, 0.25);
+  color: #f87171;
+  border-color: rgba(239,68,68,0.4);
+  text-shadow: 0 0 4px rgba(239, 68, 68, 0.5);
+  box-shadow: 0 0 8px rgba(239, 68, 68, 0.2);
 }
 
 .status-badge.revoked {
-  background: rgba(245, 158, 11, 0.12);
-  color: #f59e0b;
-  border-color: rgba(245,158,11,0.18);
+  background: rgba(245, 158, 11, 0.25);
+  color: #fbbf24;
+  border-color: rgba(245,158,11,0.4);
+  text-shadow: 0 0 4px rgba(245, 158, 11, 0.5);
+  box-shadow: 0 0 8px rgba(245, 158, 11, 0.2);
 }
 
 /* Actions cell */
