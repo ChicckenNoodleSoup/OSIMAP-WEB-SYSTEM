@@ -1,14 +1,19 @@
+// === Imports ===
 import express from "express";
 import multer from "multer";
 import path from "path";
 import cors from "cors";
 import fs from "fs";
-import { spawn } from "child_process";  
+import { spawn } from "child_process";
+import nodemailer from "nodemailer";
+import dotenv from "dotenv";
+dotenv.config();
 
+// === Setup ===
 const app = express();
-const PORT = process.env.PORT || 5000; 
+const PORT = process.env.PORT || 5000;
 
-// Enable CORS
+// Middleware
 app.use(cors());
 app.use(express.json());
 
@@ -17,7 +22,7 @@ let isProcessing = false;
 let processingStartTime = null;
 let processingError = null;
 
-// Ensure "data" folder exists
+// === Ensure "data" folder exists ===
 const dataFolder = path.join(process.cwd(), "data");
 if (!fs.existsSync(dataFolder)) {
   fs.mkdirSync(dataFolder);
@@ -25,10 +30,10 @@ if (!fs.existsSync(dataFolder)) {
 }
 
 // Serve static files from the data directory
-app.use('/data', express.static(dataFolder));
+app.use("/data", express.static(dataFolder));
 console.log("Static files served from:", dataFolder);
 
-// Multer storage configuration
+// === Multer storage configuration ===
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     const fullPath = path.join(process.cwd(), "data");
@@ -42,8 +47,7 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage });
 
-
-// Function to run a Python script (using spawn instead of exec)
+// === Function to run Python script ===
 function runSingleScript(scriptPath, onSuccess) {
   const process = spawn("python", [scriptPath]);
 
@@ -73,13 +77,12 @@ function runSingleScript(scriptPath, onSuccess) {
   });
 }
 
-
-// Function to run Python scripts sequentially (including cleanup after processing)
+// === Function to run Python scripts sequentially ===
 const runPythonScripts = () => {
   isProcessing = true;
   processingStartTime = new Date();
   processingError = null;
-  
+
   const script1 = path.join(process.cwd(), "cleaning2.py");
   const script2 = path.join(process.cwd(), "export_geojson.py");
   const script3 = path.join(process.cwd(), "cluster_hdbscan.py");
@@ -107,56 +110,65 @@ const runPythonScripts = () => {
   });
 };
 
+// === ROUTES ===
 
 // Root route
 app.get("/", (req, res) => {
   res.send("Backend is running. Use POST /upload to upload files.");
 });
 
-// Test endpoint for debugging
+// Test endpoint
 app.get("/test", (req, res) => {
-  res.json({ 
-    message: "Backend is accessible", 
+  res.json({
+    message: "Backend is accessible",
     timestamp: new Date().toISOString(),
-    isProcessing: isProcessing 
+    isProcessing: isProcessing,
   });
 });
 
-// Route to check processing status
+// Processing status
 app.get("/status", (req, res) => {
   console.log("Status endpoint hit - isProcessing:", isProcessing);
-  const processingTime = processingStartTime ? 
-    Math.floor((new Date() - processingStartTime) / 1000) : 0;
-  
+  const processingTime = processingStartTime
+    ? Math.floor((new Date() - processingStartTime) / 1000)
+    : 0;
+
   const statusResponse = {
     isProcessing,
     processingTime: processingTime,
     processingStartTime: processingStartTime,
     processingError: processingError,
-    status: isProcessing ? "processing" : processingError ? "error" : "idle"
+    status: isProcessing
+      ? "processing"
+      : processingError
+      ? "error"
+      : "idle",
   };
-  
+
   console.log("Status response:", statusResponse);
   res.json(statusResponse);
 });
 
-// Route to check available data files
+// Check available data files
 app.get("/data-files", (req, res) => {
   try {
     const files = fs.readdirSync(dataFolder);
-    const geojsonFiles = files.filter(file => file.endsWith('.geojson'));
-    res.json({ 
+    const geojsonFiles = files.filter((file) => file.endsWith(".geojson"));
+    res.json({
       message: "Available data files",
       files: geojsonFiles,
-      total: geojsonFiles.length
+      total: geojsonFiles.length,
     });
   } catch (error) {
     console.error("Error reading data folder:", error);
-    res.status(500).json({ message: "Error reading data folder", error: error.message });
+    res.status(500).json({
+      message: "Error reading data folder",
+      error: error.message,
+    });
   }
 });
 
-// Upload route
+// File upload route
 app.post("/upload", upload.single("file"), (req, res) => {
   console.log("POST /upload route hit");
   console.log("File received:", req.file);
@@ -165,17 +177,69 @@ app.post("/upload", upload.single("file"), (req, res) => {
     return res.status(400).json({ message: "No file uploaded" });
   }
 
-  // Respond to frontend immediately
-  res.json({ 
-    message: "File uploaded successfully. Processing started...", 
-    filename: req.file.filename 
+  res.json({
+    message: "File uploaded successfully. Processing started...",
+    filename: req.file.filename,
   });
 
-  // Run all Python scripts sequentially (including clustering)
+  // Start processing
   runPythonScripts();
 });
 
-// Start server
+// === Support Email Route ===
+app.post("/api/send-support-email", async (req, res) => {
+  const { name, email, message, to } = req.body;
+
+  try {
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+    });
+
+    const mailOptions = {
+      from: process.env.EMAIL_USER,
+      to: to,
+      replyTo: email,
+      subject: `Support Request from ${name}`,
+      html: `
+        <div style="font-family: Arial, sans-serif; padding: 20px; background-color: #f4f4f4;">
+          <div style="max-width: 600px; margin: 0 auto; background: white; padding: 20px; border-radius: 10px;">
+            <h2 style="color: #0085FF; border-bottom: 2px solid #0085FF; padding-bottom: 10px;">
+              New Support Message
+            </h2>
+            <div style="margin: 20px 0;">
+              <p><strong>From:</strong> ${name}</p>
+              <p><strong>Email:</strong> <a href="mailto:${email}">${email}</a></p>
+            </div>
+            <div style="background: #f9f9f9; padding: 15px; border-radius: 5px; margin: 20px 0;">
+              <p><strong>Message:</strong></p>
+              <p style="white-space: pre-wrap;">${message}</p>
+            </div>
+            <hr style="border: none; border-top: 1px solid #ddd; margin: 20px 0;">
+            <p style="color: #666; font-size: 14px;">
+              <em>You can reply directly to this email to respond to ${name}</em>
+            </p>
+          </div>
+        </div>
+      `,
+    };
+
+    await transporter.sendMail(mailOptions);
+    res.json({ success: true, message: "Email sent successfully" });
+  } catch (error) {
+    console.error("Error sending support email:", error);
+    res.status(500).json({
+      success: false,
+      error: "Failed to send email",
+      details: error.message,
+    });
+  }
+});
+
+// === Start Server ===
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
   console.log(`Data files available at: http://localhost:${PORT}/data/`);
