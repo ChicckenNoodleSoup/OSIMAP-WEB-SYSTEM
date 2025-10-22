@@ -1,15 +1,9 @@
 import React, { useCallback, useState } from "react";
 import { useDropzone } from "react-dropzone";
-import {
-  Plus,
-  Upload,
-  Database,
-  Map,
-  CheckCircle,
-  AlertCircle,
-} from "lucide-react";
+import { Plus, Upload, Database, Map, CheckCircle, AlertCircle } from "lucide-react";
 import "./DateTime.css";
 import "./AddRecord.css";
+import "./PageHeader.css";
 import { DateTime } from "./DateTime";
 import { logDataEvent } from "./utils/loggingUtils";
 
@@ -24,37 +18,28 @@ export default function AddRecord() {
     setCurrentStep(0);
   };
 
-  // Function to poll backend status
   const pollBackendStatus = () => {
     const pollInterval = setInterval(async () => {
       try {
         const res = await fetch("https://osimap-web-system.onrender.com/status");
-        if (!res.ok) {
-          throw new Error(`HTTP ${res.status}: ${res.statusText}`);
-        }
+        if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
         const statusData = await res.json();
-        
+
         console.log("Backend status:", statusData);
-        
+
         if (statusData.status === "error") {
-          // Processing failed
           clearInterval(pollInterval);
           setProcessingStage("error");
           setUploadStatus(`❌ Processing failed: ${statusData.processingError || "Unknown error"}`);
-          // Log processing failure
           await logDataEvent.processingFailed(statusData.processingError || "Unknown error");
         } else if (!statusData.isProcessing && statusData.status === "idle") {
-          // Processing is complete
           clearInterval(pollInterval);
           setProcessingStage("complete");
           setCurrentStep(4);
           setUploadStatus("✅ Pipeline completed successfully!");
-          // Log processing completion
           await logDataEvent.processingCompleted();
         } else if (statusData.isProcessing) {
-          // Still processing, update progress based on time
           const processingTime = statusData.processingTime || 0;
-          
           if (processingTime < 3) {
             setCurrentStep(2);
             setUploadStatus("📊 Processing data through pipeline...");
@@ -71,24 +56,21 @@ export default function AddRecord() {
         clearInterval(pollInterval);
         setProcessingStage("error");
         setUploadStatus("❌ Failed to check processing status. Please check backend server.");
-        // Log polling error
         await logDataEvent.processingFailed(`Status polling failed: ${err.message}`);
       }
-    }, 1000); // Poll every second
+    }, 1000);
 
-    // Clear interval after 5 minutes as fallback
     setTimeout(() => {
       clearInterval(pollInterval);
       if (processingStage === "processing") {
         setProcessingStage("error");
         setUploadStatus("❌ Processing timeout. Please try again.");
       }
-    }, 300000); // 5 minutes timeout
+    }, 300000); // 5 min timeout
   };
 
   const onDrop = useCallback((acceptedFiles) => {
     if (acceptedFiles.length === 0) return;
-
     resetStatus();
 
     acceptedFiles.forEach((file) => {
@@ -99,32 +81,26 @@ export default function AddRecord() {
       setCurrentStep(1);
       setUploadStatus("📤 Uploading file...");
 
-      fetch("https://osimap-web-system.onrender.com/status", {
+      fetch("https://osimap-web-system.onrender.com/upload", {
         method: "POST",
         body: formData,
       })
         .then((res) => res.json())
         .then(async (data) => {
           console.log("Backend response:", data);
-
-          // Log file upload
           await logDataEvent.fileUploaded(file.name);
 
           setProcessingStage("processing");
           setCurrentStep(2);
           setUploadStatus("📊 Processing data through pipeline...");
-
-          // Log processing start
           await logDataEvent.processingStarted();
 
-          // Start polling backend status
           pollBackendStatus();
         })
         .catch(async (err) => {
           console.error(err);
           setProcessingStage("error");
           setUploadStatus("❌ Upload failed.");
-          // Log upload failure
           await logDataEvent.processingFailed(`Upload failed: ${err.message}`);
         });
     });
@@ -161,26 +137,24 @@ export default function AddRecord() {
               <div key={step.id} className="processing-step">
                 <div className="step-icon-wrapper">
                   <div
-                    className={`step-circle 
-                      ${isError ? "error" : ""} 
-                      ${isCompleted ? "completed" : ""} 
-                      ${isActive ? "active" : ""}`}
+                    className={`step-circle ${isError ? "error" : ""} ${
+                      isCompleted ? "completed" : ""
+                    } ${isActive ? "active" : ""}`}
                   >
                     {isError ? (
                       <AlertCircle className="icon error" />
                     ) : (
                       <Icon
-                        className={`icon 
-                          ${isCompleted ? "completed" : ""} 
-                          ${isActive ? "active" : ""}`}
+                        className={`icon ${isCompleted ? "completed" : ""} ${
+                          isActive ? "active" : ""
+                        }`}
                       />
                     )}
                   </div>
                   <span
-                    className={`step-label 
-                      ${isError ? "error" : ""} 
-                      ${isCompleted ? "completed" : ""} 
-                      ${isActive ? "active" : ""}`}
+                    className={`step-label ${isError ? "error" : ""} ${
+                      isCompleted ? "completed" : ""
+                    } ${isActive ? "active" : ""}`}
                   >
                     {step.label}
                   </span>
@@ -202,42 +176,30 @@ export default function AddRecord() {
 
   return (
     <div className="dashboard">
-
-            <div className="page-header">
-              <div className="page-title-container">
-                <img src="stopLight.svg" alt="Logo" className="page-logo" />
-                <h1 className="page-title">Add Record</h1>
-                {/* Info button */}
-                <button type="button" className="addrec-info-btn" aria-label="Dashboard Info">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                    <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1" />
-                    <text x="12" y="16" textAnchor="middle" fontSize="12" fill="currentColor" fontFamily="Poppins, sans-serif">i</text>
-                  </svg>
-                </button>
-
-                <div className="addrec-edit-instructions" role="status">
-                  <strong>💡 How to Add Records</strong>
-                  <div>• Drag and drop your Excel file or click to browse.</div>
-                  <div>• Supported formats: <code>.xlsx</code> and <code>.xls</code>.</div>
-                  <div>• The system will upload, process, and convert data into GeoJSON.</div>
-                  <div>• Follow the progress steps below — each icon shows the current stage.</div>
-                  <div>• When complete, your new data will be reflected on the map and current records.</div>
-                </div>
-              </div>
-              <DateTime />
-            </div>
+      <div className="page-header">
+        <div className="page-title-container">
+          <img src="stopLight.svg" alt="Logo" className="page-logo" />
+          <h1 className="page-title">Add Record</h1>
+          <DateTime />
+        </div>
+        <div className="addrec-edit-instructions" role="status">
+          <strong>💡 How to Add Records</strong>
+          <div>• Drag and drop your Excel file or click to browse.</div>
+          <div>• Supported formats: <code>.xlsx</code> and <code>.xls</code>.</div>
+          <div>• The system will upload, process, and convert data into GeoJSON.</div>
+          <div>• Follow the progress steps below — each icon shows the current stage.</div>
+          <div>• When complete, your new data will be reflected on the map and current records.</div>
+        </div>
+      </div>
 
       {/* Content Card Wrapper */}
       <div className="add-record-card">
-        
-        {/* Always show steppers */}
         <ProcessingSteps />
 
-        {/* Upload Card */}
         <div
           {...getRootProps()}
-          className={`upload-card 
-            ${processingStage === "uploading" || processingStage === "processing"
+          className={`upload-card ${
+            processingStage === "uploading" || processingStage === "processing"
               ? "uploading"
               : processingStage === "complete"
               ? "complete"
@@ -247,11 +209,11 @@ export default function AddRecord() {
               ? "reject"
               : isDragActive
               ? "active"
-              : ""}`}
+              : ""
+          }`}
         >
           <input {...getInputProps()} />
 
-          {/* Big Icon */}
           <div className="upload-icon">
             {processingStage === "uploading" || processingStage === "processing" ? (
               <div className="spinner" />
@@ -264,7 +226,6 @@ export default function AddRecord() {
             )}
           </div>
 
-          {/* Instructions / Dynamic Text */}
           <div className="upload-text">
             {processingStage === "uploading" || processingStage === "processing" ? (
               <>
@@ -302,7 +263,6 @@ export default function AddRecord() {
             )}
           </div>
 
-          {/* Upload Status */}
           {uploadStatus && (
             <div className="upload-status">
               {(processingStage === "uploading" || processingStage === "processing") && (
@@ -313,7 +273,6 @@ export default function AddRecord() {
           )}
         </div>
 
-        {/* Reset button */}
         {(processingStage === "complete" || processingStage === "error") && (
           <div className="reset-btn-wrapper">
             <button onClick={resetStatus} className="reset-btn">

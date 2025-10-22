@@ -7,6 +7,8 @@ import RoleProtectedRoute from './components/RoleProtectedRoute';
 import { DateTime } from './DateTime';
 import { Shield, Users, Activity, CheckCircle, XCircle, Clock, Mail, User } from 'lucide-react';
 import './AdminDashboard.css';
+import './Spinner.css';
+import './PageHeader.css';
 
 const SUPABASE_URL = process.env.REACT_APP_SUPABASE_URL;
 const SUPABASE_KEY = process.env.REACT_APP_SUPABASE_KEY;
@@ -21,7 +23,7 @@ function AdminDashboard() {
   const [accessDenied, setAccessDenied] = useState(false);
   const [activeTab, setActiveTab] = useState('accounts'); // 'accounts' or 'logs'
   const [accountsSubTab, setAccountsSubTab] = useState('rejected'); // 'rejected', 'pending', 'approved'
-  
+
   // Pagination states
   const [accountsCurrentPage, setAccountsCurrentPage] = useState(1);
   const [logsCurrentPage, setLogsCurrentPage] = useState(1);
@@ -84,7 +86,7 @@ function AdminDashboard() {
     );
     const pending = allAccounts.filter(account => account.status === 'pending');
     const approved = allAccounts.filter(account => account.status === 'approved');
-    
+
     return { rejectedRevoked, pending, approved };
   };
 
@@ -151,7 +153,7 @@ function AdminDashboard() {
     try {
       let newStatus;
       let actionText;
-      
+
       if (action === 'approve') {
         newStatus = 'approved';
         actionText = 'approved';
@@ -177,7 +179,7 @@ function AdminDashboard() {
         await handleDeleteAccount(accountId);
         return;
       }
-      
+
       const { error } = await supabase
         .from('police')
         .update({ 
@@ -195,7 +197,7 @@ function AdminDashboard() {
       // Log the account action
       const account = allAccounts.find(acc => acc.id === accountId);
       const logDetails = `Account ${actionText}: ${account?.full_name} (${account?.email})`;
-      
+
       if (action === 'approve') {
         await logAccountEvent.approved(accountId, logDetails);
       } else if (action === 'reject') {
@@ -208,10 +210,10 @@ function AdminDashboard() {
 
       // Send email notification
       await sendEmailNotification(accountId, newStatus);
-      
+
       // Refresh the list
       await fetchAllAccounts();
-      
+
       setMessage(`Account ${actionText} successfully`);
       setTimeout(() => setMessage(''), 3000);
     } catch (error) {
@@ -233,12 +235,12 @@ function AdminDashboard() {
     // Get account details for confirmation
     const account = allAccounts.find(acc => acc.id === accountId);
     const accountName = account ? account.full_name : 'this account';
-    
+
     // Show confirmation dialog
     const confirmed = window.confirm(
       `Are you sure you want to permanently delete ${accountName}? This action cannot be undone.`
     );
-    
+
     if (!confirmed) {
       return; // User cancelled the deletion
     }
@@ -271,7 +273,7 @@ function AdminDashboard() {
 
       // Refresh the list
       await fetchAllAccounts();
-      
+
       setMessage(`${accountName} deleted successfully`);
       setTimeout(() => setMessage(''), 3000);
     } catch (error) {
@@ -293,13 +295,13 @@ function AdminDashboard() {
 
       // Send email notification
       const result = await sendAccountStatusEmail(account.email, account.full_name, status);
-      
+
       if (result.success) {
         console.log(`Email notification sent to ${account.email}: Account ${status}`);
       } else {
         console.error('Failed to send email notification:', result.error);
       }
-      
+
     } catch (error) {
       console.error('Error sending email notification:', error);
     }
@@ -309,9 +311,26 @@ function AdminDashboard() {
     return (
       <div className="scroll-wrapper">
         <div className="admin-dashboard-container">
-          <div className="loading">
-            <Activity className="loading-icon" size={32} />
-            <p>Loading accounts...</p>
+          <div className="loading-center full-height" role="status" aria-live="polite">
+            <div style={{display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10}}>
+              <svg 
+                className="loading-spinner" 
+                viewBox="-13 -13 45 45" 
+                xmlns="http://www.w3.org/2000/svg"
+                aria-hidden="true"
+              >
+                <circle className="box5631" cx="13" cy="1" r="5"/>
+                <circle className="box5631" cx="25" cy="1" r="5"/>
+                <circle className="box5631" cx="1" cy="13" r="5"/>
+                <circle className="box5631" cx="13" cy="13" r="5"/>
+                <circle className="box5631" cx="25" cy="13" r="5"/>
+                <circle className="box5631" cx="1" cy="25" r="5"/>
+                <circle className="box5631" cx="13" cy="25" r="5"/>
+                <circle className="box5631" cx="25" cy="25" r="5"/>
+                <circle className="box5631" cx="1" cy="1" r="5"/>
+              </svg>
+              <div className="loading-text">Loading accounts...</div>
+            </div>
           </div>
         </div>
       </div>
@@ -333,13 +352,14 @@ function AdminDashboard() {
   }
 
   return (
-    <div className="scroll-wrapper">
-      <div className="admin-dashboard-container">
+    <div className="admindash-scroll-wrapper">
+      <div className="admindash-container">
         <div className="page-header">
           <div className="page-title-container">
             <img src="stopLight.svg" alt="Logo" className="page-logo" />
             <h1 className="page-title">Admin Dashboard</h1>
           </div>
+
           <DateTime />
         </div>
 
@@ -526,7 +546,7 @@ function AdminDashboard() {
                     ))}
                   </div>
                 </div>
-                
+
                 {/* Accounts Pagination */}
                 {accountsTotalPages > 1 && (
                   <div className="pagination">
@@ -537,7 +557,7 @@ function AdminDashboard() {
                     >
                       ⬅ Prev
                     </button>
-                    
+
                     {Array.from({ length: accountsTotalPages }, (_, i) => i + 1)
                       .slice(
                         Math.max(0, accountsCurrentPage - 3),
@@ -554,7 +574,7 @@ function AdminDashboard() {
                           {pageNum}
                         </button>
                       ))}
-                    
+
                     <button
                       onClick={() => setAccountsCurrentPage(prev => Math.min(prev + 1, accountsTotalPages))}
                       disabled={accountsCurrentPage === accountsTotalPages}
@@ -573,9 +593,26 @@ function AdminDashboard() {
         {activeTab === 'logs' && (
           <>
             {logsLoading ? (
-              <div className="loading">
-                <Activity className="loading-icon" size={32} />
-                <p>Loading user activity logs...</p>
+              <div className="loading-center compact" role="status" aria-live="polite">
+                <div style={{display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10}}>
+                  <svg 
+                    className="loading-spinner" 
+                    viewBox="-13 -13 45 45" 
+                    xmlns="http://www.w3.org/2000/svg"
+                    aria-hidden="true"
+                  >
+                    <circle className="box5631" cx="13" cy="1" r="5"/>
+                    <circle className="box5631" cx="25" cy="1" r="5"/>
+                    <circle className="box5631" cx="1" cy="13" r="5"/>
+                    <circle className="box5631" cx="13" cy="13" r="5"/>
+                    <circle className="box5631" cx="25" cy="13" r="5"/>
+                    <circle className="box5631" cx="1" cy="25" r="5"/>
+                    <circle className="box5631" cx="13" cy="25" r="5"/>
+                    <circle className="box5631" cx="25" cy="25" r="5"/>
+                    <circle className="box5631" cx="1" cy="1" r="5"/>
+                  </svg>
+                  <div className="loading-text">Loading user activity logs...</div>
+                </div>
               </div>
             ) : userLogs.length === 0 ? (
               <div className="no-data">
@@ -631,7 +668,7 @@ function AdminDashboard() {
                     </div>
                   ))}
                 </div>
-                
+
                 {/* Logs Pagination */}
                 {logsTotalPages > 1 && (
                   <div className="pagination">
@@ -642,7 +679,7 @@ function AdminDashboard() {
                     >
                       ⬅ Prev
                     </button>
-                    
+
                     {Array.from({ length: logsTotalPages }, (_, i) => i + 1)
                       .slice(
                         Math.max(0, logsCurrentPage - 3),
@@ -659,7 +696,7 @@ function AdminDashboard() {
                           {pageNum}
                         </button>
                       ))}
-                    
+
                     <button
                       onClick={() => setLogsCurrentPage(prev => Math.min(prev + 1, logsTotalPages))}
                       disabled={logsCurrentPage === logsTotalPages}
@@ -677,5 +714,3 @@ function AdminDashboard() {
     </div>
   );
 }
-
-export default AdminDashboard;

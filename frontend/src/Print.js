@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import './Print.css';
+import './Spinner.css';
+import './PageHeader.css';
 import { createClient } from '@supabase/supabase-js';
 import { DateTime } from './DateTime';
 import { logSystemEvent } from './utils/loggingUtils';
@@ -99,7 +101,7 @@ const CustomDropdown = ({ options, value, onChange, allLabel = "All" }) => {
         <span className="print-dropdown-text">{getDisplayText()}</span>
         <span className={`print-dropdown-arrow ${isOpen ? 'open' : ''}`}>▼</span>
       </div>
-      
+
       {isOpen && (
         <div className="print-dropdown-options" role="listbox">
           <div 
@@ -117,7 +119,7 @@ const CustomDropdown = ({ options, value, onChange, allLabel = "All" }) => {
           >
             <span>{allLabel}</span>
           </div>
-          
+
           {options.map((option) => (
             <div 
               key={option}
@@ -245,58 +247,35 @@ function Print() {
   if (loading) {
     return (
       <div className="p-8">
-        {filtersApplied ? (
-          <div className="loading-center" role="status" aria-live="polite">
-            <div style={{display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10}}>
-              <svg 
-                className="loading-spinner" 
-                viewBox="-13 -13 45 45" 
-                xmlns="http://www.w3.org/2000/svg"
-                aria-hidden="true"
-              >
-                <circle className="box5631" cx="13" cy="1" r="5"/>
-                <circle className="box5631" cx="25" cy="1" r="5"/>
-                <circle className="box5631" cx="1" cy="13" r="5"/>
-                <circle className="box5631" cx="13" cy="13" r="5"/>
-                <circle className="box5631" cx="25" cy="13" r="5"/>
-                <circle className="box5631" cx="1" cy="25" r="5"/>
-                <circle className="box5631" cx="13" cy="25" r="5"/>
-                <circle className="box5631" cx="25" cy="25" r="5"/>
-                <circle className="box5631" cx="1" cy="1" r="5"/>
-              </svg>
-              <div className="loading-text">Loading data...</div>
-            </div>
+        <div className="loading-center full-height" role="status" aria-live="polite">
+          <div style={{display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10}}>
+            <svg 
+              className="loading-spinner" 
+              viewBox="-13 -13 45 45" 
+              xmlns="http://www.w3.org/2000/svg"
+              aria-hidden="true"
+            >
+              <circle className="box5631" cx="13" cy="1" r="5"/>
+              <circle className="box5631" cx="25" cy="1" r="5"/>
+              <circle className="box5631" cx="1" cy="13" r="5"/>
+              <circle className="box5631" cx="13" cy="13" r="5"/>
+              <circle className="box5631" cx="25" cy="13" r="5"/>
+              <circle className="box5631" cx="1" cy="25" r="5"/>
+              <circle className="box5631" cx="13" cy="25" r="5"/>
+              <circle className="box5631" cx="25" cy="25" r="5"/>
+              <circle className="box5631" cx="1" cy="1" r="5"/>
+            </svg>
+            <div className="loading-text">Loading data...</div>
           </div>
-        ) : (
-          <div className="loading-center" role="status" aria-live="polite">
-            <div style={{display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10}}>
-              <svg 
-                className="loading-spinner" 
-                viewBox="-13 -13 45 45" 
-                xmlns="http://www.w3.org/2000/svg"
-                aria-hidden="true"
-              >
-                <circle className="box5631" cx="13" cy="1" r="5"/>
-                <circle className="box5631" cx="25" cy="1" r="5"/>
-                <circle className="box5631" cx="1" cy="13" r="5"/>
-                <circle className="box5631" cx="13" cy="13" r="5"/>
-                <circle className="box5631" cx="25" cy="13" r="5"/>
-                <circle className="box5631" cx="1" cy="25" r="5"/>
-                <circle className="box5631" cx="13" cy="25" r="5"/>
-                <circle className="box5631" cx="25" cy="25" r="5"/>
-                <circle className="box5631" cx="1" cy="1" r="5"/>
-              </svg>
-              <div className="loading-text">Loading data...</div>
-            </div>
-          </div>
-        )}
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="page-header">
+    <div className="min-h-screen bg-gray-50" style={{ padding: '24px' }}>
+      {/* Page Header */}
+      <div className="page-header" style={{ marginTop: '1rem' }}>
         <div className="page-title-container">
           <img src="stopLight.svg" alt="Logo" className="page-logo" />
           <h1 className="page-title">Print Records</h1>
@@ -307,6 +286,7 @@ function Print() {
               <text x="12" y="16" textAnchor="middle" fontSize="12" fill="currentColor" fontFamily="Poppins, sans-serif">i</text>
             </svg>
           </button>
+
           <div className="pr-cr-edit-instructions" role="status" aria-hidden="true">
             <strong>💡 Print Help</strong>
             <div> • Choose a start and end date or select a barangay and severity.</div>
@@ -317,64 +297,65 @@ function Print() {
 
         <DateTime />
       </div>
+
       {/* Filter Section */}
       <div className="no-print">
-        <div className="frosted-container">
-          <div className="dashboard-card p-6 mb-6">
+        <div className="frosted-container" style={{ maxWidth: 'none', width: '100%' }}>
+          <div className="dashboard-card p-6 mb-6" style={{ width: '100%', maxWidth: 'none' }}>
             <h2 className="text-2xl font-bold mb-4">Report Filters</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div>
-            <label className="block text-sm font-medium mb-2">Start Date</label>
-            <input
-              type="date"
-              value={pendingStartDate}
-              onChange={(e) => {
-                setPendingStartDate(e.target.value);
-                setFiltersApplied(false);
-              }}
-              min="2000-01-01"
-              max={today}
-              className="filter-input"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-2">End Date</label>
-            <input
-              type="date"
-              value={pendingEndDate}
-              onChange={(e) => {
-                setPendingEndDate(e.target.value);
-                setFiltersApplied(false);
-              }}
-              min="2000-01-01"
-              max={today}
-              className="filter-input"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-2">Barangay</label>
-            <CustomDropdown
-              options={barangayList}
-              value={pendingBarangay}
-              onChange={(e) => {
-                setPendingBarangay(e.target.value);
-                setFiltersApplied(false);
-              }}
-              allLabel="All Barangays"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-2">Severity</label>
-            <CustomDropdown
-              options={['Critical', 'High', 'Medium', 'Low', 'Minor']}
-              value={selectedSeverity}
-              onChange={(e) => {
-                setSelectedSeverity(e.target.value);
-                setFiltersApplied(false);
-              }}
-              allLabel="All Severities"
-            />
-          </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">Start Date</label>
+                <input
+                  type="date"
+                  value={pendingStartDate}
+                  onChange={(e) => {
+                    setPendingStartDate(e.target.value);
+                    setFiltersApplied(false);
+                  }}
+                  min="2000-01-01"
+                  max={today}
+                  className="filter-input"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">End Date</label>
+                <input
+                  type="date"
+                  value={pendingEndDate}
+                  onChange={(e) => {
+                    setPendingEndDate(e.target.value);
+                    setFiltersApplied(false);
+                  }}
+                  min="2000-01-01"
+                  max={today}
+                  className="filter-input"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">Barangay</label>
+                <CustomDropdown
+                  options={barangayList}
+                  value={pendingBarangay}
+                  onChange={(e) => {
+                    setPendingBarangay(e.target.value);
+                    setFiltersApplied(false);
+                  }}
+                  allLabel="All Barangays"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">Severity</label>
+                <CustomDropdown
+                  options={['Critical', 'High', 'Medium', 'Low', 'Minor']}
+                  value={selectedSeverity}
+                  onChange={(e) => {
+                    setSelectedSeverity(e.target.value);
+                    setFiltersApplied(false);
+                  }}
+                  allLabel="All Severities"
+                />
+              </div>
             </div>
             <div className="mt-4">
               <button
@@ -410,173 +391,170 @@ function Print() {
 
       {/* Printable Report Section */}
       <div className="print-only">
-        <div className="frosted-container">
-          <div className="max-w-6xl mx-auto bg-white shadow-lg p-8 print:shadow-none print:p-0">
-        {/* Header */}
-        <div className="border-b-2 border-gray-800 pb-4 mb-6 text-center">
-          <h1 className="text-3xl font-bold mb-2">Road Traffic Accident Report</h1>
-          <p className="font-semibold">
-            Report Generated On: {new Date().toLocaleString()}
-          </p>
-          <p className="mt-1">
-            Report Period: {startDate || 'Beginning'} to {endDate || 'Present'}
-          </p>
-          {selectedBarangay && <p>Barangay: {selectedBarangay}</p>}
-          {selectedSeverity && <p>Severity Filter: {selectedSeverity}</p>}
-          </div>
-        </div>
-      </div>
-
-        {/* Summary */}
-        <section className="mb-8">
-          <h2 className="text-2xl font-bold mb-4 border-b pb-2">
-            Summary Statistics
-          </h2>
-
-          <div className="mb-6">
-            <h3 className="text-xl font-semibold mb-3">Total Accidents</h3>
-            <p className="text-4xl font-bold text-blue-600">{stats.total}</p>
+        <div className="max-w-6xl mx-auto bg-white shadow-lg p-8 print:shadow-none print:p-0">
+          {/* Header */}
+          <div className="border-b-2 border-gray-800 pb-4 mb-6 text-center">
+            <h1 className="text-3xl font-bold mb-2">Road Traffic Accident Report</h1>
+            <p className="font-semibold">
+              Report Generated On: {new Date().toLocaleString()}
+            </p>
+            <p className="mt-1">
+              Report Period: {startDate || 'Beginning'} to {endDate || 'Present'}
+            </p>
+            {selectedBarangay && <p>Barangay: {selectedBarangay}</p>}
+            {selectedSeverity && <p>Severity Filter: {selectedSeverity}</p>}
           </div>
 
-          {/* Severity Table */}
-          <div className="mb-6">
-            <h3 className="text-xl font-semibold mb-3">Breakdown by Severity</h3>
-            <table className="w-full border-collapse border border-gray-300">
-              <thead>
-                <tr className="bg-gray-100">
-                  <th className="border px-4 py-2 text-left">Severity</th>
-                  <th className="border px-4 py-2 text-right">Count</th>
-                  <th className="border px-4 py-2 text-right">Percentage</th>
-                </tr>
-              </thead>
-              <tbody>
-                {Object.entries(statsAll.severityCounts)
-                  .filter(([sev]) => !selectedSeverity || sev === selectedSeverity)
-                  .map(([severity, count]) => (
-                    <tr key={severity}>
-                      <td className="border px-4 py-2">{severity}</td>
-                      <td className="border px-4 py-2 text-right">{count}</td>
-                      <td className="border px-4 py-2 text-right">
-                        {((count / statsAll.total) * 100).toFixed(1)}%
-                      </td>
-                    </tr>
-                  ))}
-              </tbody>
-            </table>
-          </div>
+          {/* Summary */}
+          <section className="mb-8">
+            <h2 className="text-2xl font-bold mb-4 border-b pb-2">
+              Summary Statistics
+            </h2>
 
-          {/* Barangay Table */}
-          <div className="mb-6">
-            <h3 className="text-xl font-semibold mb-3">Accidents per Barangay</h3>
-            <table className="w-full border-collapse border border-gray-300">
-              <thead>
-                <tr className="bg-gray-100">
-                  <th className="border px-4 py-2 text-left">Rank</th>
-                  <th className="border px-4 py-2 text-left">Barangay</th>
-                  <th className="border px-4 py-2 text-right">Accidents</th>
-                  <th className="border px-4 py-2 text-right">Percentage</th>
-                </tr>
-              </thead>
-              <tbody>
-                {sortedBarangays.map(([barangay, count], i) => (
-                  <tr key={barangay}>
-                    <td className="border px-4 py-2">{i + 1}</td>
-                    <td className="border px-4 py-2">{barangay}</td>
-                    <td className="border px-4 py-2 text-right">{count}</td>
-                    <td className="border px-4 py-2 text-right">
-                      {((count / stats.total) * 100).toFixed(1)}%
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Monthly Trend */}
-          {sortedMonths.length > 1 && (
             <div className="mb-6">
-              <h3 className="text-xl font-semibold mb-3">Monthly Trend</h3>
+              <h3 className="text-xl font-semibold mb-3">Total Accidents</h3>
+              <p className="text-4xl font-bold text-blue-600">{stats.total}</p>
+            </div>
+
+            {/* Severity Table */}
+            <div className="mb-6">
+              <h3 className="text-xl font-semibold mb-3">Breakdown by Severity</h3>
               <table className="w-full border-collapse border border-gray-300">
                 <thead>
                   <tr className="bg-gray-100">
-                    <th className="border px-4 py-2 text-left">Month</th>
-                    <th className="border px-4 py-2 text-right">Accidents</th>
+                    <th className="border px-4 py-2 text-left">Severity</th>
+                    <th className="border px-4 py-2 text-right">Count</th>
+                    <th className="border px-4 py-2 text-right">Percentage</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {sortedMonths.map(([month, count]) => (
-                    <tr key={month}>
-                      <td className="border px-4 py-2">
-                        {new Date(`${month}-01`).toLocaleDateString('en-US', {
-                          year: 'numeric',
-                          month: 'long',
-                        })}
-                      </td>
+                  {Object.entries(statsAll.severityCounts)
+                    .filter(([sev]) => !selectedSeverity || sev === selectedSeverity)
+                    .map(([severity, count]) => (
+                      <tr key={severity}>
+                        <td className="border px-4 py-2">{severity}</td>
+                        <td className="border px-4 py-2 text-right">{count}</td>
+                        <td className="border px-4 py-2 text-right">
+                          {((count / statsAll.total) * 100).toFixed(1)}%
+                        </td>
+                      </tr>
+                    ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Barangay Table */}
+            <div className="mb-6">
+              <h3 className="text-xl font-semibold mb-3">Accidents per Barangay</h3>
+              <table className="w-full border-collapse border border-gray-300">
+                <thead>
+                  <tr className="bg-gray-100">
+                    <th className="border px-4 py-2 text-left">Rank</th>
+                    <th className="border px-4 py-2 text-left">Barangay</th>
+                    <th className="border px-4 py-2 text-right">Accidents</th>
+                    <th className="border px-4 py-2 text-right">Percentage</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {sortedBarangays.map(([barangay, count], i) => (
+                    <tr key={barangay}>
+                      <td className="border px-4 py-2">{i + 1}</td>
+                      <td className="border px-4 py-2">{barangay}</td>
                       <td className="border px-4 py-2 text-right">{count}</td>
+                      <td className="border px-4 py-2 text-right">
+                        {((count / stats.total) * 100).toFixed(1)}%
+                      </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
-          )}
-        </section>
 
-        {/* High-Risk Analysis */}
-        <section className="mb-8">
-          <h2 className="text-2xl font-bold mb-4 border-b pb-2">High-Risk Analysis</h2>
-          {clusters.length > 0 ? (
-            <table className="w-full border-collapse border border-gray-300">
-              <thead>
-                <tr className="bg-gray-100">
-                  <th className="border px-4 py-2 text-left">Cluster ID</th>
-                  <th className="border px-4 py-2 text-left">Location</th>
-                  <th className="border px-4 py-2 text-left">Barangays</th>
-                  <th className="border px-4 py-2 text-right">Accidents</th>
-                  <th className="border px-4 py-2 text-right">Recent</th>
-                  <th className="border px-4 py-2 text-right">Danger Score</th>
-                </tr>
-              </thead>
-              <tbody>
-                {clusters.slice(0, 10).map((c) => (
-                  <tr key={c.cluster_id}>
-                    <td className="border px-4 py-2">{c.cluster_id}</td>
-                    <td className="border px-4 py-2 text-sm">
-                      {c.center_lat?.toFixed(4)}, {c.center_lon?.toFixed(4)}
-                    </td>
-                    <td className="border px-4 py-2 text-sm">
-                      {Array.isArray(c.barangays)
-                        ? c.barangays.join(', ')
-                        : c.barangays?.split(/[,;]+|(?<=\D)\s+(?=\D)/)
-                            .map(b => b.trim())
-                            .filter(Boolean)
-                            .join(', ')}
-                    </td>
-                    <td className="border px-4 py-2 text-right">{c.accident_count}</td>
-                    <td className="border px-4 py-2 text-right">{c.recent_accidents}</td>
-                    <td className="border px-4 py-2 text-right font-semibold">
-                      {(c.danger_score * 100).toFixed(1)}%
-                    </td>
+            {/* Monthly Trend */}
+            {sortedMonths.length > 1 && (
+              <div className="mb-6">
+                <h3 className="text-xl font-semibold mb-3">Monthly Trend</h3>
+                <table className="w-full border-collapse border border-gray-300">
+                  <thead>
+                    <tr className="bg-gray-100">
+                      <th className="border px-4 py-2 text-left">Month</th>
+                      <th className="border px-4 py-2 text-right">Accidents</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {sortedMonths.map(([month, count]) => (
+                      <tr key={month}>
+                        <td className="border px-4 py-2">
+                          {new Date(`${month}-01`).toLocaleDateString('en-US', {
+                            year: 'numeric',
+                            month: 'long',
+                          })}
+                        </td>
+                        <td className="border px-4 py-2 text-right">{count}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </section>
+
+          {/* High-Risk Analysis */}
+          <section className="mb-8">
+            <h2 className="text-2xl font-bold mb-4 border-b pb-2">High-Risk Analysis</h2>
+            {clusters.length > 0 ? (
+              <table className="w-full border-collapse border border-gray-300">
+                <thead>
+                  <tr className="bg-gray-100">
+                    <th className="border px-4 py-2 text-left">Cluster ID</th>
+                    <th className="border px-4 py-2 text-left">Location</th>
+                    <th className="border px-4 py-2 text-left">Barangays</th>
+                    <th className="border px-4 py-2 text-right">Accidents</th>
+                    <th className="border px-4 py-2 text-right">Recent</th>
+                    <th className="border px-4 py-2 text-right">Danger Score</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          ) : (
-            <p className="text-gray-600">No cluster data available.</p>
-          )}
-        </section>
+                </thead>
+                <tbody>
+                  {clusters.slice(0, 10).map((c) => (
+                    <tr key={c.cluster_id}>
+                      <td className="border px-4 py-2">{c.cluster_id}</td>
+                      <td className="border px-4 py-2 text-sm">
+                        {c.center_lat?.toFixed(4)}, {c.center_lon?.toFixed(4)}
+                      </td>
+                      <td className="border px-4 py-2 text-sm">
+                        {Array.isArray(c.barangays)
+                          ? c.barangays.join(', ')
+                          : c.barangays?.split(/[,;]+|(?<=\D)\s+(?=\D)/)
+                              .map(b => b.trim())
+                              .filter(Boolean)
+                              .join(', ')}
+                      </td>
+                      <td className="border px-4 py-2 text-right">{c.accident_count}</td>
+                      <td className="border px-4 py-2 text-right">{c.recent_accidents}</td>
+                      <td className="border px-4 py-2 text-right font-semibold">
+                        {(c.danger_score * 100).toFixed(1)}%
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            ) : (
+              <p className="text-gray-600">No cluster data available.</p>
+            )}
+          </section>
 
-        <div className="text-center text-sm text-gray-600 mt-8 pt-4 border-t">
-          <p>This report is for official use only.</p>
-          <p>Generated using OSIMAP</p>
+          <div className="text-center text-sm text-gray-600 mt-8 pt-4 border-t">
+            <p>This report is for official use only.</p>
+            <p>Generated using OSIMAP</p>
+          </div>
         </div>
       </div>
 
-      {/* Print Styles (restored rules to allow multi-page printing) */}
+      {/* Print Styles */}
       <style>{`
         .print-only { display: none !important; }
 
         @media print {
-          /* Hide everything except the print-only section */
           body * {
             visibility: hidden !important;
           }
@@ -666,7 +644,6 @@ function Print() {
             }
           }
         }
-        
       `}</style>
     </div>
   );

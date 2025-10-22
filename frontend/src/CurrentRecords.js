@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
 import "./CurrentRecords.css";
+import "./Spinner.css";
+import "./PageHeader.css";
 import { DateTime } from "./DateTime";
 import { createClient } from "@supabase/supabase-js";
 import { useNavigate } from "react-router-dom";
@@ -88,23 +90,21 @@ function CurrentRecords() {
           lat: record.lat,
           lng: record.lng,
           recordDetails: record,
-        }
+        },
       });
     }
-  };  
-  
-
+  };
 
   return (
     <div className="scroll-wrapper">
       <div className="records-container">
+        {/* Page Header */}
         <div className="page-header">
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
             <div className="page-title-container">
               <img src="stopLight.svg" alt="Logo" className="page-logo" />
               <h1 className="page-title">Current Records</h1>
             </div>
-
             <button
               type="button"
               className="cr-info-btn"
@@ -136,22 +136,19 @@ function CurrentRecords() {
                 </text>
               </svg>
             </button>
+          </div>
 
-            <div
-              className="cr-edit-instructions"
-              role="status"
-              aria-hidden="true"
-            >
-              <strong>💡 Record Info</strong>
-              <div>• Use the search bar to look for a specific record.</div>
-              <div>• Navigate through records using the pagination controls.</div>
-              <div>• Click on any record row to view its location on the map.</div>
-            </div>
+          <div className="cr-edit-instructions" role="status" aria-hidden="true">
+            <strong>💡 Record Info</strong>
+            <div>• Use the search bar to look for a specific record.</div>
+            <div>• Navigate through records using the pagination controls.</div>
+            <div>• Click on any record row to view its location on the map.</div>
           </div>
 
           <DateTime />
         </div>
 
+        {/* Search */}
         <div className="search-actions">
           <div className="search-container">
             <svg
@@ -182,6 +179,7 @@ function CurrentRecords() {
           </div>
         </div>
 
+        {/* Pagination */}
         <div className="pagination">
           <button
             onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
@@ -219,9 +217,41 @@ function CurrentRecords() {
           </button>
         </div>
 
+        {/* Records Table */}
         <div className="records-card">
           {loading ? (
-            <p>Loading {records.length} records...</p>
+            <div
+              className="loading-center compact"
+              role="status"
+              aria-live="polite"
+            >
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  gap: 10,
+                }}
+              >
+                <svg
+                  className="loading-spinner"
+                  viewBox="-13 -13 45 45"
+                  xmlns="http://www.w3.org/2000/svg"
+                  aria-hidden="true"
+                >
+                  <circle className="box5631" cx="13" cy="1" r="5" />
+                  <circle className="box5631" cx="25" cy="1" r="5" />
+                  <circle className="box5631" cx="1" cy="13" r="5" />
+                  <circle className="box5631" cx="13" cy="13" r="5" />
+                  <circle className="box5631" cx="25" cy="13" r="5" />
+                  <circle className="box5631" cx="1" cy="25" r="5" />
+                  <circle className="box5631" cx="13" cy="25" r="5" />
+                  <circle className="box5631" cx="25" cy="25" r="5" />
+                  <circle className="box5631" cx="1" cy="1" r="5" />
+                </svg>
+                <div className="loading-text">Loading records...</div>
+              </div>
+            </div>
           ) : (
             <div className="table-body-wrapper">
               <table className="records-table">
@@ -253,7 +283,7 @@ function CurrentRecords() {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan="9" className="no-records">
+                      <td colSpan="8" className="no-records">
                         No records found
                       </td>
                     </tr>

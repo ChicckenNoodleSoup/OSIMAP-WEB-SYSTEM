@@ -13,6 +13,8 @@ import "leaflet.heat";
 import "leaflet-fullscreen";
 import "leaflet-fullscreen/dist/leaflet.fullscreen.css";
 import "./MapView.css";
+import "./Spinner.css";
+import "./PageHeader.css";
 import { DateTime } from "./DateTime";
 import L from "leaflet";
 import { useLocation } from "react-router-dom";
@@ -41,7 +43,7 @@ function ClusteredHeatmapLayer({ filteredData, showHeatmap }) {
   const map = useMap();
   const heatmapPoints = useMemo(() => {
     if (!filteredData || !showHeatmap || !filteredData.accidentPoints) return [];
-    
+
     return filteredData.accidentPoints
       .map(({ geometry, properties }) => {
         if (!geometry || !geometry.coordinates) return null;
@@ -149,13 +151,13 @@ function LegendControl({ clusterCenters }) {
 
   useEffect(() => {
     if (!map) return;
-    
+
     const legendId = 'custom-legend-control';
     const existingLegend = document.getElementById(legendId);
     if (existingLegend) {
       existingLegend.remove();
     }
-    
+
     const legend = L.control({ position: "bottomright" });
 
     legend.onAdd = function () {
@@ -164,9 +166,9 @@ function LegendControl({ clusterCenters }) {
 
       const button = L.DomUtil.create("div", "legend-button leaflet-bar", container);
       button.innerHTML = "LEGEND";
-      
+
       const panel = L.DomUtil.create("div", "legend-panel", container);
-      
+
       const updateLegendContent = () => {
         panel.innerHTML = `
           <div class="legend-title">Heatmap Intensity</div>
@@ -195,7 +197,7 @@ function LegendControl({ clusterCenters }) {
 
         const clusterListContainer = L.DomUtil.create("div", "cluster-list-container", panel);
         const clustersToShow = isClustersCollapsed ? sortedClusters.slice(0, 5) : sortedClusters;
-        
+
         clustersToShow.forEach(cluster => {
           const item = L.DomUtil.create("div", "legend-item legend-cluster-item", clusterListContainer);
           const color = getClusterColor(cluster.properties.cluster_id);
@@ -217,14 +219,14 @@ function LegendControl({ clusterCenters }) {
             }
           };
         });
-        
+
         if (sortedClusters.length > 5) {
           const toggleElement = panel.querySelector(".collapse-toggle");
           if (toggleElement) {
             toggleElement.onclick = () => setIsClustersCollapsed(v => !v);
           }
         }
-        
+
         panel.style.display = isPanelVisible ? "block" : "none";
       };
 
@@ -236,7 +238,7 @@ function LegendControl({ clusterCenters }) {
 
       L.DomEvent.disableScrollPropagation(container);
       L.DomEvent.disableClickPropagation(container);
-      
+
       return container;
     };
 
@@ -273,7 +275,7 @@ function SafeFullscreenControl() {
         });
 
         control.addTo(map);
-        
+
         setTimeout(() => {
           const button = document.querySelector('.leaflet-control-fullscreen-button');
           if (button) {
@@ -286,7 +288,7 @@ function SafeFullscreenControl() {
           try {
             const isFs = map && typeof map.isFullscreen === 'function' ? map.isFullscreen() : false;
             document.body.classList.toggle("fullscreen-active", isFs);
-            
+
             const button = document.querySelector('.leaflet-control-fullscreen-button');
             if (button) {
               button.setAttribute('title', isFs ? 'Exit Fullscreen' : 'View Fullscreen');
@@ -296,7 +298,7 @@ function SafeFullscreenControl() {
             console.warn('Fullscreen state check failed:', error);
             const isFs = !!(document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement);
             document.body.classList.toggle("fullscreen-active", isFs);
-            
+
             const button = document.querySelector('.leaflet-control-fullscreen-button');
             if (button) {
               button.setAttribute('title', isFs ? 'Exit Fullscreen' : 'View Fullscreen');
@@ -306,7 +308,7 @@ function SafeFullscreenControl() {
         };
 
         map.on("fullscreenchange", handleFsChange);
-        
+
         const documentEvents = ['fullscreenchange', 'webkitfullscreenchange', 'mozfullscreenchange', 'MSFullscreenChange'];
         documentEvents.forEach(event => {
           document.addEventListener(event, handleFsChange);
@@ -339,7 +341,7 @@ function SafeFullscreenControl() {
 // Search Zoom Control
 const SearchZoomControl = ({ searchTerm, searchResults, onRecordSelect }) => {
   const map = useMap();
-  
+
   useEffect(() => {
     if (searchResults.length === 1 && searchTerm.length > 2) {
       const result = searchResults[0];
@@ -448,7 +450,7 @@ export default function MapView() {
       const values = data
         .map(f => f.properties[property])
         .filter(value => value !== null && value !== undefined && String(value).trim() !== '');
-      
+
       return [...new Set(values)].sort();
     };
 
@@ -475,10 +477,10 @@ export default function MapView() {
     // Apply filters with updated year logic
     accidents = accidents.filter(f => {
       const { year, barangay, offensetype, severity } = f.properties;
-      
+
       // Convert year to string for comparison
       const yearStr = String(year).trim();
-      
+
       // Empty selectedYears array means "all years"
       const yearMatch = selectedYears.length === 0 || selectedYears.includes(yearStr);
       const locationMatch = selectedLocation === "all" || String(barangay).trim() === selectedLocation;
@@ -491,7 +493,7 @@ export default function MapView() {
     // Filter clusters to only show those that contain at least one of the currently filtered accidents
     const visibleClusterIds = new Set(accidents.map(a => a.properties.cluster));
     const filteredClusters = clusters.filter(c => visibleClusterIds.has(c.properties.cluster_id));
-    
+
     // Update cluster count based on filtered clusters
     const updatedClusters = filteredClusters.map(c => {
       const accidentCount = accidents.filter(a => a.properties.cluster === c.properties.cluster_id).length;
@@ -543,7 +545,7 @@ export default function MapView() {
   // Search functionality
   const handleSearch = useCallback((term) => {
     setSearchTerm(term);
-    
+
     if (term.length < 2) {
       setSearchResults([]);
       setShowSearchDropdown(false);
@@ -656,23 +658,23 @@ export default function MapView() {
 
   function FlyToQueryLocation() {
     const map = useMap();
-  
+
     useEffect(() => {
       if (!hasFlown && recordLat && recordLng && map) {
         map.flyTo([recordLat, recordLng], 17, { duration: 1.5 });
         setHasFlown(true);
       }
     }, [map]);
-  
+
     return null;
   }
-  
+
   function RecordPopup({ record }) {
     const map = useMap();
-  
+
     useEffect(() => {
       if (!record || !map) return;
-  
+
       const popup = L.popup({ autoClose: false, closeOnClick: true })
         .setLatLng([record.lat, record.lng])
         .setContent(`
@@ -685,10 +687,10 @@ export default function MapView() {
           </div>
         `)
         .openOn(map);
-  
+
       return () => map.closePopup(popup);
     }, [map, record]);
-  
+
     return null;
   }
 
@@ -719,6 +721,7 @@ export default function MapView() {
               <div>• Use the fullscreen button (top-right) for an expanded map view.</div>
             </div>
           </div>
+
           <DateTime />
         </div>
 
@@ -781,7 +784,7 @@ export default function MapView() {
               <input type="checkbox" checked={showMarkers} onChange={handleToggle(setShowMarkers)} /> Points
             </label>
           </div>
-          
+
           {filteredData.stats && (
             <div className="stats-display">
               {filteredData.stats.totalAccidents} accidents • {filteredData.stats.totalClusters} clusters • {filteredData.stats.noisePoints} noise
@@ -812,7 +815,7 @@ export default function MapView() {
               />
 
               <img src="/osimap-logo.svg" alt="OSIMAP Logo" className="osimap-logo" />
-              
+
               <FullscreenFilters
                 yearFilter={selectedYears}
                 locationFilter={selectedLocation}
@@ -848,12 +851,12 @@ export default function MapView() {
                 }}
                 onSearchResultSelect={handleSearchResultSelect}
               />
-              
+
               {selectedRecord && <RecordPopup record={selectedRecord} />}
               <SafeFullscreenControl />
               <LegendControl clusterCenters={filteredData.clusterCenters} />
               <FlyToQueryLocation fromRecords={fromRecords} />
-              
+
               <LayersControl position="topright">
                 <LayersControl.BaseLayer checked name="Light">
                   <TileLayer url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png" attribution="© CartoDB" />
@@ -871,15 +874,15 @@ export default function MapView() {
                   />
                 </LayersControl.BaseLayer>
               </LayersControl>
-              
+
               <ClusteredHeatmapLayer filteredData={filteredData} showHeatmap={showHeatmap} />
               <ClusterCenters clusterCenters={filteredData.clusterCenters} showClusters={showClusters} />
               <AccidentMarkers accidentPoints={filteredData.accidentPoints} showMarkers={showMarkers} />
-              
+
             </MapContainer>
           </div>
         </div>
       </div>
     </div>
   );
-}
+};
