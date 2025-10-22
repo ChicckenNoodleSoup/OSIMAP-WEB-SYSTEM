@@ -140,8 +140,11 @@
   position: relative;
 }
 
+
 .cr-edit-instructions {
   position: absolute;
+  top: 100%; /* directly below the button */
+  left: 50%;
   top: 150%; /* directly below the button */
   left: 48%;
   transform: translateX(-100%);
