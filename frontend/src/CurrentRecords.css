@@ -142,9 +142,8 @@
 
 .cr-edit-instructions {
   position: absolute;
-  top: 150%; /* directly below the button */
-  left: 148%;
-  transform: translateX(-100%);
+  top: calc(100% + 8px); /* 8px below the button */
+  right: 0; /* align to right edge of parent */
   width: 320px;
   max-width: 90vw;
   z-index: 60;
@@ -159,7 +158,6 @@
   backdrop-filter: blur(6px);
   border: 1px solid rgba(255,255,255,0.04);
 }
-
 .cr-info-btn:hover + .cr-edit-instructions,
 .cr-info-btn:focus + .cr-edit-instructions {
   display: block;
