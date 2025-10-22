@@ -13,6 +13,7 @@ import "leaflet.heat";
 import "leaflet-fullscreen";
 import "leaflet-fullscreen/dist/leaflet.fullscreen.css";
 import "./MapView.css";
+import "./Spinner.css";
 import { DateTime } from "./DateTime";
 import L from "leaflet";
 import { useLocation } from "react-router-dom";
