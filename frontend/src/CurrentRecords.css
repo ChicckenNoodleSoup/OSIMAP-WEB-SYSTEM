@@ -141,23 +141,20 @@
 }
 
 .cr-edit-instructions {
-  position: absolute;
-  top: calc(100% + 8px); /* 8px below the button */
-  right: 50; /* align to right edge of parent */
+  position: relative; /* remove absolute positioning */
   width: 320px;
   max-width: 90vw;
-  z-index: 60;
-  display: none;
   padding: 0.75rem 1rem;
   background: rgba(10, 30, 60, 0.92);
   border-radius: 10px;
   color: #EAF6FF;
   font-size: 0.95rem;
   line-height: 1.3;
+  display: none; /* still hidden by default */
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
-  backdrop-filter: blur(6px);
   border: 1px solid rgba(255,255,255,0.04);
 }
+
 .cr-info-btn:hover + .cr-edit-instructions,
 .cr-info-btn:focus + .cr-edit-instructions {
   display: block;
