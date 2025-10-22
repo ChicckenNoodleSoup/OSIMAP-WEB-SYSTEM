@@ -337,15 +337,12 @@ h6 {
 
 /* Loading spinner */
 .loading-spinner-signin {
-  width: 20px;
-  height: 20px;
   width: 16px;
   height: 16px;
   border: 2px solid rgba(255, 255, 255, 0.3);
   border-top: 2px solid #F1EFEC;
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
-  margin-right: 8px;
   flex-shrink: 0;
 }
 
@@ -540,7 +537,7 @@ h6 {
   .frosted-right, .signin-form-side::before {
     display: none;
   }
-
+  
   .signin-container {
     background: linear-gradient(135deg, #000000 0%, #0085FF 100%);
   }
@@ -558,11 +555,11 @@ h6 {
     animation: slideInDown 0.3s ease-out;
     display: block;
   }
-
+  
   .validation-error::after {
     display: none;
   }
-
+  
   .signin-card h6 {
     display: block;
     width: 100%;
@@ -580,7 +577,7 @@ h6 {
     width: 100%;
     animation: slideInDown 0.3s ease-out;
   }
-
+  
   .validation-error::after {
     display: none;
   }
