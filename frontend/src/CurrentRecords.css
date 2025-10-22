@@ -167,7 +167,7 @@
   content: "";
   position: absolute;
   top: -7px;
-  left: 153px; /* Center the 14px arrow under the button: (320/2 - 14/2 + adjustment if needed) ≈ 153px */
+  left: 180px; /* Center the 14px arrow under the button: (320/2 - 14/2 + adjustment if needed) ≈ 153px */
   right: auto;
   width: 14px;
   height: 14px;
