@@ -142,7 +142,7 @@
 .cr-edit-instructions {
   position: absolute;
   top: calc(100% + 8px); /* 8px below the button */
-  left: 221px; /* Center the 320px panel under the 20px button: (-320/2 + 20/2) = -150px */
+  left: 222px; /* Center the 320px panel under the 20px button: (-320/2 + 20/2) = -150px */
   width: 320px;
   max-width: 90vw;
   z-index: 60;
