@@ -1,3 +1,5 @@
+@import './PageHeader.css';
+
 * {
   font-family: 'Poppins', sans-serif;
   box-sizing: border-box;
@@ -6,6 +8,20 @@
 .records-container {
   width: 100%;
   padding: 1rem;
+}
+
+/* Page wrapper for consistent spacing */
+.currentrecord-page-wrapper {
+  padding: 24px;
+  min-height: 100vh;
+  box-sizing: border-box;
+}
+
+.currentrecord-page-container {
+  padding: 0 20px;
+  max-width: 1400px;
+  margin: 0 auto;
+  box-sizing: border-box;
 }
 
 /* Header */

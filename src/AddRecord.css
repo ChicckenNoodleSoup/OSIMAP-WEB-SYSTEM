@@ -1,3 +1,19 @@
+@import './PageHeader.css';
+
+/* Page wrapper for consistent spacing */
+.addrecord-page-wrapper {
+  padding: 24px;
+  min-height: 100vh;
+  box-sizing: border-box;
+}
+
+.addrecord-page-container {
+  padding: 0 20px;
+  max-width: 1400px;
+  margin: 0 auto;
+  box-sizing: border-box;
+}
+
 /* === Container & Layout === */
 .add-record-container {
   flex: 1;
