@@ -23,7 +23,7 @@ function AdminDashboard() {
   const [accessDenied, setAccessDenied] = useState(false);
   const [activeTab, setActiveTab] = useState('accounts'); // 'accounts' or 'logs'
   const [accountsSubTab, setAccountsSubTab] = useState('rejected'); // 'rejected', 'pending', 'approved'
-
+  
   // Pagination states
   const [accountsCurrentPage, setAccountsCurrentPage] = useState(1);
   const [logsCurrentPage, setLogsCurrentPage] = useState(1);
@@ -86,7 +86,7 @@ function AdminDashboard() {
     );
     const pending = allAccounts.filter(account => account.status === 'pending');
     const approved = allAccounts.filter(account => account.status === 'approved');
-
+    
     return { rejectedRevoked, pending, approved };
   };
 
@@ -153,7 +153,7 @@ function AdminDashboard() {
     try {
       let newStatus;
       let actionText;
-
+      
       if (action === 'approve') {
         newStatus = 'approved';
         actionText = 'approved';
@@ -179,7 +179,7 @@ function AdminDashboard() {
         await handleDeleteAccount(accountId);
         return;
       }
-
+      
       const { error } = await supabase
         .from('police')
         .update({ 
@@ -197,7 +197,7 @@ function AdminDashboard() {
       // Log the account action
       const account = allAccounts.find(acc => acc.id === accountId);
       const logDetails = `Account ${actionText}: ${account?.full_name} (${account?.email})`;
-
+      
       if (action === 'approve') {
         await logAccountEvent.approved(accountId, logDetails);
       } else if (action === 'reject') {
@@ -210,10 +210,10 @@ function AdminDashboard() {
 
       // Send email notification
       await sendEmailNotification(accountId, newStatus);
-
+      
       // Refresh the list
       await fetchAllAccounts();
-
+      
       setMessage(`Account ${actionText} successfully`);
       setTimeout(() => setMessage(''), 3000);
     } catch (error) {
@@ -235,12 +235,12 @@ function AdminDashboard() {
     // Get account details for confirmation
     const account = allAccounts.find(acc => acc.id === accountId);
     const accountName = account ? account.full_name : 'this account';
-
+    
     // Show confirmation dialog
     const confirmed = window.confirm(
       `Are you sure you want to permanently delete ${accountName}? This action cannot be undone.`
     );
-
+    
     if (!confirmed) {
       return; // User cancelled the deletion
     }
@@ -273,7 +273,7 @@ function AdminDashboard() {
 
       // Refresh the list
       await fetchAllAccounts();
-
+      
       setMessage(`${accountName} deleted successfully`);
       setTimeout(() => setMessage(''), 3000);
     } catch (error) {
@@ -295,13 +295,13 @@ function AdminDashboard() {
 
       // Send email notification
       const result = await sendAccountStatusEmail(account.email, account.full_name, status);
-
+      
       if (result.success) {
         console.log(`Email notification sent to ${account.email}: Account ${status}`);
       } else {
         console.error('Failed to send email notification:', result.error);
       }
-
+      
     } catch (error) {
       console.error('Error sending email notification:', error);
     }
@@ -546,7 +546,7 @@ function AdminDashboard() {
                     ))}
                   </div>
                 </div>
-
+                
                 {/* Accounts Pagination */}
                 {accountsTotalPages > 1 && (
                   <div className="pagination">
@@ -557,7 +557,7 @@ function AdminDashboard() {
                     >
                       ⬅ Prev
                     </button>
-
+                    
                     {Array.from({ length: accountsTotalPages }, (_, i) => i + 1)
                       .slice(
                         Math.max(0, accountsCurrentPage - 3),
@@ -574,7 +574,7 @@ function AdminDashboard() {
                           {pageNum}
                         </button>
                       ))}
-
+                    
                     <button
                       onClick={() => setAccountsCurrentPage(prev => Math.min(prev + 1, accountsTotalPages))}
                       disabled={accountsCurrentPage === accountsTotalPages}
@@ -668,7 +668,7 @@ function AdminDashboard() {
                     </div>
                   ))}
                 </div>
-
+                
                 {/* Logs Pagination */}
                 {logsTotalPages > 1 && (
                   <div className="pagination">
@@ -679,7 +679,7 @@ function AdminDashboard() {
                     >
                       ⬅ Prev
                     </button>
-
+                    
                     {Array.from({ length: logsTotalPages }, (_, i) => i + 1)
                       .slice(
                         Math.max(0, logsCurrentPage - 3),
@@ -696,7 +696,7 @@ function AdminDashboard() {
                           {pageNum}
                         </button>
                       ))}
-
+                    
                     <button
                       onClick={() => setLogsCurrentPage(prev => Math.min(prev + 1, logsTotalPages))}
                       disabled={logsCurrentPage === logsTotalPages}

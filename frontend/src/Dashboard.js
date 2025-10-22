@@ -167,7 +167,7 @@ function Dashboard() {
       </div>
 
       <div className="dashboard-grid">
-
+        
         {/* Left column */}
         <div className="dashboard-column">
           {/* Current Records */}

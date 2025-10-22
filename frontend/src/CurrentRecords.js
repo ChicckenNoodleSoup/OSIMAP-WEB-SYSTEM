@@ -94,6 +94,8 @@ function CurrentRecords() {
       });
     }
   };  
+  
+
 
   return (
     <div className="scroll-wrapper">
@@ -271,7 +273,7 @@ function CurrentRecords() {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan="8" className="no-records">
+                      <td colSpan="9" className="no-records">
                         No records found
                       </td>
                     </tr>

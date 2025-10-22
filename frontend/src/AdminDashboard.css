@@ -13,7 +13,6 @@
 
 /* Container */
 .admindash-container {
-  padding: 0 20px;
   padding: 24px;
   max-width: 1400px;
   margin: 0 auto;
@@ -693,7 +692,7 @@
     grid-template-columns: 1fr;
     gap: 1rem;
   }
-
+  
   .accounts-column {
     margin-bottom: 1rem;
   }
@@ -704,25 +703,25 @@
     flex-direction: column;
     gap: 6px;
   }
-
+  
   .sub-tab-btn {
     padding: 12px 16px;
     font-size: 13px;
   }
-
+  
   .accounts-columns-container {
     gap: 0.75rem;
   }
-
+  
   .accounts-column-body {
     padding: 12px;
     max-height: 500px;
   }
-
+  
   .account-card {
     padding: 12px;
   }
-
+  
   .account-card-actions {
     gap: 6px;
   }
@@ -738,3 +737,5 @@
 
 /* Accessibility: focus outlines for keyboard users */
 button:focus { outline: 3px solid rgba(0,133,255,0.18); outline-offset: 2px; }
+
+/* End of merged CSS */

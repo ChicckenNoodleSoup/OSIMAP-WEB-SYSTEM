@@ -182,7 +182,7 @@
 }
 
 /* strong inside instructions */
-.cr-edit-instructions strong {
+.edit-instructions strong {
   display: block;
   margin-bottom: 6px;
   font-weight: 700;
