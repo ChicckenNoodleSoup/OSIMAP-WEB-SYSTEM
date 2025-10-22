@@ -42,7 +42,7 @@ function HelpSupport() {
     setStatusMessage('');
 
     try {
-      const response = await fetch('http://localhost:3002/api/send-support-email', {
+      const response = await fetch('http://osimap-web-system.onrender.com/api/send-support-email', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -59,38 +59,31 @@ function HelpSupport() {
 
       if (result.success) {
         setStatusMessage('Message sent successfully!');
-        // Clear form
-        setFormData({
-          name: '',
-          email: '',
-          message: ''
-        });
-        setTimeout(() => setStatusMessage(''), 5000);
+        setFormData({ name: '', email: '', message: '' });
       } else {
         setStatusMessage('Failed to send message. Please try again.');
-        setTimeout(() => setStatusMessage(''), 5000);
       }
     } catch (error) {
       console.error('Error sending message:', error);
       setStatusMessage('Failed to send message. Please try again.');
-      setTimeout(() => setStatusMessage(''), 5000);
     } finally {
       setIsSending(false);
+      setTimeout(() => setStatusMessage(''), 5000);
     }
   };
 
   return (
     <div className='help-scroll-wrapper'>
       <div className="help-support-container">
-        {/* Logo at the top */}
+        {/* Logo */}
         <img src="/signin-logo.png" alt="Logo" className="help-logo" />
 
-        {/* Help card below */}
+        {/* Main Help Card */}
         <div className="help-card">
           <h1 className="help-title">Developer Support Page</h1>
 
           <div className="text-column-container">
-            {/* Column One */}
+            {/* Column One - Info */}
             <div className="columnOne">
               <h3>Need Help?</h3>
               <p className="help-text">
@@ -110,8 +103,8 @@ function HelpSupport() {
                   </g>
                 </svg>
                 <p className="help-details">
-                  <b>Our Address</b> <br />
-                  Pampanga State University - Bacolor <br />
+                  <b>Our Address</b><br />
+                  Pampanga State University - Bacolor<br />
                   Pampanga, PH
                 </p>
               </div>
@@ -119,45 +112,39 @@ function HelpSupport() {
               {/* Contact */}
               <div className="text-column">
                 <svg className="help-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                  <path fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M15.6 14.521c-2.395 
-                  2.521-8.504-3.533-6.1-6.063c1.468-1.545-.19-3.31-1.108-4.609c-1.723-2.435-5.504.927-5.39 3.066c.363 
-                  6.746 7.66 14.74 14.726 14.042c2.21-.218 4.75-4.21 2.214-5.669c-1.267-.73-3.008-2.17-4.342-.767ZM14 
-                  3a7 7 0 0 1 7 7m-7-3a3 3 0 0 1 3 3"/>
+                  <path fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" 
+                  d="M15.6 14.521c-2.395 2.521-8.504-3.533-6.1-6.063c1.468-1.545-.19-3.31-1.108-4.609
+                  c-1.723-2.435-5.504.927-5.39 3.066c.363 6.746 7.66 14.74 14.726 14.042c2.21-.218 4.75-4.21 2.214-5.669
+                  c-1.267-.73-3.008-2.17-4.342-.767ZM14 3a7 7 0 0 1 7 7m-7-3a3 3 0 0 1 3 3"/>
                 </svg>
                 <p className="help-details">
-                  <b>Contact</b> <br />
-                  Phone: +63 999 1508 859 <br />
-                  Email: osimapdatabase@gmail.com 
+                  <b>Contact</b><br />
+                  Phone: +63 999 1508 859<br />
+                  Email: osimapdatabase@gmail.com
                 </p>
               </div>
 
               {/* Working Hours */}
               <div className="text-column">
                 <svg className="help-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1664 1664">
-                  <path fill="currentColor" d="M1088 768H904q-29-32-72-32h-5L475 
-                  384q-19-19-45.5-19T384 384t-19 45.5t19 45.5l352 352v5q0 40 28 68t68 28q43 0 72-32h184q26 
-                  0 45-19t19-45t-19-45t-45-19zM832 256q26 0 45 19t19 45t-19 45t-45 19t-45-19t-19-45t19-45t45-19zm0 
-                  1024q26 0 45 19t19 45t-19 45t-45 19t-45-19t-19-45t19-45t45-19zM320 768q26 0 45 19t19 45t-19 
-                  45t-45 19t-45-19t-19-45t19-45t45-19zm1024 0q26 0 45 19t19 45t-19 45t-45 19t-45-19t-19-45t19-45t45-19zM832 
-                  0Q663 0 508.5 66T243 243T66 508.5T0 832t66 323.5T243 1421t265.5 177t323.5 
-                  66t323.5-66t265.5-177t177-265.5t66-323.5t-66-323.5T1421 243T1155.5 66T832 0zm0 128q143 0 273.5 
-                  55.5t225 150t150 225T1536 832t-55.5 273.5t-150 225t-225 150T832 1536t-273.5-55.5t-225-150t-150-225T128 
-                  832t55.5-273.5t150-225t225-150T832 128z"/>
+                  <path fill="currentColor" d="M1088 768H904q-29-32-72-32h-5L475 384q-19-19-45.5-19T384 384
+                  t-19 45.5t19 45.5l352 352v5q0 40 28 68t68 28q43 0 72-32h184q26 0 45-19t19-45t-19-45t-45-19zM832 
+                  256q26 0 45 19t19 45t-19 45t-45 19t-45-19t-19-45t19-45t45-19z"/>
                 </svg>
                 <p className="help-details">
-                  <b>Working Hours</b> <br />
-                  Monday - Friday: 8:00 - 17:00 <br />
+                  <b>Working Hours</b><br />
+                  Monday - Friday: 8:00 - 17:00<br />
                   Saturday & Sunday: 8:00 - 12:00
                 </p>
               </div>
             </div>
 
-            {/* Column Two */}
+            {/* Column Two - Form */}
             <div className="columnTwo">
               <h3>Ready to get started?</h3>
-              
+
               {statusMessage && (
-                <div className={`status-message ${statusMessage.includes('success') ? 'success' : 'error'}`}>
+                <div className={`status-message ${statusMessage.includes('successfully') ? 'success' : 'error'}`}>
                   {statusMessage}
                 </div>
               )}
@@ -165,7 +152,7 @@ function HelpSupport() {
               <form className="help-form" onSubmit={handleSendMessage}>
                 <input 
                   type="text" 
-                  name="name"
+                  name="name" 
                   placeholder="Your Name" 
                   value={formData.name}
                   onChange={handleInputChange}
@@ -173,7 +160,7 @@ function HelpSupport() {
                 />
                 <input 
                   type="email" 
-                  name="email"
+                  name="email" 
                   placeholder="Your Email Address" 
                   value={formData.email}
                   onChange={handleInputChange}
@@ -181,7 +168,7 @@ function HelpSupport() {
                 />
                 <textarea 
                   className="message-input" 
-                  name="message"
+                  name="message" 
                   placeholder="Your Message" 
                   value={formData.message}
                   onChange={handleInputChange}
