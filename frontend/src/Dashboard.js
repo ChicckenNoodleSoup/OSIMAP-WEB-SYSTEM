@@ -10,7 +10,7 @@ const SUPABASE_URL = process.env.REACT_APP_SUPABASE_URL;
 const SUPABASE_KEY = process.env.REACT_APP_SUPABASE_KEY;
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-function Dashboard() {
+export function Dashboard() {
   const navigate = useNavigate();
   const { user } = useUser();
   const [userData, setUserData] = useState(null);
