@@ -143,7 +143,7 @@
 .cr-edit-instructions {
   position: absolute;
   top: 150%; /* directly below the button */
-  left: 48%;
+  left: 100%;
   transform: translateX(-100%);
   width: 320px;
   max-width: 90vw;
