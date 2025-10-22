@@ -14,6 +14,7 @@ import "leaflet-fullscreen";
 import "leaflet-fullscreen/dist/leaflet.fullscreen.css";
 import "./MapView.css";
 import "./Spinner.css";
+import "./PageHeader.css";
 import { DateTime } from "./DateTime";
 import L from "leaflet";
 import { useLocation } from "react-router-dom";
@@ -720,6 +721,7 @@ export default function MapView() {
               <div>• Use the fullscreen button (top-right) for an expanded map view.</div>
             </div>
           </div>
+
           <DateTime />
         </div>
 

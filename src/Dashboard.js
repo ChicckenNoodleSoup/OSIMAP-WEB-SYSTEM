@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from './UserContext'; // Only new import added
 import './Dashboard.css';
+import './PageHeader.css';
 import { DateTime } from './DateTime';
 import { createClient } from '@supabase/supabase-js';
 

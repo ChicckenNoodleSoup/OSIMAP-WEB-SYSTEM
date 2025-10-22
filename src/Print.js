@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import './Print.css';
 import './Spinner.css';
+import './PageHeader.css';
 import { createClient } from '@supabase/supabase-js';
 import { DateTime } from './DateTime';
 import { logSystemEvent } from './utils/loggingUtils';
@@ -272,8 +273,8 @@ function Print() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="page-header" style={{ marginTop: '1rem' }}>
+    <div className="min-h-screen bg-gray-50" style={{ padding: '24px' }}>
+      <div className="page-header">
         <div className="page-title-container">
           <img src="stopLight.svg" alt="Logo" className="page-logo" />
           <h1 className="page-title">Print Records</h1>
@@ -284,6 +285,7 @@ function Print() {
               <text x="12" y="16" textAnchor="middle" fontSize="12" fill="currentColor" fontFamily="Poppins, sans-serif">i</text>
             </svg>
           </button>
+
           <div className="pr-cr-edit-instructions" role="status" aria-hidden="true">
             <strong>💡 Print Help</strong>
             <div> • Choose a start and end date or select a barangay and severity.</div>
@@ -296,8 +298,8 @@ function Print() {
       </div>
       {/* Filter Section */}
       <div className="no-print">
-        <div className="frosted-container">
-          <div className="dashboard-card p-6 mb-6">
+        <div className="frosted-container" style={{ maxWidth: 'none', width: '100%' }}>
+          <div className="dashboard-card p-6 mb-6" style={{ width: '100%', maxWidth: 'none' }}>
             <h2 className="text-2xl font-bold mb-4">Report Filters</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <div>
