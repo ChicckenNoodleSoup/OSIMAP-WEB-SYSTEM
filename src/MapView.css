@@ -245,7 +245,7 @@
 .mapview-container {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 1%;
+  padding: 0;
   display: flex;
   flex-direction: column;
   gap: 20px;
@@ -515,13 +515,13 @@
 /* Responsiveness */
 @media (max-width: 1024px) {
   .mapview-container {
-    padding: 2%;
+    padding: 0;
   }
 }
 
 @media (max-width: 768px) {
   .mapview-container {
-    padding: 4%;
+    padding: 0;
   }
 
   .map-card {
@@ -572,7 +572,7 @@
 
 @media (max-width: 480px) {
   .mapview-container {
-    padding: 5%;
+    padding: 0;
   }
 
   .page-header {

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import "./CurrentRecords.css";
 import "./Spinner.css";
+import "./PageHeader.css";
 import { DateTime } from "./DateTime";
 import { createClient } from "@supabase/supabase-js";
 import { useNavigate } from "react-router-dom";
@@ -100,11 +101,9 @@ function CurrentRecords() {
     <div className="scroll-wrapper">
       <div className="records-container">
         <div className="page-header">
-          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <div className="page-title-container">
-              <img src="stopLight.svg" alt="Logo" className="page-logo" />
-              <h1 className="page-title">Current Records</h1>
-            </div>
+          <div className="page-title-container">
+            <img src="stopLight.svg" alt="Logo" className="page-logo" />
+            <h1 className="page-title">Current Records</h1>
 
             <button
               type="button"
