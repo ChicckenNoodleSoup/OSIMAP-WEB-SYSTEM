@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './CreateAccount.css';
-import { validateFullName, validateEmail, validatePassword, validateConfirmPassword } from './utils/validation';
+import { validateFullName, validateEmail, validatePassword, validateConfirmPassword, getPasswordRequirements } from './utils/validation';
 import { createClient } from "@supabase/supabase-js";
 import { secureHash } from './utils/passwordUtils';
 import { logAccountEvent } from './utils/loggingUtils';
@@ -24,6 +24,17 @@ function CreateAccount() {
   const [passwordError, setPasswordError] = useState('');
   const [confirmPasswordError, setConfirmPasswordError] = useState('');
   
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [passwordRequirements, setPasswordRequirements] = useState({
+    minLength: false,
+    hasUppercase: false,
+    hasLowercase: false,
+    hasNumber: false,
+    hasSpecialChar: false
+  });
+  const [isPasswordFocused, setIsPasswordFocused] = useState(false);
+  
   const navigate = useNavigate();
 
   // If already authenticated, redirect to dashboard immediately
@@ -38,6 +49,14 @@ function CreateAccount() {
     setter(e.target.value);
     errorSetter('');
     setMessage('');
+  };
+
+  const handlePasswordChange = (e) => {
+    const newPassword = e.target.value;
+    setPassword(newPassword);
+    setPasswordError('');
+    setMessage('');
+    setPasswordRequirements(getPasswordRequirements(newPassword));
   };
 
   const validateForm = () => {
@@ -164,13 +183,58 @@ function CreateAccount() {
                     Password
                     {passwordError && <span className="validation-error">{passwordError}</span>}
                   </h6>
-                  <input
-                    type="password"
-                    placeholder="Enter Password"
-                    value={password}
-                    onChange={handleInputChange(setPassword, setPasswordError)}
-                    maxLength={128}
-                  />
+                  <div className="password-wrapper">
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      placeholder="Enter Password"
+                      value={password}
+                      onChange={handlePasswordChange}
+                      onFocus={() => setIsPasswordFocused(true)}
+                      onBlur={() => setIsPasswordFocused(false)}
+                      maxLength={128}
+                    />
+                    <span
+                      className="eye-icon"
+                      onClick={() => setShowPassword(!showPassword)}
+                      title={showPassword ? 'Hide password' : 'Show password'}
+                    >
+                      {showPassword ? (
+                        <svg viewBox="0 0 24 24">
+                          <path d="M12 4.5C7.5 4.5 3.6 7.3 2 12c1.6 4.7 5.5 7.5 10 7.5s8.4-2.8 10-7.5c-1.6-4.7-5.5-7.5-10-7.5zM12 17c-2.8 0-5-2.2-5-5s2.2-5 5-5 5 2.2 5 5-2.2 5-5 5zm0-8c-1.7 0-3 1.3-3 3s1.3 3 3 3 3-1.3 3-3-1.3-3-3-3z"/>
+                        </svg>
+                      ) : (
+                        <svg viewBox="0 0 24 24">
+                          <path d="M12 7c2.8 0 5 2.2 5 5 0 .6-.1 1.2-.3 1.7l1.4 1.4c1.2-1.2 2.1-2.7 2.7-4.4-1.6-4.7-5.5-7.5-10-7.5-1.4 0-2.8.3-4.1.8L8 5.3C9.3 6.1 10.6 7 12 7zm-5-2L5.6 3.6 4.2 5l1.9 1.9C4.6 8.2 3.1 10 2 12c1.6 4.7 5.5 7.5 10 7.5 1.9 0 3.7-.5 5.3-1.3L19 19.7l1.4-1.4L7 5zm5.3 8.3c-.2.4-.3.8-.3 1.2 0 1.7 1.3 3 3 3 .4 0 .8-.1 1.2-.3l-3.9-3.9z"/>
+                        </svg>
+                      )}
+                    </span>
+
+                    {isPasswordFocused && (
+                      <div className="password-requirements">
+                        <div className="requirements-title">Password must have:</div>
+                        <div className={`requirement ${passwordRequirements.minLength ? 'met' : ''}`}>
+                          <span className="requirement-icon">{passwordRequirements.minLength ? '✓' : '○'}</span>
+                          At least 8 characters
+                        </div>
+                        <div className={`requirement ${passwordRequirements.hasUppercase ? 'met' : ''}`}>
+                          <span className="requirement-icon">{passwordRequirements.hasUppercase ? '✓' : '○'}</span>
+                          One uppercase letter
+                        </div>
+                        <div className={`requirement ${passwordRequirements.hasLowercase ? 'met' : ''}`}>
+                          <span className="requirement-icon">{passwordRequirements.hasLowercase ? '✓' : '○'}</span>
+                          One lowercase letter
+                        </div>
+                        <div className={`requirement ${passwordRequirements.hasNumber ? 'met' : ''}`}>
+                          <span className="requirement-icon">{passwordRequirements.hasNumber ? '✓' : '○'}</span>
+                          One number
+                        </div>
+                        <div className={`requirement ${passwordRequirements.hasSpecialChar ? 'met' : ''}`}>
+                          <span className="requirement-icon">{passwordRequirements.hasSpecialChar ? '✓' : '○'}</span>
+                          One special character (!@#$%^&*...)
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 <div>
@@ -178,13 +242,30 @@ function CreateAccount() {
                     Confirm Password
                     {confirmPasswordError && <span className="validation-error">{confirmPasswordError}</span>}
                   </h6>
-                  <input
-                    type="password"
-                    placeholder="Confirm Password"
-                    value={confirmPassword}
-                    onChange={handleInputChange(setConfirmPassword, setConfirmPasswordError)}
-                    maxLength={128}
-                  />
+                  <div className="password-wrapper">
+                    <input
+                      type={showConfirmPassword ? 'text' : 'password'}
+                      placeholder="Confirm Password"
+                      value={confirmPassword}
+                      onChange={handleInputChange(setConfirmPassword, setConfirmPasswordError)}
+                      maxLength={128}
+                    />
+                    <span
+                      className="eye-icon"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      title={showConfirmPassword ? 'Hide password' : 'Show password'}
+                    >
+                      {showConfirmPassword ? (
+                        <svg viewBox="0 0 24 24">
+                          <path d="M12 4.5C7.5 4.5 3.6 7.3 2 12c1.6 4.7 5.5 7.5 10 7.5s8.4-2.8 10-7.5c-1.6-4.7-5.5-7.5-10-7.5zM12 17c-2.8 0-5-2.2-5-5s2.2-5 5-5 5 2.2 5 5-2.2 5-5 5zm0-8c-1.7 0-3 1.3-3 3s1.3 3 3 3 3-1.3 3-3-1.3-3-3-3z"/>
+                        </svg>
+                      ) : (
+                        <svg viewBox="0 0 24 24">
+                          <path d="M12 7c2.8 0 5 2.2 5 5 0 .6-.1 1.2-.3 1.7l1.4 1.4c1.2-1.2 2.1-2.7 2.7-4.4-1.6-4.7-5.5-7.5-10-7.5-1.4 0-2.8.3-4.1.8L8 5.3C9.3 6.1 10.6 7 12 7zm-5-2L5.6 3.6 4.2 5l1.9 1.9C4.6 8.2 3.1 10 2 12c1.6 4.7 5.5 7.5 10 7.5 1.9 0 3.7-.5 5.3-1.3L19 19.7l1.4-1.4L7 5zm5.3 8.3c-.2.4-.3.8-.3 1.2 0 1.7 1.3 3 3 3 .4 0 .8-.1 1.2-.3l-3.9-3.9z"/>
+                        </svg>
+                      )}
+                    </span>
+                  </div>
                 </div>
 
                 <button type="submit" disabled={isLoading}>

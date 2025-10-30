@@ -31,7 +31,21 @@ export const validatePassword = (password) => {
   if (!/[0-9]/.test(password)) {
     return 'Password must contain at least one number';
   }
+  if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) {
+    return 'Password must contain at least one special character';
+  }
   return '';
+};
+
+// Helper function to check individual password requirements
+export const getPasswordRequirements = (password) => {
+  return {
+    minLength: password.length >= 8,
+    hasUppercase: /[A-Z]/.test(password),
+    hasLowercase: /[a-z]/.test(password),
+    hasNumber: /[0-9]/.test(password),
+    hasSpecialChar: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)
+  };
 };
 
 export const validateConfirmPassword = (password, confirmPassword) => {
