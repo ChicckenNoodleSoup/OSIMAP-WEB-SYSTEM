@@ -1,39 +1,38 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './HelpSupport.css';
 
 function HelpSupport() {
   const navigate = useNavigate();
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    message: ''
-  });
+  const [userData, setUserData] = useState(null);
+  const [message, setMessage] = useState('');
   const [isSending, setIsSending] = useState(false);
   const [statusMessage, setStatusMessage] = useState('');
 
+  // Get authenticated user data
+  useEffect(() => {
+    const adminData = localStorage.getItem('adminData');
+    if (adminData) {
+      setUserData(JSON.parse(adminData));
+    }
+  }, []);
+
   const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+    setMessage(e.target.value);
   };
 
   const handleSendMessage = async (e) => {
     e.preventDefault();
 
     // Validation
-    if (!formData.name || !formData.email || !formData.message) {
-      setStatusMessage('Please fill in all fields');
+    if (!message) {
+      setStatusMessage('Please enter a message');
       setTimeout(() => setStatusMessage(''), 3000);
       return;
     }
 
-    // Basic email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(formData.email)) {
-      setStatusMessage('Please enter a valid email address');
+    if (!userData || !userData.email || !userData.full_name) {
+      setStatusMessage('User information not found. Please log in again.');
       setTimeout(() => setStatusMessage(''), 3000);
       return;
     }
@@ -48,9 +47,9 @@ function HelpSupport() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          name: formData.name,
-          email: formData.email,
-          message: formData.message,
+          name: userData.full_name,
+          email: userData.email,
+          message: message,
           to: 'osimapdatabase@gmail.com'
         }),
       });
@@ -59,12 +58,8 @@ function HelpSupport() {
 
       if (result.success) {
         setStatusMessage('Message sent successfully!');
-        // Clear form
-        setFormData({
-          name: '',
-          email: '',
-          message: ''
-        });
+        // Clear message
+        setMessage('');
         setTimeout(() => setStatusMessage(''), 5000);
       } else {
         setStatusMessage('Failed to send message. Please try again.');
@@ -156,6 +151,13 @@ function HelpSupport() {
             <div className="columnTwo">
               <h3>Ready to get started?</h3>
               
+              {userData && (
+                <div className="user-info">
+                  <p><strong>Name:</strong> {userData.full_name}</p>
+                  <p><strong>Email:</strong> {userData.email}</p>
+                </div>
+              )}
+
               {statusMessage && (
                 <div className={`status-message ${statusMessage.includes('success') ? 'success' : 'error'}`}>
                   {statusMessage}
@@ -163,27 +165,13 @@ function HelpSupport() {
               )}
 
               <form className="help-form" onSubmit={handleSendMessage}>
-                <input 
-                  type="text" 
-                  name="name"
-                  placeholder="Your Name" 
-                  value={formData.name}
-                  onChange={handleInputChange}
-                  disabled={isSending}
-                />
-                <input 
-                  type="email" 
-                  name="email"
-                  placeholder="Your Email Address" 
-                  value={formData.email}
-                  onChange={handleInputChange}
-                  disabled={isSending}
-                />
+                <label htmlFor="message-textarea" className="message-label">Your Message</label>
                 <textarea 
+                  id="message-textarea"
                   className="message-input" 
                   name="message"
-                  placeholder="Your Message" 
-                  value={formData.message}
+                  placeholder="Type your message here..." 
+                  value={message}
                   onChange={handleInputChange}
                   disabled={isSending}
                 />
