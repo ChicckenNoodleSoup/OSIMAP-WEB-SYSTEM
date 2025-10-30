@@ -40,6 +40,34 @@ function ForgotPassword() {
   
     setIsLoading(true);
     try {
+      // Check if the email exists and account is approved
+      const { data: userData, error: userError } = await supabase
+        .from('police')
+        .select('email, status, role')
+        .eq('email', email)
+        .single();
+
+      if (userError || !userData) {
+        setError('No account found with this email address.');
+        setIsLoading(false);
+        return;
+      }
+
+      // Check if account is approved (or if user is Administrator)
+      if (userData.role !== 'Administrator' && userData.status !== 'approved') {
+        if (userData.status === 'pending') {
+          setError('Your account is still pending approval. Please wait for administrator approval.');
+        } else if (userData.status === 'rejected') {
+          setError('Your account has been rejected. Please contact the administrator.');
+        } else if (userData.status === 'revoked') {
+          setError('Your account has been revoked. Please contact the administrator.');
+        } else {
+          setError('Your account is not approved for password reset.');
+        }
+        setIsLoading(false);
+        return;
+      }
+
       const otp = generateOTP();
   
       // Save OTP in Supabase table
@@ -108,10 +136,10 @@ function ForgotPassword() {
                     value={email}
                     onChange={handleEmailChange}
                   />
-                  {emailError && <p className="validation-error">{emailError}</p>}
+                  {(emailError || error) && (
+                    <p className="validation-error">{emailError || error}</p>
+                  )}
                 </div>
-
-                {error && <p className="validation-error">{error}</p>}
 
                 <button type="submit" disabled={isLoading}>
                   {isLoading ? 'Sending...' : 'Send OTP'}
