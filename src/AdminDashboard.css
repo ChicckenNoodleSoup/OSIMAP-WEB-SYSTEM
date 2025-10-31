@@ -6,14 +6,14 @@
 
 /* Scroll wrapper */
 .admindash-scroll-wrapper {
-  padding: 24px;
+  padding: 16px;
   min-height: 100vh;
   box-sizing: border-box;
 }
 
 /* Container */
 .admindash-container {
-  padding: 24px;
+  padding: 8px;
   max-width: 1400px;
   margin: 0 auto;
   box-sizing: border-box;
@@ -98,30 +98,30 @@
 .access-denied h2 { color: #ef4444; margin: 0; font-size: 1.6rem; font-weight: 700; }
 .access-denied p { color: #e6f2ff; margin: 0; font-size: 15px; line-height: 1.6; }
 
-/* Tab Navigation */
+/* Tab Navigation - Compact Design */
 .tab-navigation {
   display: flex;
-  gap: 12px;
-  margin-bottom: 22px;
-  padding: 8px;
+  gap: 8px;
+  margin-bottom: 12px;
+  padding: 4px;
   background: rgba(255,255,255,0.02);
   backdrop-filter: blur(8px);
-  border-radius: 16px;
+  border-radius: 10px;
   border: 1px solid rgba(255,255,255,0.04);
 }
 
 .tab-btn {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 12px 20px;
+  gap: 6px;
+  padding: 8px 14px;
   border: none;
   background: transparent;
   color: #e6f2ff;
-  font-size: 14px;
-  font-weight: 700;
+  font-size: 13px;
+  font-weight: 600;
   cursor: pointer;
-  border-radius: 12px;
+  border-radius: 8px;
   transition: all 0.2s ease;
   flex: 1;
   justify-content: center;
@@ -129,21 +129,21 @@
 
 .tab-btn:hover {
   background: rgba(0,133,255,0.12);
-  transform: translateY(-2px);
+  transform: translateY(-1px);
 }
 
 .tab-btn.active {
   background: rgba(0,133,255,0.22);
   color: #ffffff;
-  box-shadow: 0 8px 20px rgba(0,133,255,0.12);
+  box-shadow: 0 4px 12px rgba(0,133,255,0.12);
 }
 
 .tab-badge {
-  padding: 4px 10px;
+  padding: 2px 8px;
   background: rgba(0,133,255,0.18);
-  border-radius: 10px;
-  font-size: 13px;
-  font-weight: 800;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 700;
 }
 
 .tab-btn.active .tab-badge {
@@ -168,27 +168,27 @@
 .no-data p { font-size: 16px; margin: 0; color: #e6f2ff; }
 
 /* ===========================
-   Sub-Tab Navigation
+   Sub-Tab Navigation - Compact Design
    =========================== */
 
 .sub-tab-navigation {
   display: flex;
-  gap: 8px;
-  margin-bottom: 1.5rem;
-  padding: 0 4px;
+  gap: 6px;
+  margin-bottom: 12px;
+  padding: 0 2px;
 }
 
 .sub-tab-btn {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 10px 16px;
+  gap: 6px;
+  padding: 6px 12px;
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 12px;
+  border-radius: 8px;
   color: rgba(230, 242, 255, 0.7);
   font-weight: 500;
-  font-size: 14px;
+  font-size: 12px;
   cursor: pointer;
   transition: all 0.3s ease;
   flex: 1;
@@ -332,6 +332,41 @@
 /* ===========================
    Accounts: table-like grid (Legacy)
    =========================== */
+
+/* Scrollable wrapper for accounts table */
+.accounts-scrollable-wrapper {
+  max-height: clamp(400px, 65vh, 700px);
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 8px 4px;
+  margin-bottom: 16px;
+  border-radius: 12px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.3) rgba(241, 239, 236, 0.05);
+}
+
+.accounts-scrollable-wrapper::-webkit-scrollbar {
+  width: 10px;
+}
+
+.accounts-scrollable-wrapper::-webkit-scrollbar-track {
+  background: rgba(241, 239, 236, 0.05);
+  border-radius: 10px;
+}
+
+.accounts-scrollable-wrapper::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 10px;
+  backdrop-filter: blur(6px);
+  border: 2px solid rgba(241, 239, 236, 0.1);
+  transition: background 0.3s ease, transform 0.2s ease;
+}
+
+.accounts-scrollable-wrapper::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 133, 255, 0.6);
+  transform: scaleX(1.1);
+  box-shadow: 0 0 6px rgba(0, 133, 255, 0.6);
+}
 
 /* Container that visually wraps table */
 .accounts-table-container {
@@ -573,7 +608,45 @@
    Logs list (grid-like rows)
    =========================== */
 
-.logs-list { display: grid; gap: 12px; margin-top: 6px; }
+.logs-scrollable-wrapper {
+  max-height: clamp(400px, 65vh, 700px);
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 8px 4px;
+  margin-bottom: 16px;
+  border-radius: 12px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.3) rgba(241, 239, 236, 0.05);
+}
+
+.logs-scrollable-wrapper::-webkit-scrollbar {
+  width: 10px;
+}
+
+.logs-scrollable-wrapper::-webkit-scrollbar-track {
+  background: rgba(241, 239, 236, 0.05);
+  border-radius: 10px;
+}
+
+.logs-scrollable-wrapper::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 10px;
+  backdrop-filter: blur(6px);
+  border: 2px solid rgba(241, 239, 236, 0.1);
+  transition: background 0.3s ease, transform 0.2s ease;
+}
+
+.logs-scrollable-wrapper::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 133, 255, 0.6);
+  transform: scaleX(1.1);
+  box-shadow: 0 0 6px rgba(0, 133, 255, 0.6);
+}
+
+.logs-list { 
+  display: grid; 
+  gap: 12px; 
+  margin-top: 6px;
+}
 
 .log-card {
   background: rgba(255,255,255,0.03);

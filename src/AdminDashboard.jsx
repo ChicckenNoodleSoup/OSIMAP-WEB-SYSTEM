@@ -429,14 +429,15 @@ function AdminDashboard() {
               </div>
             ) : (
               <>
-                <div className="accounts-table-container">
-                  <div className="accounts-table-header">
-                    <div className="header-name">Name</div>
-                    <div className="header-status">Status</div>
-                    <div className="header-actions">Actions</div>
-                  </div>
-                  <div className="accounts-table-body">
-                    {getPaginatedAccounts().map((account) => (
+                <div className="accounts-scrollable-wrapper">
+                  <div className="accounts-table-container">
+                    <div className="accounts-table-header">
+                      <div className="header-name">Name</div>
+                      <div className="header-status">Status</div>
+                      <div className="header-actions">Actions</div>
+                    </div>
+                    <div className="accounts-table-body">
+                      {getPaginatedAccounts().map((account) => (
                       <div key={account.id} className="account-row">
                         <div className="account-name">
                           <div className="account-name-inner">
@@ -543,7 +544,8 @@ function AdminDashboard() {
                           )}
                         </div>
                       </div>
-                    ))}
+                      ))}
+                    </div>
                   </div>
                 </div>
                 
@@ -621,9 +623,10 @@ function AdminDashboard() {
               </div>
             ) : (
               <>
-                <div className="logs-list">
-                  {getPaginatedLogs().map((log) => (
-                  <div key={log.id} className="log-card">
+                <div className="logs-scrollable-wrapper">
+                  <div className="logs-list">
+                    {getPaginatedLogs().map((log) => (
+                    <div key={log.id} className="log-card">
                     <div className="log-info">
                       <div className="log-header">
                         <div className="log-user">
@@ -666,7 +669,8 @@ function AdminDashboard() {
                       </span>
                     </div>
                     </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
                 
                 {/* Logs Pagination */}
