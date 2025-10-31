@@ -127,6 +127,14 @@
   text-align: right;
 }
 
+.profile-hint {
+  font-size: 0.75rem;
+  color: rgba(241, 239, 236, 0.5);
+  font-style: italic;
+  margin: 0.25rem 0 0 0;
+  text-align: right;
+}
+
 /* Editable inputs */
 .profile-edit-input,
 .profile-edit-select {

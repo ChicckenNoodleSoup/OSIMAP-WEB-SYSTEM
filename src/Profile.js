@@ -36,7 +36,6 @@ function Profile() {
       setEditForm({
         fullName: userData.full_name,
         email: userData.email,
-        role: userData.role,
         station: userData.station || ''
       });
     }
@@ -99,11 +98,6 @@ function Profile() {
       return;
     }
 
-    if (!editForm.role) {
-      setMessage('Role is required.');
-      return;
-    }
-
     try {
       setIsLoading(true);
       
@@ -112,7 +106,6 @@ function Profile() {
         .update({
           full_name: editForm.fullName,
           email: editForm.email,
-          role: editForm.role,
           station: editForm.station
         })
         .eq('email', userData.email);
@@ -128,7 +121,6 @@ function Profile() {
         ...prev,
         full_name: editForm.fullName,
         email: editForm.email,
-        role: editForm.role,
         station: editForm.station
       }));
 
@@ -137,22 +129,20 @@ function Profile() {
         ...userData,
         full_name: editForm.fullName,
         email: editForm.email,
-        role: editForm.role,
         station: editForm.station
       };
       localStorage.setItem('adminData', JSON.stringify(updatedUserData));
-      localStorage.setItem('userRole', editForm.role);
 
       // Update context
       updateUser({
         fullName: editForm.fullName,
         email: editForm.email,
-        role: editForm.role,
+        role: userData.role,
         station: editForm.station
       });
 
       // Log profile update
-      const updateDetails = `Updated: ${editForm.fullName} (${editForm.email}) - Role: ${editForm.role}, Station: ${editForm.station}`;
+      const updateDetails = `Updated: ${editForm.fullName} (${editForm.email}) - Station: ${editForm.station}`;
       await logProfileEvent.updated(updateDetails);
 
       setIsEditing(false);
@@ -171,7 +161,6 @@ function Profile() {
       setEditForm({
         fullName: userData.full_name,
         email: userData.email,
-        role: userData.role,
         station: userData.station || ''
       });
     }
@@ -340,18 +329,7 @@ function Profile() {
 
               <div className="profile-item">
                 <p className="profile-label">🧑🏻‍✈️ Role</p>
-                {isEditing ? (
-                  <SingleSelectDropdown
-                    options={["Officer", "Supervisor", "Analyst"]}
-                    selectedValue={editForm.role || ''}
-                    onChange={(value) => setEditForm({ ...editForm, role: value })}
-                    placeholder="Select Role"
-                    allLabel="Select Role"
-                    allValue=""
-                  />
-                ) : (
-                  <p className="profile-value">{userData.role}</p>
-                )}
+                <p className="profile-value">{userData.role}</p>
               </div>
 
               <div className="profile-item">

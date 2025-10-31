@@ -91,7 +91,8 @@ export const logAccountEvent = {
   rejected: (userId, details = 'Status changed from pending to rejected') => logUserActivity('Account rejected by administrator', 'WARNING', details),
   revoked: (userId, details = 'Status changed from approved to revoked') => logUserActivity('Account revoked by administrator', 'WARNING', details),
   deleted: (userId, details = 'Account permanently removed from system') => logUserActivity('Account deleted by administrator', 'WARNING', details),
-  undone: (userId, details = 'Status reverted to previous state') => logUserActivity('Account status undone by administrator', 'INFO', details)
+  undone: (userId, details = 'Status reverted to previous state') => logUserActivity('Account status undone by administrator', 'INFO', details),
+  roleUpdated: (userId, details = 'User role updated') => logUserActivity('User role updated by administrator', 'INFO', details)
 };
 
 /**
