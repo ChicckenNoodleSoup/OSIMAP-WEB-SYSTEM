@@ -231,6 +231,13 @@ function Print() {
     setIsPrinting(false);
   };
 
+  const handleClearFilters = () => {
+    setStartDate('');
+    setEndDate('');
+    setSelectedBarangay('');
+    setSelectedSeverity('');
+  };
+
   // Calculate stats for ALL barangays (for percentage calculations)
   const allBarangaysAccidents = accidents.filter(a => {
     const inDateRange =
@@ -366,7 +373,16 @@ function Print() {
                 Available date range: {minDate} to {maxDate}
               </p>
             )}
-            <div className="mt-4">
+            <div className="mt-4 flex gap-4 items-start">
+              <button
+                onClick={handleClearFilters}
+                disabled={isPrinting || (!startDate && !endDate && !selectedBarangay && !selectedSeverity)}
+                className={`clear-btn px-6 py-2 rounded 
+                  ${isPrinting || (!startDate && !endDate && !selectedBarangay && !selectedSeverity) ? 'opacity-50 cursor-not-allowed' : ''}`}
+              >
+                Clear Filters
+              </button>
+
               <button
                 onClick={handlePrint}
                 disabled={isPrinting}

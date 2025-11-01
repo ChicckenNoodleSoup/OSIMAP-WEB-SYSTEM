@@ -97,6 +97,16 @@
   box-shadow: 0 6px 18px rgba(31,122,53,0.22);
 }
 
+.frosted-container .clear-btn {
+  background: linear-gradient(180deg, #6c757d, #495057);
+  color: white;
+  box-shadow: 0 6px 18px rgba(108, 117, 125, 0.22);
+}
+
+.frosted-container .clear-btn:hover {
+  box-shadow: 0 8px 20px rgba(108, 117, 125, 0.35);
+}
+
 .frosted-container .print-btn {
   background: linear-gradient(180deg,#2563eb,#1e47b7);
   color: white;
