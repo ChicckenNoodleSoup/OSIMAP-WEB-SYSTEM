@@ -30,6 +30,7 @@ function AdminDashboard() {
   // Pagination states
   const [accountsCurrentPage, setAccountsCurrentPage] = useState(1);
   const [logsCurrentPage, setLogsCurrentPage] = useState(1);
+  const [rolesCurrentPage, setRolesCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
   // Role assignment state
@@ -69,6 +70,20 @@ function AdminDashboard() {
     setAccountsCurrentPage(1);
   }, [accountsSubTab]);
 
+  // Get accounts for current sub-tab (must be defined before using it)
+  const getAccountsForCurrentTab = () => {
+    if (accountsSubTab === 'rejected') {
+      return allAccounts.filter(account => 
+        account.status === 'rejected' || account.status === 'revoked'
+      );
+    } else if (accountsSubTab === 'pending') {
+      return allAccounts.filter(account => account.status === 'pending');
+    } else if (accountsSubTab === 'approved') {
+      return allAccounts.filter(account => account.status === 'approved');
+    }
+    return [];
+  };
+
   // Pagination logic
   const getPaginatedAccounts = () => {
     const accountsForCurrentTab = getAccountsForCurrentTab();
@@ -83,19 +98,23 @@ function AdminDashboard() {
     return userLogs.slice(startIndex, endIndex);
   };
 
-  // Get accounts for current sub-tab
-  const getAccountsForCurrentTab = () => {
-    if (accountsSubTab === 'rejected') {
-      return allAccounts.filter(account => 
-        account.status === 'rejected' || account.status === 'revoked'
-      );
-    } else if (accountsSubTab === 'pending') {
-      return allAccounts.filter(account => account.status === 'pending');
-    } else if (accountsSubTab === 'approved') {
-      return allAccounts.filter(account => account.status === 'approved');
-    }
-    return [];
+  const approvedAccountsForRoles = allAccounts.filter(acc => acc.status === 'approved');
+  
+  const getPaginatedRoles = () => {
+    const startIndex = (rolesCurrentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    return approvedAccountsForRoles.slice(startIndex, endIndex);
   };
+
+  // Calculate display ranges
+  const accountsDisplayStart = getAccountsForCurrentTab().length > 0 ? ((accountsCurrentPage - 1) * itemsPerPage) + 1 : 0;
+  const accountsDisplayEnd = Math.min(accountsCurrentPage * itemsPerPage, getAccountsForCurrentTab().length);
+
+  const logsDisplayStart = userLogs.length > 0 ? ((logsCurrentPage - 1) * itemsPerPage) + 1 : 0;
+  const logsDisplayEnd = Math.min(logsCurrentPage * itemsPerPage, userLogs.length);
+
+  const rolesDisplayStart = approvedAccountsForRoles.length > 0 ? ((rolesCurrentPage - 1) * itemsPerPage) + 1 : 0;
+  const rolesDisplayEnd = Math.min(rolesCurrentPage * itemsPerPage, approvedAccountsForRoles.length);
 
   // Organize accounts by status
   const getAccountsByStatus = () => {
@@ -110,6 +129,7 @@ function AdminDashboard() {
 
   const accountsTotalPages = Math.ceil(getAccountsForCurrentTab().length / itemsPerPage);
   const logsTotalPages = Math.ceil(userLogs.length / itemsPerPage);
+  const rolesTotalPages = Math.ceil(approvedAccountsForRoles.length / itemsPerPage);
 
   const fetchAllAccounts = async () => {
     try {
@@ -712,43 +732,49 @@ function AdminDashboard() {
                   </div>
                 </div>
                 
-                {/* Accounts Pagination */}
-                {accountsTotalPages > 1 && (
-                  <div className="pagination">
-                    <button
-                      onClick={() => setAccountsCurrentPage(prev => Math.max(prev - 1, 1))}
-                      disabled={accountsCurrentPage === 1}
-                      className="pagination-btn"
-                    >
-                      ⬅ Prev
-                    </button>
-                    
-                    {Array.from({ length: accountsTotalPages }, (_, i) => i + 1)
-                      .slice(
-                        Math.max(0, accountsCurrentPage - 3),
-                        Math.min(accountsTotalPages, accountsCurrentPage + 2)
-                      )
-                      .map((pageNum) => (
-                        <button
-                          key={pageNum}
-                          onClick={() => setAccountsCurrentPage(pageNum)}
-                          className={`pagination-number ${
-                            accountsCurrentPage === pageNum ? "active" : ""
-                          }`}
-                        >
-                          {pageNum}
-                        </button>
-                      ))}
-                    
-                    <button
-                      onClick={() => setAccountsCurrentPage(prev => Math.min(prev + 1, accountsTotalPages))}
-                      disabled={accountsCurrentPage === accountsTotalPages}
-                      className="pagination-btn"
-                    >
-                      Next ➡
-                    </button>
+                {/* Accounts Pagination and Count */}
+                <div className="pagination-wrapper">
+                  <div className="record-count">
+                    Showing {accountsDisplayStart}-{accountsDisplayEnd} of {getAccountsForCurrentTab().length} accounts
                   </div>
-                )}
+                  
+                  {accountsTotalPages > 1 && (
+                    <div className="pagination">
+                      <button
+                        onClick={() => setAccountsCurrentPage(prev => Math.max(prev - 1, 1))}
+                        disabled={accountsCurrentPage === 1}
+                        className="pagination-btn"
+                      >
+                        ⬅ Prev
+                      </button>
+                      
+                      {Array.from({ length: accountsTotalPages }, (_, i) => i + 1)
+                        .slice(
+                          Math.max(0, accountsCurrentPage - 3),
+                          Math.min(accountsTotalPages, accountsCurrentPage + 2)
+                        )
+                        .map((pageNum) => (
+                          <button
+                            key={pageNum}
+                            onClick={() => setAccountsCurrentPage(pageNum)}
+                            className={`pagination-number ${
+                              accountsCurrentPage === pageNum ? "active" : ""
+                            }`}
+                          >
+                            {pageNum}
+                          </button>
+                        ))}
+                      
+                      <button
+                        onClick={() => setAccountsCurrentPage(prev => Math.min(prev + 1, accountsTotalPages))}
+                        disabled={accountsCurrentPage === accountsTotalPages}
+                        className="pagination-btn"
+                      >
+                        Next ➡
+                      </button>
+                    </div>
+                  )}
+                </div>
               </>
             )}
           </>
@@ -836,43 +862,49 @@ function AdminDashboard() {
                   </div>
                 </div>
                 
-                {/* Logs Pagination */}
-                {logsTotalPages > 1 && (
-                  <div className="pagination">
-                    <button
-                      onClick={() => setLogsCurrentPage(prev => Math.max(prev - 1, 1))}
-                      disabled={logsCurrentPage === 1}
-                      className="pagination-btn"
-                    >
-                      ⬅ Prev
-                    </button>
-                    
-                    {Array.from({ length: logsTotalPages }, (_, i) => i + 1)
-                      .slice(
-                        Math.max(0, logsCurrentPage - 3),
-                        Math.min(logsTotalPages, logsCurrentPage + 2)
-                      )
-                      .map((pageNum) => (
-                        <button
-                          key={pageNum}
-                          onClick={() => setLogsCurrentPage(pageNum)}
-                          className={`pagination-number ${
-                            logsCurrentPage === pageNum ? "active" : ""
-                          }`}
-                        >
-                          {pageNum}
-                        </button>
-                      ))}
-                    
-                    <button
-                      onClick={() => setLogsCurrentPage(prev => Math.min(prev + 1, logsTotalPages))}
-                      disabled={logsCurrentPage === logsTotalPages}
-                      className="pagination-btn"
-                    >
-                      Next ➡
-                    </button>
+                {/* Logs Pagination and Count */}
+                <div className="pagination-wrapper">
+                  <div className="record-count">
+                    Showing {logsDisplayStart}-{logsDisplayEnd} of {userLogs.length} logs
                   </div>
-                )}
+                  
+                  {logsTotalPages > 1 && (
+                    <div className="pagination">
+                      <button
+                        onClick={() => setLogsCurrentPage(prev => Math.max(prev - 1, 1))}
+                        disabled={logsCurrentPage === 1}
+                        className="pagination-btn"
+                      >
+                        ⬅ Prev
+                      </button>
+                      
+                      {Array.from({ length: logsTotalPages }, (_, i) => i + 1)
+                        .slice(
+                          Math.max(0, logsCurrentPage - 3),
+                          Math.min(logsTotalPages, logsCurrentPage + 2)
+                        )
+                        .map((pageNum) => (
+                          <button
+                            key={pageNum}
+                            onClick={() => setLogsCurrentPage(pageNum)}
+                            className={`pagination-number ${
+                              logsCurrentPage === pageNum ? "active" : ""
+                            }`}
+                          >
+                            {pageNum}
+                          </button>
+                        ))}
+                      
+                      <button
+                        onClick={() => setLogsCurrentPage(prev => Math.min(prev + 1, logsTotalPages))}
+                        disabled={logsCurrentPage === logsTotalPages}
+                        className="pagination-btn"
+                      >
+                        Next ➡
+                      </button>
+                    </div>
+                  )}
+                </div>
               </>
             )}
           </>
@@ -883,7 +915,7 @@ function AdminDashboard() {
           <div className="role-assignment-section">
             <div className="role-assignment-container">
               <div className="users-list-scrollable">
-                {allAccounts.filter(acc => acc.status === 'approved').map((account) => (
+                {getPaginatedRoles().map((account) => (
                   <div key={account.id} className="role-user-card">
                     <div className="role-user-info">
                       <User size={18} className="user-icon" />
@@ -918,6 +950,50 @@ function AdminDashboard() {
                   </div>
                 ))}
               </div>
+            </div>
+            
+            {/* Roles Pagination and Count */}
+            <div className="pagination-wrapper">
+              <div className="record-count">
+                Showing {rolesDisplayStart}-{rolesDisplayEnd} of {approvedAccountsForRoles.length} users
+              </div>
+              
+              {rolesTotalPages > 1 && (
+                <div className="pagination">
+                  <button
+                    onClick={() => setRolesCurrentPage(prev => Math.max(prev - 1, 1))}
+                    disabled={rolesCurrentPage === 1}
+                    className="pagination-btn"
+                  >
+                    ⬅ Prev
+                  </button>
+                  
+                  {Array.from({ length: rolesTotalPages }, (_, i) => i + 1)
+                    .slice(
+                      Math.max(0, rolesCurrentPage - 3),
+                      Math.min(rolesTotalPages, rolesCurrentPage + 2)
+                    )
+                    .map((pageNum) => (
+                      <button
+                        key={pageNum}
+                        onClick={() => setRolesCurrentPage(pageNum)}
+                        className={`pagination-number ${
+                          rolesCurrentPage === pageNum ? "active" : ""
+                        }`}
+                      >
+                        {pageNum}
+                      </button>
+                    ))}
+                  
+                  <button
+                    onClick={() => setRolesCurrentPage(prev => Math.min(prev + 1, rolesTotalPages))}
+                    disabled={rolesCurrentPage === rolesTotalPages}
+                    className="pagination-btn"
+                  >
+                    Next ➡
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         )}

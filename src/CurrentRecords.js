@@ -5,6 +5,7 @@ import "./PageHeader.css";
 import { DateTime } from "./DateTime";
 import { createClient } from "@supabase/supabase-js";
 import { useNavigate } from "react-router-dom";
+import SingleSelectDropdown from "./SingleSelectDropdown";
 
 const SUPABASE_URL = process.env.REACT_APP_SUPABASE_URL;
 const SUPABASE_KEY = process.env.REACT_APP_SUPABASE_KEY;
@@ -17,6 +18,12 @@ function CurrentRecords() {
   const [currentPage, setCurrentPage] = useState(1);
   const recordsPerPage = 50;
   const navigate = useNavigate();
+  
+  // Filter states
+  const [selectedBarangay, setSelectedBarangay] = useState("all");
+  const [selectedSeverity, setSelectedSeverity] = useState("all");
+  const [barangayList, setBarangayList] = useState([]);
+  const [sortBy, setSortBy] = useState("date-desc"); // date-desc, date-asc, severity
 
   useEffect(() => {
     const fetchAllRecords = async () => {
@@ -50,14 +57,27 @@ function CurrentRecords() {
       }
 
       setRecords(allRecords);
+      
+      // Extract unique barangays for filter
+      const uniqueBarangays = [...new Set(allRecords.map(r => r.barangay).filter(Boolean))].sort();
+      setBarangayList(uniqueBarangays);
+      
       setLoading(false);
     };
 
     fetchAllRecords();
   }, []);
 
-  const filteredRecords = records.filter((record) =>
-    [
+  // Apply filters and search
+  const filteredRecords = records.filter((record) => {
+    // Barangay filter
+    const matchesBarangay = selectedBarangay === "all" || record.barangay === selectedBarangay;
+    
+    // Severity filter
+    const matchesSeverity = selectedSeverity === "all" || record.severity === selectedSeverity;
+    
+    // Search filter - only search if searchTerm exists
+    const matchesSearch = !searchTerm || [
       record.id?.toString(),
       record.datecommitted,
       record.timecommitted,
@@ -71,16 +91,35 @@ function CurrentRecords() {
       .filter(Boolean)
       .some((field) =>
         String(field).toLowerCase().includes(searchTerm.toLowerCase())
-      )
-  );
+      );
+    
+    return matchesBarangay && matchesSeverity && matchesSearch;
+  });
 
-  const totalPages = Math.ceil(filteredRecords.length / recordsPerPage);
+  // Apply sorting
+  const sortedRecords = [...filteredRecords].sort((a, b) => {
+    if (sortBy === 'date-desc') {
+      return new Date(b.datecommitted) - new Date(a.datecommitted);
+    } else if (sortBy === 'date-asc') {
+      return new Date(a.datecommitted) - new Date(b.datecommitted);
+    } else if (sortBy === 'severity') {
+      const severityOrder = { 'Critical': 1, 'High': 2, 'Medium': 3, 'Low': 4, 'Minor': 5 };
+      return (severityOrder[a.severity] || 99) - (severityOrder[b.severity] || 99);
+    }
+    return 0;
+  });
+
+  const totalPages = Math.ceil(sortedRecords.length / recordsPerPage);
   const indexOfLastRecord = currentPage * recordsPerPage;
   const indexOfFirstRecord = indexOfLastRecord - recordsPerPage;
-  const currentRecords = filteredRecords.slice(
+  const currentRecords = sortedRecords.slice(
     indexOfFirstRecord,
     indexOfLastRecord
   );
+
+  // Calculate display range
+  const displayStart = sortedRecords.length > 0 ? indexOfFirstRecord + 1 : 0;
+  const displayEnd = Math.min(indexOfLastRecord, sortedRecords.length);
 
   const handleRowClick = (record) => {
     if (record.lat && record.lng) {
@@ -182,41 +221,67 @@ function CurrentRecords() {
           </div>
         </div>
 
-        <div className="pagination">
-          <button
-            onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-            disabled={currentPage === 1}
-            className="pagination-btn"
-          >
-            ⬅ Prev
-          </button>
+        {/* Filters and Sort Section */}
+        <div className="filters-section">
+          <div className="filters-container">
+            <div className="filter-group">
+              <label className="filter-label">Barangay</label>
+              <SingleSelectDropdown
+                options={barangayList}
+                selectedValue={selectedBarangay}
+                onChange={(value) => {
+                  setSelectedBarangay(value);
+                  setCurrentPage(1);
+                }}
+                placeholder="All Barangays"
+                allLabel="All Barangays"
+                allValue="all"
+              />
+            </div>
 
-          {Array.from({ length: totalPages }, (_, i) => i + 1)
-            .slice(
-              Math.max(0, currentPage - 3),
-              Math.min(totalPages, currentPage + 2)
-            )
-            .map((pageNum) => (
-              <button
-                key={pageNum}
-                onClick={() => setCurrentPage(pageNum)}
-                className={`pagination-number ${
-                  currentPage === pageNum ? "active" : ""
-                }`}
+            <div className="filter-group">
+              <label className="filter-label">Severity</label>
+              <SingleSelectDropdown
+                options={['Critical', 'High', 'Medium', 'Low', 'Minor']}
+                selectedValue={selectedSeverity}
+                onChange={(value) => {
+                  setSelectedSeverity(value);
+                  setCurrentPage(1);
+                }}
+                placeholder="All Severities"
+                allLabel="All Severities"
+                allValue="all"
+              />
+            </div>
+
+            <div className="filter-group">
+              <label className="filter-label">Sort By</label>
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                className="sort-select"
               >
-                {pageNum}
-              </button>
-            ))}
+                <option value="date-desc">Date (Newest First)</option>
+                <option value="date-asc">Date (Oldest First)</option>
+                <option value="severity">Severity (High to Low)</option>
+              </select>
+            </div>
 
-          <button
-            onClick={() =>
-              setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-            }
-            disabled={currentPage === totalPages}
-            className="pagination-btn"
-          >
-            Next ➡
-          </button>
+            <button
+              onClick={() => {
+                setSelectedBarangay("all");
+                setSelectedSeverity("all");
+                setSortBy("date-desc");
+                setSearchTerm("");
+                setCurrentPage(1);
+              }}
+              className="clear-filters-btn"
+              disabled={selectedBarangay === "all" && selectedSeverity === "all" && sortBy === "date-desc" && !searchTerm}
+            >
+              Clear All Filters
+            </button>
+          </div>
+
         </div>
 
         <div className="records-card">
@@ -282,6 +347,53 @@ function CurrentRecords() {
               </table>
             </div>
           )}
+        </div>
+
+        {/* Pagination and Record Count */}
+        <div className="pagination-wrapper">
+          <div className="record-count">
+            Showing {displayStart}-{displayEnd} of {sortedRecords.length} records
+            {sortedRecords.length !== records.length && (
+              <span className="filtered-indicator"> (filtered from {records.length} total)</span>
+            )}
+          </div>
+          
+          <div className="pagination">
+            <button
+              onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+              disabled={currentPage === 1}
+              className="pagination-btn"
+            >
+              ⬅ Prev
+            </button>
+
+            {Array.from({ length: totalPages }, (_, i) => i + 1)
+              .slice(
+                Math.max(0, currentPage - 3),
+                Math.min(totalPages, currentPage + 2)
+              )
+              .map((pageNum) => (
+                <button
+                  key={pageNum}
+                  onClick={() => setCurrentPage(pageNum)}
+                  className={`pagination-number ${
+                    currentPage === pageNum ? "active" : ""
+                  }`}
+                >
+                  {pageNum}
+                </button>
+              ))}
+
+            <button
+              onClick={() =>
+                setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+              }
+              disabled={currentPage === totalPages}
+              className="pagination-btn"
+            >
+              Next ➡
+            </button>
+          </div>
         </div>
       </div>
     </div>

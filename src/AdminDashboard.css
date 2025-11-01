@@ -335,7 +335,7 @@
 
 /* Scrollable wrapper for accounts table */
 .accounts-scrollable-wrapper {
-  max-height: clamp(400px, 65vh, 700px);
+  max-height: clamp(400px, 60vh, 650px);
   overflow-y: auto;
   overflow-x: hidden;
   padding: 8px 4px;
@@ -609,7 +609,7 @@
    =========================== */
 
 .logs-scrollable-wrapper {
-  max-height: clamp(400px, 65vh, 700px);
+  max-height: clamp(400px, 60vh, 650px);
   overflow-y: auto;
   overflow-x: hidden;
   padding: 8px 4px;
@@ -1145,6 +1145,22 @@
   opacity: 0.5;
   cursor: not-allowed;
   transform: none;
+}
+
+/* Pagination wrapper for record count + pagination */
+.pagination-wrapper {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 1rem;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.record-count {
+  font-size: 0.95rem;
+  color: #dbefff;
+  font-weight: 500;
 }
 
 /* Preserve older light-mode defaults for non-glass areas (in case base used them) */
