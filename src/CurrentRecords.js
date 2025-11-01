@@ -6,6 +6,7 @@ import { DateTime } from "./DateTime";
 import { createClient } from "@supabase/supabase-js";
 import { useNavigate } from "react-router-dom";
 import SingleSelectDropdown from "./SingleSelectDropdown";
+import { isAdministrator } from "./utils/authUtils";
 
 const SUPABASE_URL = process.env.REACT_APP_SUPABASE_URL;
 const SUPABASE_KEY = process.env.REACT_APP_SUPABASE_KEY;
@@ -23,7 +24,28 @@ function CurrentRecords() {
   const [selectedBarangay, setSelectedBarangay] = useState("all");
   const [selectedSeverity, setSelectedSeverity] = useState("all");
   const [barangayList, setBarangayList] = useState([]);
-  const [sortBy, setSortBy] = useState("date-desc"); // date-desc, date-asc, severity
+  const [sortBy, setSortBy] = useState("date-desc"); // date-desc, date-asc, severity, severity-asc
+  
+  // CRUD states
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+  const [modalMode, setModalMode] = useState('create'); // 'create' or 'edit'
+  const [editingRecord, setEditingRecord] = useState(null);
+  const [formData, setFormData] = useState({
+    barangay: '',
+    lat: '',
+    lng: '',
+    datecommitted: '',
+    timecommitted: '',
+    offensetype: '',
+    severity: '',
+    year: ''
+  });
+  const [message, setMessage] = useState('');
+
+  useEffect(() => {
+    setIsAdmin(isAdministrator());
+  }, []);
 
   useEffect(() => {
     const fetchAllRecords = async () => {
@@ -105,6 +127,9 @@ function CurrentRecords() {
     } else if (sortBy === 'severity') {
       const severityOrder = { 'Critical': 1, 'High': 2, 'Medium': 3, 'Low': 4, 'Minor': 5 };
       return (severityOrder[a.severity] || 99) - (severityOrder[b.severity] || 99);
+    } else if (sortBy === 'severity-asc') {
+      const severityOrder = { 'Critical': 1, 'High': 2, 'Medium': 3, 'Low': 4, 'Minor': 5 };
+      return (severityOrder[b.severity] || 99) - (severityOrder[a.severity] || 99);
     }
     return 0;
   });
@@ -133,6 +158,122 @@ function CurrentRecords() {
       });
     }
   };  
+
+  const handleCreate = () => {
+    setModalMode('create');
+    setFormData({
+      barangay: '',
+      lat: '',
+      lng: '',
+      datecommitted: '',
+      timecommitted: '',
+      offensetype: '',
+      severity: '',
+      year: new Date().getFullYear().toString()
+    });
+    setShowModal(true);
+  };
+
+  const handleEdit = (record) => {
+    setModalMode('edit');
+    setEditingRecord(record);
+    setFormData({
+      barangay: record.barangay || '',
+      lat: record.lat || '',
+      lng: record.lng || '',
+      datecommitted: record.datecommitted || '',
+      timecommitted: record.timecommitted || '',
+      offensetype: record.offensetype || '',
+      severity: record.severity || '',
+      year: record.year?.toString() || ''
+    });
+    setShowModal(true);
+  };
+
+  const handleDelete = async (recordId) => {
+    if (!window.confirm('Are you sure you want to delete this record? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('road_traffic_accident')
+        .delete()
+        .eq('id', recordId);
+
+      if (error) {
+        setMessage('Error deleting record');
+        console.error('Error:', error);
+        return;
+      }
+
+      setMessage('Record deleted successfully');
+      setTimeout(() => setMessage(''), 3000);
+      
+      // Refresh records
+      setRecords(records.filter(r => r.id !== recordId));
+    } catch (error) {
+      console.error('Error:', error);
+      setMessage('Error deleting record');
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    try {
+      if (modalMode === 'create') {
+        const { error } = await supabase
+          .from('road_traffic_accident')
+          .insert([{
+            ...formData,
+            lat: parseFloat(formData.lat),
+            lng: parseFloat(formData.lng),
+            year: parseInt(formData.year)
+          }]);
+
+        if (error) {
+          setMessage('Error creating record');
+          console.error('Error:', error);
+          return;
+        }
+
+        setMessage('Record created successfully');
+      } else {
+        const { error } = await supabase
+          .from('road_traffic_accident')
+          .update({
+            ...formData,
+            lat: parseFloat(formData.lat),
+            lng: parseFloat(formData.lng),
+            year: parseInt(formData.year)
+          })
+          .eq('id', editingRecord.id);
+
+        if (error) {
+          setMessage('Error updating record');
+          console.error('Error:', error);
+          return;
+        }
+
+        setMessage('Record updated successfully');
+      }
+
+      setTimeout(() => setMessage(''), 3000);
+      setShowModal(false);
+      
+      // Refresh records - simple reload
+      window.location.reload();
+    } catch (error) {
+      console.error('Error:', error);
+      setMessage('Error saving record');
+    }
+  };
+
+  const closeModal = () => {
+    setShowModal(false);
+    setEditingRecord(null);
+  };
   
 
 
@@ -191,35 +332,11 @@ function CurrentRecords() {
           <DateTime />
         </div>
 
-        <div className="search-actions">
-          <div className="search-container">
-            <svg
-              className="search-icon"
-              xmlns="http://www.w3.org/2000/svg"
-              width="16"
-              height="16"
-              fill="currentColor"
-              viewBox="0 0 16 16"
-            >
-              <path
-                d="M11.742 10.344a6.5 6.5 0 1 0-1.397 
-                1.398h-.001l3.85 3.85a1 1 0 0 0 
-                1.415-1.414l-3.85-3.85zm-5.242.656a5 
-                5 0 1 1 0-10 5 5 0 0 1 0 10z"
-              />
-            </svg>
-            <input
-              type="text"
-              placeholder="Search records..."
-              value={searchTerm}
-              onChange={(e) => {
-                setSearchTerm(e.target.value);
-                setCurrentPage(1);
-              }}
-              className="search-input"
-            />
+        {message && (
+          <div className={`message ${message.includes('Error') ? 'error' : 'success'}`}>
+            {message}
           </div>
-        </div>
+        )}
 
         {/* Filters and Sort Section */}
         <div className="filters-section">
@@ -264,10 +381,11 @@ function CurrentRecords() {
                 <option value="date-desc">Date (Newest First)</option>
                 <option value="date-asc">Date (Oldest First)</option>
                 <option value="severity">Severity (High to Low)</option>
+                <option value="severity-asc">Severity (Low to High)</option>
               </select>
             </div>
 
-            <button
+          <button
               onClick={() => {
                 setSelectedBarangay("all");
                 setSelectedSeverity("all");
@@ -279,9 +397,45 @@ function CurrentRecords() {
               disabled={selectedBarangay === "all" && selectedSeverity === "all" && sortBy === "date-desc" && !searchTerm}
             >
               Clear All Filters
-            </button>
+          </button>
           </div>
+        </div>
 
+        {/* Search Bar and Add New Record Button */}
+        <div className="search-actions">
+          {isAdmin && (
+            <button onClick={handleCreate} className="add-record-btn">
+              + Add New Record
+            </button>
+          )}
+          
+          <div className="search-container">
+            <svg
+              className="search-icon"
+              xmlns="http://www.w3.org/2000/svg"
+              width="16"
+              height="16"
+              fill="currentColor"
+              viewBox="0 0 16 16"
+            >
+              <path
+                d="M11.742 10.344a6.5 6.5 0 1 0-1.397 
+                1.398h-.001l3.85 3.85a1 1 0 0 0 
+                1.415-1.414l-3.85-3.85zm-5.242.656a5 
+                5 0 1 1 0-10 5 5 0 0 1 0 10z"
+              />
+            </svg>
+            <input
+              type="text"
+              placeholder="Search records..."
+              value={searchTerm}
+              onChange={(e) => {
+                setSearchTerm(e.target.value);
+                setCurrentPage(1);
+              }}
+              className="search-input"
+            />
+          </div>
         </div>
 
         <div className="records-card">
@@ -320,25 +474,50 @@ function CurrentRecords() {
                     <th>Longitude</th>
                     <th>Offense Type</th>
                     <th>Severity</th>
+                    {isAdmin && <th>Actions</th>}
                   </tr>
                 </thead>
                 <tbody>
                   {currentRecords.length > 0 ? (
                     currentRecords.map((record) => (
-                      <tr key={record.id} onClick={() => handleRowClick(record)}>
-                        <td>{record.id}</td>
-                        <td>{record.datecommitted}</td>
-                        <td>{record.timecommitted}</td>
-                        <td>{record.barangay}</td>
-                        <td>{record.lat}</td>
-                        <td>{record.lng}</td>
-                        <td>{record.offensetype}</td>
-                        <td>{record.severity}</td>
+                      <tr key={record.id}>
+                        <td onClick={() => handleRowClick(record)} style={{cursor: 'pointer'}}>{record.id}</td>
+                        <td onClick={() => handleRowClick(record)} style={{cursor: 'pointer'}}>{record.datecommitted}</td>
+                        <td onClick={() => handleRowClick(record)} style={{cursor: 'pointer'}}>{record.timecommitted}</td>
+                        <td onClick={() => handleRowClick(record)} style={{cursor: 'pointer'}}>{record.barangay}</td>
+                        <td onClick={() => handleRowClick(record)} style={{cursor: 'pointer'}}>{record.lat}</td>
+                        <td onClick={() => handleRowClick(record)} style={{cursor: 'pointer'}}>{record.lng}</td>
+                        <td onClick={() => handleRowClick(record)} style={{cursor: 'pointer'}}>{record.offensetype}</td>
+                        <td onClick={() => handleRowClick(record)} style={{cursor: 'pointer'}}>{record.severity}</td>
+                        {isAdmin && (
+                          <td className="action-cell">
+                            <button 
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleEdit(record);
+                              }}
+                              className="edit-btn-small"
+                              title="Edit"
+                            >
+                              ✏️
+                            </button>
+                            <button 
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDelete(record.id);
+                              }}
+                              className="delete-btn-small"
+                              title="Delete"
+                            >
+                              🗑️
+                            </button>
+                          </td>
+                        )}
                       </tr>
                     ))
                   ) : (
                     <tr>
-                      <td colSpan="9" className="no-records">
+                      <td colSpan={isAdmin ? "9" : "8"} className="no-records">
                         No records found
                       </td>
                     </tr>
@@ -395,6 +574,118 @@ function CurrentRecords() {
             </button>
           </div>
         </div>
+
+        {/* Modal for Create/Edit */}
+        {showModal && (
+          <div className="modal-overlay" onClick={closeModal}>
+            <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+              <h2 className="modal-title">{modalMode === 'create' ? 'Add New Record' : 'Edit Record'}</h2>
+              
+              <form onSubmit={handleSubmit} className="record-form">
+                <div className="form-grid">
+                  <div className="form-field">
+                    <label>Barangay *</label>
+                    <input
+                      type="text"
+                      value={formData.barangay}
+                      onChange={(e) => setFormData({...formData, barangay: e.target.value})}
+                      required
+                    />
+                  </div>
+
+                  <div className="form-field">
+                    <label>Date Committed *</label>
+                    <input
+                      type="date"
+                      value={formData.datecommitted}
+                      onChange={(e) => setFormData({...formData, datecommitted: e.target.value})}
+                      required
+                    />
+                  </div>
+
+                  <div className="form-field">
+                    <label>Time Committed</label>
+                    <input
+                      type="time"
+                      value={formData.timecommitted}
+                      onChange={(e) => setFormData({...formData, timecommitted: e.target.value})}
+                    />
+                  </div>
+
+                  <div className="form-field">
+                    <label>Latitude *</label>
+                    <input
+                      type="number"
+                      step="any"
+                      value={formData.lat}
+                      onChange={(e) => setFormData({...formData, lat: e.target.value})}
+                      required
+                    />
+                  </div>
+
+                  <div className="form-field">
+                    <label>Longitude *</label>
+                    <input
+                      type="number"
+                      step="any"
+                      value={formData.lng}
+                      onChange={(e) => setFormData({...formData, lng: e.target.value})}
+                      required
+                    />
+                  </div>
+
+                  <div className="form-field">
+                    <label>Offense Type *</label>
+                    <input
+                      type="text"
+                      value={formData.offensetype}
+                      onChange={(e) => setFormData({...formData, offensetype: e.target.value})}
+                      required
+                    />
+                  </div>
+
+                  <div className="form-field">
+                    <label>Severity *</label>
+                    <select
+                      value={formData.severity}
+                      onChange={(e) => setFormData({...formData, severity: e.target.value})}
+                      required
+                      className="form-select"
+                    >
+                      <option value="">Select Severity</option>
+                      <option value="Critical">Critical</option>
+                      <option value="High">High</option>
+                      <option value="Medium">Medium</option>
+                      <option value="Low">Low</option>
+                      <option value="Minor">Minor</option>
+                    </select>
+                  </div>
+
+                  <div className="form-field">
+                    <label>Year *</label>
+                    <input
+                      type="number"
+                      value={formData.year}
+                      onChange={(e) => setFormData({...formData, year: e.target.value})}
+                      required
+                      min="2000"
+                      max="2099"
+                    />
+                  </div>
+                </div>
+
+                <div className="modal-actions">
+                  <button type="button" onClick={closeModal} className="cancel-btn">
+                    Cancel
+                  </button>
+                  <button type="submit" className="submit-btn">
+                    {modalMode === 'create' ? 'Create Record' : 'Update Record'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
