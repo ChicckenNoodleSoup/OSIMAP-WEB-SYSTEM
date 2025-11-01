@@ -148,43 +148,44 @@ function Print() {
   const [accidents, setAccidents] = useState([]);
   const [clusters, setClusters] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [filtersApplied, setFiltersApplied] = useState(false);
+  const [isPrinting, setIsPrinting] = useState(false);
 
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [selectedBarangay, setSelectedBarangay] = useState('');
-  const [pendingStartDate, setPendingStartDate] = useState('');
-  const [pendingEndDate, setPendingEndDate] = useState('');
-  const [pendingBarangay, setPendingBarangay] = useState('');
   const [selectedSeverity, setSelectedSeverity] = useState('');
   const [barangayList, setBarangayList] = useState([]);
+  const [minDate, setMinDate] = useState('');
+  const [maxDate, setMaxDate] = useState('');
   const today = new Date().toISOString().split('T')[0];
 
   useEffect(() => {
-    fetchData();
-  }, [startDate, endDate, selectedBarangay]);
+    fetchInitialData();
+  }, []);
 
-  const fetchData = async () => {
+  const fetchInitialData = async () => {
     setLoading(true);
     try {
-      let accidentData = await fetchAllRecords('road_traffic_accident', 'datecommitted');
+      const allAccidentData = await fetchAllRecords('road_traffic_accident', 'datecommitted');
 
-      const allBarangays = [...new Set(accidentData.map(a => a.barangay))].sort();
+      // Extract unique barangays
+      const allBarangays = [...new Set(allAccidentData.map(a => a.barangay))].sort();
       setBarangayList(allBarangays);
 
-      if (selectedBarangay)
-        accidentData = accidentData.filter(a => a.barangay === selectedBarangay);
-      if (startDate)
-        accidentData = accidentData.filter(a => a.datecommitted >= startDate);
-      if (endDate)
-        accidentData = accidentData.filter(a => a.datecommitted <= endDate);
+      // Find min and max dates from records
+      const dates = allAccidentData
+        .map(a => a.datecommitted)
+        .filter(Boolean)
+        .sort();
+      
+      if (dates.length > 0) {
+        setMinDate(dates[0]);
+        setMaxDate(dates[dates.length - 1]);
+      }
 
-      setAccidents(accidentData);
+      setAccidents(allAccidentData);
 
-      setPendingStartDate(startDate);
-      setPendingEndDate(endDate);
-      setPendingBarangay(selectedBarangay);
-
+      // Fetch cluster data
       const { data: clusterData, error: clusterError } = await supabase
         .from('Cluster_Centers')
         .select('*')
@@ -219,8 +220,15 @@ function Print() {
   };
 
   const handlePrint = async () => {
+    setIsPrinting(true);
+    
+    // Small delay to show loading state
+    await new Promise(resolve => setTimeout(resolve, 100));
+    
     await logSystemEvent.printReport('accident data report');
     window.print();
+    
+    setIsPrinting(false);
   };
 
   const baseAccidents = accidents.filter(a => {
@@ -306,13 +314,10 @@ function Print() {
             <label className="block text-sm font-medium mb-2">Start Date</label>
             <input
               type="date"
-              value={pendingStartDate}
-              onChange={(e) => {
-                setPendingStartDate(e.target.value);
-                setFiltersApplied(false);
-              }}
-              min="2000-01-01"
-              max={today}
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+              min={minDate}
+              max={maxDate}
               className="filter-input"
             />
           </div>
@@ -320,13 +325,10 @@ function Print() {
             <label className="block text-sm font-medium mb-2">End Date</label>
             <input
               type="date"
-              value={pendingEndDate}
-              onChange={(e) => {
-                setPendingEndDate(e.target.value);
-                setFiltersApplied(false);
-              }}
-              min="2000-01-01"
-              max={today}
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+              min={minDate}
+              max={maxDate}
               className="filter-input"
             />
           </div>
@@ -334,11 +336,8 @@ function Print() {
             <label className="block text-sm font-medium mb-2">Barangay</label>
             <CustomDropdown
               options={barangayList}
-              value={pendingBarangay}
-              onChange={(e) => {
-                setPendingBarangay(e.target.value);
-                setFiltersApplied(false);
-              }}
+              value={selectedBarangay}
+              onChange={(e) => setSelectedBarangay(e.target.value)}
               allLabel="All Barangays"
             />
           </div>
@@ -347,39 +346,29 @@ function Print() {
             <CustomDropdown
               options={['Critical', 'High', 'Medium', 'Low', 'Minor']}
               value={selectedSeverity}
-              onChange={(e) => {
-                setSelectedSeverity(e.target.value);
-                setFiltersApplied(false);
-              }}
+              onChange={(e) => setSelectedSeverity(e.target.value)}
               allLabel="All Severities"
             />
           </div>
             </div>
+            {minDate && (
+              <p className="text-xs text-gray-400 mt-2">
+                Available date range: {minDate} to {maxDate}
+              </p>
+            )}
             <div className="mt-4">
               <button
-                onClick={() => {
-                  setStartDate(pendingStartDate);
-                  setEndDate(pendingEndDate);
-                  setSelectedBarangay(pendingBarangay);
-                  setFiltersApplied(true);
-                }}
-                className="apply-btn px-6 py-2 rounded hover:opacity-95 mr-4"
-              >
-                Apply Filters
-              </button>
-
-              <button
                 onClick={handlePrint}
-                disabled={!filtersApplied}
+                disabled={isPrinting}
                 className={`print-btn mt-0 px-6 py-2 rounded 
-                  ${filtersApplied ? '' : 'opacity-50 cursor-not-allowed'}`}
+                  ${isPrinting ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
-                Print Report
+                {isPrinting ? 'Preparing Report...' : 'Print Report'}
               </button>
 
-              {!filtersApplied && (
+              {!startDate && !endDate && !selectedBarangay && !selectedSeverity && (
                 <p className="helper-text mt-2">
-                  Please apply filters before printing the report.
+                  No filters selected - all accidents will be included in the report.
                 </p>
               )}
             </div>
