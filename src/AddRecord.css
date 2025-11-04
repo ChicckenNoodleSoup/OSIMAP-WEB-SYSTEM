@@ -1,9 +1,17 @@
 @import './PageHeader.css';
 
-/* Page wrapper for consistent spacing */
+/* Page wrapper for consistent spacing and scrolling */
 .addrecord-page-wrapper {
-  padding: 24px;
   min-height: 100vh;
+  height: 100vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  box-sizing: border-box;
+}
+
+.addrecord-page-content {
+  padding: 24px;
+  min-height: 100%;
   box-sizing: border-box;
 }
 
@@ -298,6 +306,91 @@
 
 .status-text.error {
   color: #ff4d4d;
+}
+
+/* === Validation Errors === */
+.validation-errors {
+  margin-top: 20px;
+  padding: 20px;
+  background: rgba(255, 77, 77, 0.15);
+  border: 2px solid rgba(255, 77, 77, 0.4);
+  border-radius: 16px;
+  color: #ffffff;
+  max-width: 600px;
+  width: 100%;
+  backdrop-filter: blur(10px);
+  animation: slideDown 0.3s ease-out;
+  display: flex;
+  flex-direction: column;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.validation-errors .error-list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 15px 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  max-height: 200px; /* Fits ~3 errors before scrolling */
+}
+
+.validation-errors .error-list::-webkit-scrollbar {
+  width: 8px;
+}
+
+.validation-errors .error-list::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 10px;
+}
+
+.validation-errors .error-list::-webkit-scrollbar-thumb {
+  background: rgba(255, 107, 107, 0.5);
+  border-radius: 10px;
+}
+
+.validation-errors .error-list::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 107, 107, 0.7);
+}
+
+.validation-errors .error-list li {
+  padding: 10px 15px;
+  margin-bottom: 8px;
+  background: rgba(0, 0, 0, 0.3);
+  border-left: 3px solid #ff6b6b;
+  border-radius: 8px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #ffcccc;
+}
+
+.validation-errors .error-actions {
+  margin-top: 5px;
+  padding: 15px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+  border-left: 3px solid #0085ff;
+  flex-shrink: 0;
+}
+
+.validation-errors .error-actions p {
+  margin: 0;
+  color: #dbefff;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.validation-errors .error-actions strong {
+  color: #0085ff;
 }
 
 /* === Reset Button === */

@@ -3,7 +3,8 @@ import multer from "multer";
 import path from "path";
 import cors from "cors";
 import fs from "fs";
-import { spawn } from "child_process";  
+import { spawn } from "child_process";
+import XLSX from "xlsx";  
 
 const app = express();
 const PORT = process.env.PORT || 5000; 
@@ -42,6 +43,141 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage });
 
+// Validation constants (must match frontend and Python script)
+const REQUIRED_COLUMNS = [
+  'barangay',
+  'lat',
+  'lng',
+  'datecommitted',
+  'timecommitted',
+  'offensetype'
+];
+
+const SEVERITY_CALC_COLUMNS = [
+  'victimcount',
+  'suspectcount',
+  'victiminjured',
+  'victimkilled',
+  'victimunharmed',
+  'suspectkilled'
+];
+
+const ALL_REQUIRED_COLUMNS = [...REQUIRED_COLUMNS, ...SEVERITY_CALC_COLUMNS];
+
+// Function to validate Excel file structure
+function validateExcelFile(filePath) {
+  const errors = [];
+  
+  try {
+    console.log("Validating Excel file:", filePath);
+    
+    // Read the Excel file
+    const workbook = XLSX.readFile(filePath);
+    const sheetNames = workbook.SheetNames;
+    
+    console.log("Found sheets:", sheetNames);
+    
+    if (sheetNames.length === 0) {
+      errors.push("❌ Excel file contains no sheets - please add at least one sheet with data");
+      return { valid: false, errors };
+    }
+    
+    // Validate each sheet
+    sheetNames.forEach((sheetName) => {
+      // 1. Check if sheet name contains a year (1900-2099)
+      const yearRegex = /\b(19|20)\d{2}\b/;
+      const yearMatch = sheetName.match(yearRegex);
+      
+      if (!yearMatch) {
+        errors.push(`❌ Sheet name "${sheetName}" must include a 4-digit year (e.g., "2023", "Accidents_2024", or "Data_2025")`);
+      } else {
+        console.log(`✅ Sheet "${sheetName}" contains year: ${yearMatch[0]}`);
+      }
+      
+      // 2. Check if sheet has required columns
+      const worksheet = workbook.Sheets[sheetName];
+      const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+      
+      if (jsonData.length === 0) {
+        errors.push(`❌ Sheet "${sheetName}" is completely empty - please add data to this sheet`);
+        return;
+      }
+      
+      // Get header row and normalize column names (lowercase, trim, remove spaces)
+      const headers = jsonData[0] || [];
+      const normalizedHeaders = headers.map(h => 
+        String(h).trim().toLowerCase().replace(/\s+/g, '_').replace(/[^\w]/g, '')
+      );
+      
+      console.log(`Sheet "${sheetName}" columns:`, normalizedHeaders);
+      console.log(`Required columns:`, ALL_REQUIRED_COLUMNS);
+      
+      // Check for required columns - use exact matching
+      const missingColumns = ALL_REQUIRED_COLUMNS.filter(col => {
+        const normalizedCol = col.replace(/_/g, '').toLowerCase();
+        
+        // Check for exact match or very close match (allowing underscores/spaces)
+        const found = normalizedHeaders.some(header => {
+          const normalizedHeader = header.toLowerCase();
+          
+          // Exact match after normalization
+          if (normalizedHeader === normalizedCol) return true;
+          
+          // Also check with underscores preserved
+          const colWithUnderscore = col.toLowerCase();
+          if (normalizedHeader === colWithUnderscore) return true;
+          
+          return false;
+        });
+        
+        return !found;
+      });
+      
+      if (missingColumns.length > 0) {
+        console.log(`❌ Sheet "${sheetName}" missing columns:`, missingColumns);
+        
+        // Group missing columns for better readability
+        const missingBasic = missingColumns.filter(col => REQUIRED_COLUMNS.includes(col));
+        const missingSeverity = missingColumns.filter(col => SEVERITY_CALC_COLUMNS.includes(col));
+        
+        if (missingBasic.length > 0) {
+          errors.push(`❌ Sheet "${sheetName}" is missing basic columns: ${missingBasic.join(', ')}`);
+        }
+        if (missingSeverity.length > 0) {
+          errors.push(`❌ Sheet "${sheetName}" is missing severity columns: ${missingSeverity.join(', ')}`);
+        }
+      } else {
+        console.log(`✅ Sheet "${sheetName}" has all required columns`);
+      }
+      
+      // Check if sheet has data rows
+      if (jsonData.length < 2) {
+        errors.push(`❌ Sheet "${sheetName}" only has column headers but no data rows`);
+      } else {
+        console.log(`✅ Sheet "${sheetName}" has ${jsonData.length - 1} data rows`);
+      }
+    });
+    
+    if (errors.length === 0) {
+      console.log("✅ Excel file validation passed");
+      return { valid: true, errors: [] };
+    } else {
+      console.log("❌ Excel file validation failed:", errors);
+      return { valid: false, errors };
+    }
+    
+  } catch (error) {
+    console.error("Error validating Excel file:", error);
+    if (error.message.includes('Unsupported file')) {
+      errors.push(`❌ This file appears to be corrupted or is not a valid Excel file (.xlsx or .xls)`);
+    } else if (error.message.includes('ENOENT') || error.message.includes('no such file')) {
+      errors.push(`❌ File could not be found - please try uploading again`);
+    } else {
+      errors.push(`❌ Unable to read Excel file - it may be corrupted, password-protected, or have an invalid format`);
+    }
+    return { valid: false, errors };
+  }
+}
 
 // Function to run a Python script (using spawn instead of exec)
 function runSingleScript(scriptPath, onSuccess) {
@@ -156,18 +292,48 @@ app.get("/data-files", (req, res) => {
   }
 });
 
-// Upload route
+// Upload route with validation
 app.post("/upload", upload.single("file"), (req, res) => {
   console.log("POST /upload route hit");
   console.log("File received:", req.file);
 
   if (!req.file) {
-    return res.status(400).json({ message: "No file uploaded" });
+    return res.status(400).json({ 
+      message: "No file uploaded",
+      error: "No file received"
+    });
   }
 
-  // Respond to frontend immediately
+  const filePath = req.file.path;
+  
+  // Validate the Excel file structure BEFORE processing
+  console.log("Validating Excel file structure...");
+  const validation = validateExcelFile(filePath);
+  
+  if (!validation.valid) {
+    // Validation failed - delete the uploaded file and return errors
+    console.log("Validation failed, deleting uploaded file...");
+    
+    try {
+      fs.unlinkSync(filePath);
+      console.log("Uploaded file deleted");
+    } catch (err) {
+      console.error("Error deleting file:", err);
+    }
+    
+    return res.status(400).json({ 
+      message: "Excel file validation failed",
+      error: "File does not meet requirements",
+      validationErrors: validation.errors
+    });
+  }
+  
+  // Validation passed - proceed with processing
+  console.log("✅ Validation passed, starting processing...");
+
+  // Respond to frontend
   res.json({ 
-    message: "File uploaded successfully. Processing started...", 
+    message: "File validated successfully. Processing started...", 
     filename: req.file.filename 
   });
 
