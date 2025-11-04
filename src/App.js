@@ -19,6 +19,7 @@ import { isAuthenticated, clearUserData, extendSession } from './utils/authUtils
 import { logAuthEvent } from './utils/loggingUtils';
 import './App.css';
 import ResetPassword from './ResetPassword';
+import DownloadPage from './DownloadPage';
 
 function ProtectedRoute({ isAuthenticated, children }) {
   return isAuthenticated ? children : <Navigate to="/signin" />;
@@ -86,6 +87,10 @@ function App() {
           <Route
             path="/reset-password"
             element={<ResetPassword />}
+          />
+          <Route
+            path="/download"
+            element={<DownloadPage />}
           />
 
           {/* Protected routes */}
