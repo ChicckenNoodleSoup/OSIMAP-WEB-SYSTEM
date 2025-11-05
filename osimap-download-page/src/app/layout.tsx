@@ -15,6 +15,9 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "OSIMAP: Optimized Spatial Information Map for Accident Prevention",
   description: "Stay safe on Philippine roads with real time accident alerts.",
+  icons: {
+    icon: "/favicon.svg",
+  },
 };
 
 export default function RootLayout({
