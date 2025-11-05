@@ -10,109 +10,102 @@ export default function DownloadPage() {
   const videoRef = useRef(null);
   const headerRef = useRef(null);
 
-  // Handle click outside to close menu
   useEffect(() => {
+    // Enable scrolling on body when component mounts
+    document.body.style.overflow = 'auto';
+    document.body.style.height = 'auto';
+    document.documentElement.style.overflow = 'auto';
+    document.documentElement.style.height = 'auto';
+
+    // Close menu when clicking outside
     const handleClickOutside = (event) => {
-      if (headerRef.current && !headerRef.current.contains(event.target)) {
+      if (menuOpen && !event.target.closest('.header-nav-download')) {
         setMenuOpen(false);
       }
     };
 
-    if (menuOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-      return () => {
-        document.removeEventListener('mousedown', handleClickOutside);
-      };
-    }
-  }, [menuOpen]);
-
-  // Handle video auto-play on scroll
-  useEffect(() => {
+    // Trigger video playback on scroll
     const handleScroll = () => {
       if (videoRef.current) {
         const rect = videoRef.current.getBoundingClientRect();
-        const isVisible = rect.top < window.innerHeight * 0.75;
+        const isVisible = rect.top < window.innerHeight * 0.75 && rect.bottom > 0;
+        
         if (isVisible && !videoPlaying) {
           videoRef.current.play();
           setVideoPlaying(true);
+        } else if (!isVisible && videoPlaying) {
+          videoRef.current.pause();
+          setVideoPlaying(false);
         }
       }
     };
 
+    document.addEventListener('click', handleClickOutside);
     window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [videoPlaying]);
+
+    // Cleanup: restore original styles when component unmounts
+    return () => {
+      document.body.style.overflow = '';
+      document.body.style.height = '';
+      document.documentElement.style.overflow = '';
+      document.documentElement.style.height = '';
+      document.removeEventListener('click', handleClickOutside);
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, [menuOpen, videoPlaying]);
 
   const toggleMenu = () => {
     setMenuOpen(!menuOpen);
   };
 
-  const toggleFAQ = (index) => {
-    setExpandedFAQ(expandedFAQ === index ? null : index);
+  const closeMenu = () => {
+    setMenuOpen(false);
   };
-
-  const faqItems = [
-    {
-      question: 'How do I download and install OSIMAP?',
-      answer: 'You can download OSIMAP from the App Store or Google Play Store by searching "OSIMAP". Simply tap Install, and the app will be ready to use within seconds.'
-    },
-    {
-      question: 'Is OSIMAP really free?',
-      answer: 'Yes! OSIMAP is completely free to download and use. We\'re committed to making accident reporting and safety information accessible to everyone.'
-    },
-    {
-      question: 'How does the voice alert system work?',
-      answer: 'OSIMAP uses advanced AI to process voice recordings of accidents and automatically extracts key information like location, time, and severity to alert nearby drivers and authorities.'
-    },
-    {
-      question: 'Can I report accidents anonymously?',
-      answer: 'Yes, you can report accidents anonymously through OSIMAP. Your privacy is important to us, and we never store personally identifiable information without consent.'
-    },
-    {
-      question: 'How accurate are the accident predictions?',
-      answer: 'Our AI model is trained on historical accident data from the Philippines and uses machine learning to identify high-risk areas. Accuracy improves as we collect more data.'
-    },
-    {
-      question: 'Is my data secure on OSIMAP?',
-      answer: 'Absolutely. We use industry-standard encryption for all data transmission and storage. Your location and personal information are never shared with third parties without your permission.'
-    }
-  ];
 
   return (
     <div className="download-page">
       {/* Header */}
-      <header className="page-header-download" ref={headerRef}>
+      <header className="page-header-download">
         <div className="header-container-download">
-          <div className="logo-brand">
-            <img src="/osimap-logo.svg" alt="OSIMAP" className="header-logo-download" />
-          </div>
+          <img src="/osimap-logo.svg" alt="OSIMAP Logo" className="header-logo-download" />
+
           <nav className="header-nav-download">
             <button
               className={`hamburger-menu-download ${menuOpen ? 'active' : ''}`}
               onClick={toggleMenu}
-              aria-label="Toggle navigation menu"
+              aria-label="Toggle menu"
             >
               <span></span>
               <span></span>
               <span></span>
             </button>
+
+            {/* Menu Dropdown - Only About and Features */}
             <div className={`menu-dropdown ${menuOpen ? 'open' : ''}`}>
-              <a href="#features" className="menu-link" onClick={() => setMenuOpen(false)}>
-                Features
-              </a>
-              <a href="#voice-alerts" className="menu-link" onClick={() => setMenuOpen(false)}>
-                Voice Alerts
-              </a>
-              <a href="#about" className="menu-link" onClick={() => setMenuOpen(false)}>
-                About
-              </a>
-              <a href="#faq" className="menu-link" onClick={() => setMenuOpen(false)}>
-                FAQ
-              </a>
-              <a href="#footer" className="nav-button" onClick={() => setMenuOpen(false)}>
-                Get Started
+              <a href="#features" className="menu-link" onClick={closeMenu}>Features</a>
+              <a href="#about" className="menu-link" onClick={closeMenu}>About</a>
+              
+              {/* Download Button in Mobile Menu */}
+              <a 
+                href="/osimap-latest.apk" 
+                className="nav-button"
+                id="download" 
+                download
+                onClick={closeMenu}
+              >
+                Download APK
               </a>
             </div>
+
+            {/* Desktop Download Button */}
+            <a 
+              href="/osimap-latest.apk" 
+              className="nav-button download-button" 
+              download
+            >
+              <span className="download-icon">↓</span>
+              <span className="download-button-text">Download APK</span>
+            </a>
           </nav>
         </div>
       </header>
@@ -121,77 +114,70 @@ export default function DownloadPage() {
       <section className="hero-section">
         <div className="hero-container">
           <h1 className="hero-title">
-            Stay Safe on <span className="highlight-blue">Philippine Roads</span>
+            Road trip, but <span className="highlight-blue">safer.</span>
           </h1>
           <p className="hero-subtitle">
-            Real-time accident alerts, AI-powered safety predictions, and voice-activated reporting for smarter commuting.
+            Stop guessing where the danger is,<br />get real time accident hotspot alerts.
           </p>
-          <a href="#features" className="download-btn-hero">
-            Explore Features
+          <a href="/osimap-latest.apk" className="download-btn-hero" download>
+            Download OSIMAP
           </a>
           <div className="phones-showcase">
             <div className="phone-mockup phone-left">
-              <img
-                src="/welcome.png"
-                alt="Welcome Screen"
-                className="phone-img"
-              />
+              <img src="/sidebar.png" alt="Statistics Screen" className="phone-img" />
             </div>
             <div className="phone-mockup phone-center">
-              <img
-                src="/map.png"
-                alt="Map View"
-                className="phone-img"
-              />
+              <img src="/map.png" alt="Map Interface" className="phone-img" />
             </div>
             <div className="phone-mockup phone-right">
-              <img
-                src="/stats.png"
-                alt="Statistics"
-                className="phone-img"
-              />
+              <img src="/welcome.png" alt="Profile/Home Screen" className="phone-img" />
             </div>
           </div>
         </div>
       </section>
 
-      {/* Copilot/Features Section */}
-      <section id="features" className="section-copilot">
+      {/* Free Co-pilot Section */}
+      <section className="section-copilot" id="features">
         <div className="section-container">
           <div className="section-content-left">
-            <h2 className="section-title">Your <span className="highlight-yellow">AI Copilot</span></h2>
+            <h2 className="section-title">
+              OSIMAP is your <span className="highlight-yellow">co-pilot when driving.</span>
+            </h2>
             <p className="section-text">
-              Our advanced AI system analyzes accident patterns in real-time to provide personalized safety recommendations and help you avoid high-risk areas.
-            </p>
-            <p className="section-text-small">
-              Machine learning algorithms trained on thousands of accident reports continuously learn and improve, making OSIMAP smarter every day.
+              Optimized Spatial Information Map for Accident Prevention analyzes thousands of historical road traffic accidents with advanced clustering techniques.
             </p>
           </div>
           <div className="section-content-right">
+            {/* Road Background Image */}
             <div className="phone-section-wrapper">
               <img src="/road.png" alt="Road Background" className="road-background" />
-              <div className="screen-mockup">
-                <img src="/students.png" alt="Student Users" className="screen-img" />
-              </div>
-              <div className="floating-notification notification-1">
-                <div className="notification-icon">⚠️</div>
-                <div className="notification-text">
-                  <div className="notification-title">ALERT</div>
-                  <div className="notification-message">Accident ahead on C3</div>
+              
+              <div className="phone-mockup">
+                <img src="/stats.png" alt="Statistics Screen" className="screen-img" />
+                
+                {/* Floating Notification Messages */}
+                <div className="floating-notification notification-1">
+                  <div className="notification-icon">⚠️</div>
+                  <div className="notification-text">
+                    <div className="notification-title">Warning</div>
+                    <div className="notification-message">Danger zone ahead</div>
+                  </div>
                 </div>
-              </div>
-              <div className="floating-notification notification-2">
-                <div className="notification-icon">🛣️</div>
-                <div className="notification-text">
-                  <div className="notification-title">ROUTE</div>
-                  <div className="notification-message">Take Edsa instead</div>
+                
+                <div className="floating-notification notification-2">
+                  <div className="notification-icon">🚨</div>
+                  <div className="notification-text">
+                    <div className="notification-title">Alert</div>
+                    <div className="notification-message">Accident hotspot detected</div>
+                  </div>
                 </div>
-              </div>
-              <div className="floating-notification notification-3">
-                <div className="notification-icon">✅</div>
-                <div className="notification-text">
-                  <div className="notification-title">SAFE</div>
-                  <div className="notification-message">Route optimized</div>
+                
+                <div className="floating-notification notification-3">
+                  <div className="notification-icon">⚠️</div>
+                  <div className="notification-text">
+                    <div className="notification-title">Caution</div>
+                    <div className="notification-message">High risk area</div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -200,62 +186,98 @@ export default function DownloadPage() {
       </section>
 
       {/* Voice Alerts Section */}
-      <section id="voice-alerts" className="section-voice-alerts">
+      <section className="section-voice-alerts">
         <div className="section-container">
           <div className="section-content-left">
-            <div className="screen-mockup-large">
-              <img src="/map.png" alt="Voice Alerts Map" className="screen-img" />
-            </div>
+            <h2 className="section-title">
+              As you drive, OSIMAP delivers <span className="highlight-red">voice alerts.</span>
+            </h2>
+            <p className="section-text-small">
+              You can also easily view the same dynamic heat maps that local authorities use to upload road traffic accidents in real time.
+            </p>
           </div>
           <div className="section-content-right">
-            <h2 className="section-title">
-              Voice Alerts, <span className="highlight-red">Hands-Free Safety</span>
-            </h2>
-            <p className="section-text">
-              Simply speak your report. Our AI instantly transcribes your voice, extracts critical accident details, and broadcasts alerts to nearby drivers.
-            </p>
-            <p className="section-text-small">
-              No typing required. No distractions. Just natural speech that saves lives. Report while driving with complete safety.
-            </p>
+            <div className="screen-mockup-large">
+              <video 
+                ref={videoRef}
+                src="/OSIMAP-vid.mov" 
+                alt="Map with Alerts" 
+                className="screen-img"
+                controls
+                loop
+                muted
+              />
+            </div>
           </div>
         </div>
       </section>
 
-      {/* About/Researchers Section */}
-      <section id="about" className="section-researchers">
+      {/* Student Researchers Section */}
+      <section className="section-researchers" id="about">
         <div className="section-container">
           <div className="section-content-left">
-            <h2 className="section-title">Built by <span className="highlight-blue">Researchers</span></h2>
-            <p className="section-text">
-              OSIMAP is developed by a dedicated team of data scientists, traffic engineers, and safety experts from leading Philippine universities.
-            </p>
-            <p className="section-text-small">
-              Our mission is to leverage technology and research to make Philippine roads safer for everyone, from daily commuters to professional drivers.
-            </p>
+            <div className="screen-mockup">
+              <img src="/students.png" alt="Support Center" className="screen-img" />
+            </div>
           </div>
           <div className="section-content-right">
-            <div className="screen-mockup">
-              <img src="/sidebar.png" alt="Sidebar Navigation" className="screen-img" />
-            </div>
+            <h2 className="section-title">
+              OSIMAP was brought to life by a team of <span className="highlight-blue">student researchers</span>.
+            </h2>
+            <p className="section-text">
+              Transforming complex data into a real-world safety solution for the City of San Fernando, Pampanga.
+            </p>
           </div>
         </div>
       </section>
 
       {/* FAQ Section */}
-      <section id="faq" className="section-faq">
-        <div className="section-container">
+      <section className="section-faq" id="faq">
+        <div className="section-container faq-container">
           <h2 className="faq-title">Frequently Asked Questions</h2>
+          
           <div className="faq-list">
-            {faqItems.map((item, index) => (
-              <div key={index} className="faq-item">
+            {[
+              {
+                id: 1,
+                question: "What is OSIMAP?",
+                answer: "OSIMAP (Optimized Spatial Information Map for Accident Prevention) is a mobile app that provides real-time accident hotspot alerts and safety information to help drivers make safer route decisions."
+              },
+              {
+                id: 2,
+                question: "How do I download OSIMAP?",
+                answer: "You can download OSIMAP for free from the Download APK button at the top of this page. The app is compatible with Android devices."
+              },
+              {
+                id: 3,
+                question: "Does OSIMAP require an internet connection?",
+                answer: "Yes, OSIMAP requires an internet connection to receive real-time accident alerts and view updated heat maps. However, you can view previously cached data without a connection."
+              },
+              {
+                id: 4,
+                question: "Is OSIMAP available in other regions?",
+                answer: "Currently, OSIMAP is optimized for the City of San Fernando, Pampanga. We're working on expanding to other regions soon."
+              },
+              {
+                id: 5,
+                question: "How accurate is the accident data?",
+                answer: "Our data is collected from local authorities and validated using advanced clustering techniques. We ensure the highest accuracy to keep you safe on the road."
+              },
+              {
+                id: 6,
+                question: "Is my location data private?",
+                answer: "Your privacy is important to us. OSIMAP uses location data only to provide you with relevant alerts and never shares your personal information with third parties."
+              }
+            ].map((item) => (
+              <div key={item.id} className="faq-item">
                 <button
-                  className={`faq-question ${expandedFAQ === index ? 'active' : ''}`}
-                  onClick={() => toggleFAQ(index)}
+                  className={`faq-question ${expandedFAQ === item.id ? 'active' : ''}`}
+                  onClick={() => setExpandedFAQ(expandedFAQ === item.id ? null : item.id)}
                 >
                   <span>{item.question}</span>
                   <span className="faq-toggle">+</span>
                 </button>
-                {expandedFAQ === index && (
+                {expandedFAQ === item.id && (
                   <div className="faq-answer">
                     <p>{item.answer}</p>
                   </div>
@@ -267,41 +289,32 @@ export default function DownloadPage() {
       </section>
 
       {/* Footer */}
-      <footer id="footer" className="footer-section">
+      <footer className="footer-section">
         <div className="footer-container">
-          <img src="/osimap-logo.svg" alt="OSIMAP" className="footer-img" />
           <div className="footer-content">
             <p className="footer-tagline">
-              Making Philippine roads safer through AI-powered accident alerts and real-time driver assistance.
+              <img src="/signin-logo.png" alt="OSIMAP Logo" className="footer-img" />
             </p>
+            
             <div className="footer-links">
-              <a href="https://twitter.com" className="footer-link" target="_blank" rel="noopener noreferrer">
-                Twitter
-              </a>
-              <a href="https://facebook.com" className="footer-link" target="_blank" rel="noopener noreferrer">
-                Facebook
-              </a>
-              <a href="https://instagram.com" className="footer-link" target="_blank" rel="noopener noreferrer">
-                Instagram
-              </a>
-              <a href="mailto:support@osimap.ph" className="footer-link">
-                Email
-              </a>
+              <a href="/osimap-latest.apk" className="footer-link" download>Download</a>
+              <a href="#features" className="footer-link">Features</a>
+              <a href="#about" className="footer-link">About</a>
+              <a href="mailto:osimapdatabase@gmail.com" className="footer-link">Contact</a>
             </div>
           </div>
+
           <div className="footer-divider"></div>
+
           <div className="footer-bottom">
-            <p className="footer-copyright">© 2024 OSIMAP. All rights reserved.</p>
+            <p className="footer-copyright">
+              &copy; 2025 OSIMAP. All rights reserved.
+            </p>
+            
             <div className="footer-socials">
-              <a href="https://twitter.com" className="footer-social-link" target="_blank" rel="noopener noreferrer">
-                𝕏
-              </a>
-              <a href="https://facebook.com" className="footer-social-link" target="_blank" rel="noopener noreferrer">
-                f
-              </a>
-              <a href="https://instagram.com" className="footer-social-link" target="_blank" rel="noopener noreferrer">
-                📷
-              </a>
+              <a href="https://facebook.com/simonvreyes" className="footer-social-link" title="Facebook" target="_blank" rel="noopener noreferrer">f</a>
+              <a href="https://facebook.com/simonvreyes" className="footer-social-link" title="Twitter" target="_blank" rel="noopener noreferrer">𝕏</a>
+              <a href="https://facebook.com/simonvreyes" className="footer-social-link" title="LinkedIn" target="_blank" rel="noopener noreferrer">in</a>
             </div>
           </div>
         </div>
