@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "OSIMAP - Real-time Accident Alerts & Safety Predictions",
-  description: "Stay safe on Philippine roads with AI-powered accident alerts, real-time driver assistance, and voice-activated reporting.",
+  title: "OSIMAP: Optimized Spatial Information Map for Accident Prevention",
+  description: "Stay safe on Philippine roads with real time accident alerts.",
 };
 
 export default function RootLayout({
