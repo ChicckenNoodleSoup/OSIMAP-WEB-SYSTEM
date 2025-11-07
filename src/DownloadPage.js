@@ -4,6 +4,7 @@ import './DownloadPage.css';
 function DownloadPage() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [videoPlaying, setVideoPlaying] = useState(false);
+  const [expandedFAQ, setExpandedFAQ] = useState(null);
   const videoRef = useRef(null);
 
   useEffect(() => {
@@ -15,7 +16,7 @@ function DownloadPage() {
 
     // Close menu when clicking outside
     const handleClickOutside = (event) => {
-      if (menuOpen && !event.target.closest('.header-nav')) {
+      if (menuOpen && !event.target.closest('.header-nav-download')) {
         setMenuOpen(false);
       }
     };
@@ -62,11 +63,11 @@ function DownloadPage() {
     <div className="download-page">
       {/* Header */}
       <header className="page-header-download">
-        <div className="header-container">
-          <img src="/osimap-logo.svg" alt="OSIMAP Logo" className="header-logo" />
-          
-          <nav className="header-nav">
-            <button 
+        <div className="header-container-download">
+          <img src="/osimap-logo.svg" alt="OSIMAP Logo" className="header-logo-download" />
+
+          <nav className="header-nav-download">
+            <button
               className={`hamburger-menu-download ${menuOpen ? 'active' : ''}`}
               onClick={toggleMenu}
               aria-label="Toggle menu"
@@ -144,31 +145,36 @@ function DownloadPage() {
             </p>
           </div>
           <div className="section-content-right">
-            <div className="phone-mockup">
-              <img src="/stats.png" alt="Statistics Screen" className="screen-img" />
+            {/* Road Background Image */}
+            <div className="phone-section-wrapper">
+              <img src="/road.png" alt="Road Background" className="road-background" />
               
-              {/* Floating Notification Messages */}
-              <div className="floating-notification notification-1">
-                <div className="notification-icon">⚠️</div>
-                <div className="notification-text">
-                  <div className="notification-title">Warning</div>
-                  <div className="notification-message">Danger zone ahead</div>
+              <div className="phone-mockup">
+                <img src="/stats.png" alt="Statistics Screen" className="screen-img" />
+                
+                {/* Floating Notification Messages */}
+                <div className="floating-notification notification-1">
+                  <div className="notification-icon">⚠️</div>
+                  <div className="notification-text">
+                    <div className="notification-title">Warning</div>
+                    <div className="notification-message">Danger zone ahead</div>
+                  </div>
                 </div>
-              </div>
-              
-              <div className="floating-notification notification-2">
-                <div className="notification-icon">🚨</div>
-                <div className="notification-text">
-                  <div className="notification-title">Alert</div>
-                  <div className="notification-message">Accident hotspot detected</div>
+                
+                <div className="floating-notification notification-2">
+                  <div className="notification-icon">🚨</div>
+                  <div className="notification-text">
+                    <div className="notification-title">Alert</div>
+                    <div className="notification-message">Accident hotspot detected</div>
+                  </div>
                 </div>
-              </div>
-              
-              <div className="floating-notification notification-3">
-                <div className="notification-icon">⚠️</div>
-                <div className="notification-text">
-                  <div className="notification-title">Caution</div>
-                  <div className="notification-message">High risk area</div>
+                
+                <div className="floating-notification notification-3">
+                  <div className="notification-icon">⚠️</div>
+                  <div className="notification-text">
+                    <div className="notification-title">Caution</div>
+                    <div className="notification-message">High risk area</div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -181,10 +187,10 @@ function DownloadPage() {
         <div className="section-container">
           <div className="section-content-left">
             <h2 className="section-title">
-              As you drive, the app delivers <span className="highlight-red">voice alerts.</span>
+              As you drive, OSIMAP delivers <span className="highlight-red">voice alerts.</span>
             </h2>
             <p className="section-text-small">
-              You can also easily view the same dynamic heat maps that local authorities use to upload road traffic accidents.
+              You can also easily view the same dynamic heat maps that local authorities use to upload road traffic accidents in real time.
             </p>
           </div>
           <div className="section-content-right">
@@ -222,6 +228,63 @@ function DownloadPage() {
         </div>
       </section>
 
+      {/* FAQ Section */}
+      <section className="section-faq" id="faq">
+        <div className="section-container faq-container">
+          <h2 className="faq-title">Frequently Asked Questions</h2>
+          
+          <div className="faq-list">
+            {[
+              {
+                id: 1,
+                question: "What is OSIMAP?",
+                answer: "OSIMAP (Optimized Spatial Information Map for Accident Prevention) is a mobile app that provides real-time accident hotspot alerts and safety information to help drivers make safer route decisions."
+              },
+              {
+                id: 2,
+                question: "How do I download OSIMAP?",
+                answer: "You can download OSIMAP for free from the Download APK button at the top of this page. The app is compatible with Android devices."
+              },
+              {
+                id: 3,
+                question: "Does OSIMAP require an internet connection?",
+                answer: "Yes, OSIMAP requires an internet connection to receive real-time accident alerts and view updated heat maps. However, you can view previously cached data without a connection."
+              },
+              {
+                id: 4,
+                question: "Is OSIMAP available in other regions?",
+                answer: "Currently, OSIMAP is optimized for the City of San Fernando, Pampanga. We're working on expanding to other regions soon."
+              },
+              {
+                id: 5,
+                question: "How accurate is the accident data?",
+                answer: "Our data is collected from local authorities and validated using advanced clustering techniques. We ensure the highest accuracy to keep you safe on the road."
+              },
+              {
+                id: 6,
+                question: "Is my location data private?",
+                answer: "Your privacy is important to us. OSIMAP uses location data only to provide you with relevant alerts and never shares your personal information with third parties."
+              }
+            ].map((item) => (
+              <div key={item.id} className="faq-item">
+                <button
+                  className={`faq-question ${expandedFAQ === item.id ? 'active' : ''}`}
+                  onClick={() => setExpandedFAQ(expandedFAQ === item.id ? null : item.id)}
+                >
+                  <span>{item.question}</span>
+                  <span className="faq-toggle">+</span>
+                </button>
+                {expandedFAQ === item.id && (
+                  <div className="faq-answer">
+                    <p>{item.answer}</p>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* Footer */}
       <footer className="footer-section">
         <div className="footer-container">
@@ -246,9 +309,9 @@ function DownloadPage() {
             </p>
             
             <div className="footer-socials">
-              <a href="https://facebook.com/osimap" className="footer-social-link" title="Facebook" target="_blank" rel="noopener noreferrer">f</a>
-              <a href="https://twitter.com/osimap" className="footer-social-link" title="Twitter" target="_blank" rel="noopener noreferrer">𝕏</a>
-              <a href="https://linkedin.com/company/osimap" className="footer-social-link" title="LinkedIn" target="_blank" rel="noopener noreferrer">in</a>
+              <a href="https://facebook.com/simonvreyes" className="footer-social-link" title="Facebook" target="_blank" rel="noopener noreferrer">f</a>
+              <a href="https://facebook.com/simonvreyes" className="footer-social-link" title="Twitter" target="_blank" rel="noopener noreferrer">𝕏</a>
+              <a href="https://facebook.com/simonvreyes" className="footer-social-link" title="LinkedIn" target="_blank" rel="noopener noreferrer">in</a>
             </div>
           </div>
         </div>
