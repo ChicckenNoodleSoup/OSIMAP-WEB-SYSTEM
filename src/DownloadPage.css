@@ -926,7 +926,7 @@ body:has(.download-page) {
   .phone-right {
     transform: rotateY(20deg) rotateZ(-5deg) translateX(60px) translateZ(-30px);
   }
-    .hamburger-menu {
+    .hamburger-menu-download {
     width: 26px;
     height: 20px;
     flex-shrink: 0;
