@@ -31,7 +31,7 @@ body:has(.download-page) {
 }
 
 /* --- Header Navigation --- */
-.page-header {
+.page-header-download {
   position: fixed;
   top: 0;
   left: 0;
@@ -74,7 +74,7 @@ body:has(.download-page) {
 }
 
 /* Hamburger Menu - ALWAYS VISIBLE (Base Style) */
-.hamburger-menu {
+.hamburger-menu-download {
   display: flex; 
   flex-direction: column;
   justify-content: space-around;
@@ -88,7 +88,7 @@ body:has(.download-page) {
   transition: all 0.3s ease;
 }
 
-.hamburger-menu span {
+.hamburger-menu-download span {
   display: block;
   height: 3px;
   width: 100%;
@@ -99,19 +99,19 @@ body:has(.download-page) {
   margin-right: 0;
 }
 
-.hamburger-menu:hover span {
+.hamburger-menu-download:hover span {
   background: #0085FF;
 }
 
-.hamburger-menu.active span:nth-child(1) {
+.hamburger-menu-download.active span:nth-child(1) {
   transform: rotate(45deg) translate(8px, 8px);
 }
 
-.hamburger-menu.active span:nth-child(2) {
+.hamburger-menu-download.active span:nth-child(2) {
   opacity: 0;
 }
 
-.hamburger-menu.active span:nth-child(3) {
+.hamburger-menu-download.active span:nth-child(3) {
   transform: rotate(-45deg) translate(8px, -8px);
 }
 
@@ -811,7 +811,7 @@ body:has(.download-page) {
   .phone-right {
     transform: rotateY(20deg) rotateZ(-5deg) translateX(60px) translateZ(-30px);
   }
-    .hamburger-menu {
+    .hamburger-menu-download {
     width: 26px;
     height: 20px;
     flex-shrink: 0;
@@ -866,7 +866,7 @@ body:has(.download-page) {
 @media (max-width: 480px) {
   
   /* --- Header Adjustments (FIXED ALIGNMENT) --- */
-  .page-header {
+  .page-header-download {
     padding: 8px 12px;
     margin: 0;
     position: fixed;
@@ -929,7 +929,7 @@ body:has(.download-page) {
     height: 100%;
   }
 
-  .hamburger-menu {
+  .hamburger-menu-download {
     display: flex !important;
     flex-direction: column;
     justify-content: center;
@@ -946,7 +946,7 @@ body:has(.download-page) {
     flex-shrink: 0;
   }
 
-  .hamburger-menu span {
+  .hamburger-menu-download span {
     display: block;
     height: 2.5px;
     width: 20px;
@@ -956,15 +956,15 @@ body:has(.download-page) {
     margin: 3px 0;
   }
 
-  .hamburger-menu.active span:nth-child(1) {
+  .hamburger-menu-download.active span:nth-child(1) {
     transform: rotate(45deg) translate(8px, 8px);
   }
 
-  .hamburger-menu.active span:nth-child(2) {
+  .hamburger-menu-download.active span:nth-child(2) {
     opacity: 0;
   }
 
-  .hamburger-menu.active span:nth-child(3) {
+  .hamburger-menu-download.active span:nth-child(3) {
     transform: rotate(-45deg) translate(7px, -7px);
   }
 

@@ -61,13 +61,13 @@ function DownloadPage() {
   return (
     <div className="download-page">
       {/* Header */}
-      <header className="page-header">
+      <header className="page-header-download">
         <div className="header-container">
           <img src="/osimap-logo.svg" alt="OSIMAP Logo" className="header-logo" />
           
           <nav className="header-nav">
             <button 
-              className={`hamburger-menu ${menuOpen ? 'active' : ''}`}
+              className={`hamburger-menu-download ${menuOpen ? 'active' : ''}`}
               onClick={toggleMenu}
               aria-label="Toggle menu"
             >
