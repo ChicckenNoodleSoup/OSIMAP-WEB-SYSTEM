@@ -30,7 +30,8 @@ class AccidentClusterAnalyzer:
         # Temporal analysis parameters
         self.decay_rate = 0.15
         self.recent_months = 24
-        self.highway_cluster_threshold = 500  # Clusters with more accidents than this will be sub-clustered
+        # Dynamic sub-clustering threshold based on dataset size
+        # Will be set after data is loaded
 
     # ======================================================
     # LOAD + PREPROCESS
@@ -185,7 +186,7 @@ class AccidentClusterAnalyzer:
             return None
 
     # ======================================================
-    # AUTO-TUNING
+    # AUTO-TUNING (optimized for tight geographical clusters)
     # ======================================================
     def tune_clustering(self,
                         cluster_sizes=[5, 10, 20, 30, 50],
@@ -193,39 +194,103 @@ class AccidentClusterAnalyzer:
         if self.df is None:
             return None
         coords = np.radians(self.df[["latitude", "longitude"]].values)
+        n_points = len(coords)
         results = []
 
+        # For accident data, we want TIGHT but MERGEABLE geographical clusters
+        # epsilon in radians: 0.00001 rad ≈ 640m, 0.000001 rad ≈ 64m
+        # Scale parameters with dataset size
+        print(f"📊 Dataset size: {n_points} points")
+        
+        # Calculate dynamic sub-clustering threshold (scales with dataset size)
+        # Rule: ~3-4% of total accidents per cluster before sub-clustering
+        self.highway_cluster_threshold = max(300, int(n_points * 0.035))
+        print(f"🔧 Dynamic sub-cluster threshold: {self.highway_cluster_threshold} accidents")
+        
+        if n_points < 100:
+            cluster_sizes = [3, 5, 8]
+            epsilons = [0.0000001, 0.0000005, 0.000001]  # ~6m, ~32m, ~64m (NO ZERO!)
+        elif n_points < 500:
+            cluster_sizes = [5, 8, 10, 15]
+            epsilons = [0.0000005, 0.000001, 0.000002]   # ~32m, ~64m, ~128m
+        elif n_points < 2000:
+            cluster_sizes = [8, 12, 15, 20]
+            epsilons = [0.0000005, 0.000001, 0.000002, 0.000003]  # ~32m, ~64m, ~128m, ~192m
+        elif n_points < 5000:
+            cluster_sizes = [10, 15, 20, 25]
+            epsilons = [0.000001, 0.000002, 0.000003, 0.000004]   # ~64m, ~128m, ~192m, ~256m
+        elif n_points < 10000:
+            cluster_sizes = [15, 20, 28, 35]
+            epsilons = [0.000001, 0.000002, 0.000003, 0.000005]   # ~64m, ~128m, ~192m, ~320m
+        else:
+            # Very large dataset (13k+ or future 20k+ records)
+            # Balance between intersection-level clusters and merging nearby hotspots
+            cluster_sizes = [15, 22, 30, 40]  # Smaller min allows intersections to form clusters
+            epsilons = [0.000002, 0.000004, 0.000006, 0.000008]   # ~128m, ~256m, ~384m, ~512m (MORE MERGING)
+            print(f"📈 Using large dataset parameters (balanced merging + intersections)")
+
+        print("\n=== PARAMETER TUNING (Tight Clusters) ===")
         for size in cluster_sizes:
             for eps in epsilons:
                 clusterer = HDBSCAN(
                     min_cluster_size=size,
-                    min_samples=max(2, size // 2),
+                    min_samples=max(3, size // 3),  # Increased min_samples for tighter clusters
                     metric="haversine",
                     cluster_selection_epsilon=eps
                 )
                 labels = clusterer.fit_predict(coords)
                 n_clusters = len(set(labels)) - (1 if -1 in labels else 0)
                 n_noise = list(labels).count(-1)
+                noise_ratio = n_noise / len(labels) if len(labels) > 0 else 0
                 silhouette = self.fast_silhouette(coords, labels) if n_clusters > 1 else None
+                
+                # Calculate average cluster compactness (lower is tighter)
+                avg_compactness = 0
+                if n_clusters > 0:
+                    compactness_scores = []
+                    for cid in set(labels):
+                        if cid == -1:
+                            continue
+                        cluster_mask = labels == cid
+                        cluster_coords = coords[cluster_mask]
+                        if len(cluster_coords) > 1:
+                            # Calculate spread as max distance from centroid
+                            centroid = cluster_coords.mean(axis=0)
+                            distances = np.sqrt(((cluster_coords - centroid) ** 2).sum(axis=1))
+                            compactness_scores.append(distances.max())
+                    avg_compactness = np.mean(compactness_scores) if compactness_scores else 0
+                
                 results.append({
                     "min_cluster_size": size,
+                    "min_samples": max(3, size // 3),
                     "epsilon": eps,
                     "clusters": n_clusters,
-                    "noise_ratio": round(n_noise / len(labels), 3),
-                    "silhouette": silhouette
+                    "noise_ratio": round(noise_ratio, 3),
+                    "silhouette": silhouette,
+                    "compactness": round(avg_compactness, 6)
                 })
+                print(f"size={size}, samples={max(3, size // 3)}, eps={eps:.7f}  "
+                      f"clusters={n_clusters}, noise={round(noise_ratio, 3)}, "
+                      f"s={silhouette}, compact={round(avg_compactness, 6)}")
 
-        print("\n=== PARAMETER TUNING ===")
-        for r in results:
-            print(f"size={r['min_cluster_size']}, eps={r['epsilon']:.6f} "
-                  f" clusters={r['clusters']}, noise={r['noise_ratio']}, "
-                  f"s={r['silhouette']}")
-
+        # Prioritize: good silhouette > reasonable cluster count > acceptable noise > compactness
+        # We want to balance quality with sensible merging of nearby clusters
         results = sorted(results,
-                         key=lambda x: ((x["silhouette"] is not None), x["silhouette"] or -1, x["clusters"]),
+                         key=lambda x: (
+                             (x["silhouette"] is not None),                    # Has valid silhouette
+                             x["silhouette"] if x["silhouette"] else -1,       # Higher silhouette (quality)
+                             x["clusters"] > 20,                                # Has reasonable number of clusters
+                             x["noise_ratio"] < 0.35,                          # Acceptable noise level
+                             x["epsilon"] > 0.000001,                          # Prefer some merging over none
+                             -x["clusters"],                                    # Prefer fewer clusters (merge nearby)
+                             -x["compactness"]                                  # Tighter is better (but lower priority)
+                         ),
                          reverse=True)
+        
         best = results[0]
-        print("\n Best params:", best)
+        print(f"\n✨ Best params: size={best['min_cluster_size']}, samples={best['min_samples']}, "
+              f"eps={best['epsilon']:.7f}, clusters={best['clusters']}, "
+              f"noise={best['noise_ratio']}, silhouette={best['silhouette']}, compactness={best['compactness']}")
         return best
 
     # ======================================================
@@ -275,7 +340,8 @@ class AccidentClusterAnalyzer:
             return
         
         if max_accidents is None:
-            max_accidents = self.highway_cluster_threshold
+            # Use dynamic threshold if set, otherwise fallback to reasonable default
+            max_accidents = getattr(self, 'highway_cluster_threshold', 500)
             
         print(f"\n Temporal sub-clustering for clusters > {max_accidents} accidents...")
         clusters_to_process = self.clustered_df["cluster"].unique()
@@ -351,8 +417,88 @@ class AccidentClusterAnalyzer:
 
         print(f" Sub-clustered {subclustered_count} large clusters")
         
-        # Recalculate cluster centers after sub-clustering
-        self.calculate_cluster_centers()
+        # Remove outlier points from clusters
+        self.remove_cluster_outliers()
+        
+        # Renumber clusters to remove gaps
+        self.renumber_clusters_sequentially()
+
+    # ======================================================
+    # REMOVE CLUSTER OUTLIERS (Prevents chaining effect)
+    # ======================================================
+    def remove_cluster_outliers(self, max_std_dev=1.2):
+        """Remove outlier points from clusters that are too far from cluster core"""
+        if self.clustered_df is None:
+            return
+        
+        print("\n✂️  Removing outlier points from clusters...")
+        
+        total_removed = 0
+        
+        for cid in self.clustered_df["cluster"].unique():
+            if cid == -1:
+                continue
+            
+            cluster_mask = self.clustered_df["cluster"] == cid
+            cluster_points = self.clustered_df[cluster_mask]
+            
+            if len(cluster_points) < 5:
+                continue  # Skip very small clusters
+            
+            # Calculate cluster centroid
+            coords = np.radians(cluster_points[["latitude", "longitude"]].values)
+            centroid = coords.mean(axis=0)
+            
+            # Calculate distances from centroid
+            distances = np.sqrt(((coords - centroid) ** 2).sum(axis=1))
+            
+            # Calculate mean and std dev of distances
+            mean_dist = distances.mean()
+            std_dist = distances.std()
+            
+            # Mark points beyond threshold as outliers
+            # Use max_std_dev * std_dev from mean as threshold
+            threshold = mean_dist + (max_std_dev * std_dist)
+            outlier_mask = distances > threshold
+            
+            n_outliers = outlier_mask.sum()
+            
+            if n_outliers > 0:
+                # Convert outliers to noise
+                outlier_indices = cluster_points[outlier_mask].index
+                self.clustered_df.loc[outlier_indices, "cluster"] = -1
+                total_removed += n_outliers
+                
+                max_dist_m = int(distances.max() * 6371000)  # Convert to meters
+                print(f"   Cluster {cid}: Removed {n_outliers} outliers (max distance was {max_dist_m}m)")
+        
+        print(f"✅ Removed {total_removed} outlier points total")
+
+    # ======================================================
+    # RENUMBER CLUSTERS
+    # ======================================================
+    def renumber_clusters_sequentially(self):
+        """Renumber clusters to remove gaps (0, 1, 2, ..., n) after sub-clustering"""
+        if self.clustered_df is None:
+            return
+        
+        print("\n🔢 Renumbering clusters sequentially...")
+        
+        # Get unique cluster IDs (excluding noise)
+        unique_clusters = sorted([c for c in self.clustered_df["cluster"].unique() if c != -1])
+        
+        if not unique_clusters:
+            print("   No clusters to renumber")
+            return
+        
+        # Create mapping from old IDs to new sequential IDs
+        cluster_mapping = {old_id: new_id for new_id, old_id in enumerate(unique_clusters)}
+        cluster_mapping[-1] = -1  # Keep noise as -1
+        
+        # Remap cluster IDs
+        self.clustered_df["cluster"] = self.clustered_df["cluster"].map(cluster_mapping)
+        
+        print(f"   Renumbered {len(unique_clusters)} clusters: 0-{len(unique_clusters)-1}")
 
     # Legacy method for backward compatibility
     def subcluster_large_clusters(self, max_accidents=500, max_spread_m=300):
@@ -363,13 +509,33 @@ class AccidentClusterAnalyzer:
     # ENHANCED CLUSTER STATS WITH DANGER SCORING
     # ======================================================
     def calculate_cluster_centers(self):
-        """Calculate cluster centers with enhanced danger scoring"""
+        """Calculate cluster centers with enhanced danger scoring and validation"""
         stats = []
+        invalid_clusters = []
+        
         for cid in self.clustered_df["cluster"].unique():
             if cid == -1:
                 continue
                 
             subset = self.clustered_df[self.clustered_df["cluster"] == cid]
+            cluster_size = len(subset)
+            
+            # VALIDATION: Check cluster spatial spread
+            if cluster_size > 1:
+                coords = np.radians(subset[["latitude", "longitude"]].values)
+                centroid = coords.mean(axis=0)
+                distances = np.sqrt(((coords - centroid) ** 2).sum(axis=1))
+                max_spread = distances.max()
+                
+                # Flag clusters that are too spread out (> 0.0015 radians = ~96m from center)
+                # This catches visually "spread out" clusters
+                if max_spread > 0.0015:
+                    invalid_clusters.append({
+                        "id": int(cid),
+                        "size": cluster_size,
+                        "spread_m": int(max_spread * 6371000)  # Convert to meters
+                    })
+            
             danger_score = self.calculate_danger_score(subset)
             
             # Calculate recent accidents (last 12 months)
@@ -387,6 +553,17 @@ class AccidentClusterAnalyzer:
                 "avg_trend_score": round(subset['trend_score'].mean(), 4),
                 "barangays": subset["barangay"].dropna().unique().tolist() if "barangay" in subset.columns else []
             })
+        
+        # Report overly spread clusters
+        if invalid_clusters:
+            print(f"\n{'='*60}")
+            print(f"⚠️  QUALITY WARNING: Found {len(invalid_clusters)} overly spread clusters (>96m radius)")
+            print(f"{'='*60}")
+            for ic in invalid_clusters[:10]:  # Show first 10
+                print(f"   Cluster #{ic['id']}: {ic['size']} accidents, radius {ic['spread_m']}m")
+            if len(invalid_clusters) > 10:
+                print(f"   ... and {len(invalid_clusters) - 10} more")
+            print(f"{'='*60}\n")
             
         # Sort by danger score (most dangerous first)
         stats = sorted(stats, key=lambda x: x["danger_score"], reverse=True)
@@ -550,18 +727,36 @@ class AccidentClusterAnalyzer:
     # ======================================================
     # MAIN PIPELINE
     # ======================================================
-    def main(self, auto_tune=True, export_alerts=True):
+    def main(self, auto_tune=False, export_alerts=True):
         """Enhanced main pipeline with temporal analysis"""
         if not self.load_geojson_data(): 
             return
         if not self.preprocess_data(): 
             return
         
+        n_points = len(self.df)
+        
+        # Calculate dynamic sub-clustering threshold (scales with dataset size)
+        self.highway_cluster_threshold = max(300, int(n_points * 0.035))
+        print(f"🔧 Dynamic sub-cluster threshold: {self.highway_cluster_threshold} accidents")
+        
+        # FIXED parameters for FULL DATASET only (13k+ records)
+        # This script processes complete data, not filtered subsets
+        min_cluster_size = 25      # Needs 25+ accidents (statistical significance)
+        min_samples = 15           # Needs 15 points within epsilon
+        epsilon = 0.0000008        # ~51m - very tight merge radius
+        
+        print(f"\n📐 Using FIXED parameters for full dataset ({n_points} points):")
+        print(f"   min_cluster_size={min_cluster_size}, min_samples={min_samples}, epsilon={epsilon:.7f}")
+        
         if auto_tune:
-            best = self.tune_clustering()
-            self.perform_clustering(best["min_cluster_size"], best["min_cluster_size"]//2, best["epsilon"])
-        else:
-            self.perform_clustering()
+            print("⚠️  Auto-tuning disabled - using proven fixed parameters")
+        
+        self.perform_clustering(
+            min_cluster_size=min_cluster_size,
+            min_samples=min_samples,
+            cluster_selection_epsilon=epsilon
+        )
             
         # Use temporal sub-clustering instead of the old method
         self.temporal_subcluster_large_clusters()
