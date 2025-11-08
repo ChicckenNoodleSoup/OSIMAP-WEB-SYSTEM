@@ -968,3 +968,52 @@
 .box5631:nth-child(9) {
   animation: moveBox5631-9 4s infinite;
 }
+
+/* Apply Filters Button - matches Clear Filters style from CurrentRecords */
+.apply-filters-btn {
+  padding: 8px 18px;
+  background: linear-gradient(180deg, #0085FF, #0059B3);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+  box-shadow: 0 4px 12px rgba(0, 133, 255, 0.22);
+  height: fit-content;
+  align-self: flex-end;
+  margin-left: auto;
+}
+
+.apply-filters-btn:hover:not(:disabled) {
+  background: linear-gradient(180deg, #0099FF, #0066CC);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 133, 255, 0.35);
+}
+
+.apply-filters-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.apply-filters-btn.filters-changed {
+  background: linear-gradient(180deg, #FF6B00, #CC5500);
+  box-shadow: 0 4px 12px rgba(255, 107, 0, 0.22);
+}
+
+.apply-filters-btn.filters-changed:hover:not(:disabled) {
+  background: linear-gradient(180deg, #FF7F00, #E66000);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(255, 107, 0, 0.35);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .apply-filters-btn {
+    width: 100%;
+    margin-left: 0;
+    margin-top: 5px;
+  }
+}

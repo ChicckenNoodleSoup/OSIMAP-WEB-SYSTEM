@@ -1,5 +1,6 @@
-import os
+import sys
 import json
+import os
 import numpy as np
 import pandas as pd
 from datetime import datetime, timedelta
@@ -9,17 +10,28 @@ from sklearn.metrics import silhouette_score
 from sklearn.preprocessing import StandardScaler
 from scipy import stats
 import warnings
+import hashlib
 
 warnings.filterwarnings("ignore", category=FutureWarning, message=".*force_all_finite.*")
 
+# Redirect all print statements to stderr so only JSON goes to stdout
+def log(message):
+    print(message, file=sys.stderr)
 
-class AccidentClusterAnalyzer:
-    def __init__(self, filename="accidents.geojson"):
-        # Use script_dir + data folder like before
-        script_dir = os.path.dirname(os.path.abspath(__file__))
-        data_folder = os.path.join(script_dir, "data")
-        self.file_path = os.path.join(data_folder, filename)
 
+class DynamicAccidentClusterAnalyzer:
+    """Dynamic clustering that works with filtered accident data"""
+    
+    def __init__(self, filters=None):
+        self.script_dir = os.path.dirname(os.path.abspath(__file__))
+        self.data_folder = os.path.join(self.script_dir, "data")
+        self.cache_folder = os.path.join(self.data_folder, "cache")
+        
+        # Create cache folder if it doesn't exist
+        os.makedirs(self.cache_folder, exist_ok=True)
+        
+        # Filter parameters
+        self.filters = filters or {}
         self.df = None
         self.clustered_df = None
         self.cluster_centers = None
@@ -27,24 +39,63 @@ class AccidentClusterAnalyzer:
         self.trend_scores = None
         self.current_date = datetime.now()
         
-        # Temporal analysis parameters
+        # Clustering parameters (same as cluster_hdbscan.py)
         self.decay_rate = 0.15
         self.recent_months = 24
-        # Dynamic sub-clustering threshold based on dataset size
-        # Will be set after data is loaded
+        # Dynamic sub-clustering threshold - will be set during tuning based on dataset size
 
-    # ======================================================
-    # LOAD + PREPROCESS
-    # ======================================================
-    def load_geojson_data(self):
-        if not os.path.exists(self.file_path):
-            print(f" GeoJSON not found: {self.file_path}")
+    def get_cache_key(self):
+        """Generate cache key from filters - normalize arrays to ignore order"""
+        # Create normalized filter dict
+        normalized_filters = {}
+        for key, value in self.filters.items():
+            if isinstance(value, list):
+                # Sort arrays so [2016, 2017] and [2017, 2016] produce same key
+                normalized_filters[key] = sorted(value)
+            else:
+                normalized_filters[key] = value
+        
+        filter_str = json.dumps(normalized_filters, sort_keys=True)
+        return hashlib.md5(filter_str.encode()).hexdigest()
+    
+    def load_cached_result(self):
+        """Try to load cached clustering result"""
+        cache_key = self.get_cache_key()
+        cache_file = os.path.join(self.cache_folder, f"{cache_key}.geojson")
+        
+        if os.path.exists(cache_file):
+            # Check if cache is less than 1 hour old
+            cache_age = datetime.now().timestamp() - os.path.getmtime(cache_file)
+            if cache_age < 3600:  # 1 hour
+                log(f"✅ Using cached result (age: {cache_age:.0f}s)")
+                with open(cache_file, 'r', encoding='utf-8') as f:
+                    return json.load(f)
+        return None
+    
+    def save_to_cache(self, geojson_data):
+        """Save clustering result to cache"""
+        cache_key = self.get_cache_key()
+        cache_file = os.path.join(self.cache_folder, f"{cache_key}.geojson")
+        
+        with open(cache_file, 'w', encoding='utf-8') as f:
+            json.dump(geojson_data, f, indent=2, ensure_ascii=False)
+        
+        log(f"💾 Cached result saved")
+    
+    def load_and_filter_data(self):
+        """Load base GeoJSON and apply filters"""
+        # Load the base accidents.geojson (without clustering)
+        base_file = os.path.join(self.data_folder, "accidents.geojson")
+        
+        if not os.path.exists(base_file):
+            log(f"❌ Base GeoJSON not found: {base_file}")
             return False
-
-        print(f" Loading accidents from {self.file_path}...")
-        with open(self.file_path, "r", encoding="utf-8") as f:
+        
+        log(f"📂 Loading base data from {base_file}...")
+        with open(base_file, "r", encoding="utf-8") as f:
             data = json.load(f)
-
+        
+        # Convert to DataFrame
         records = []
         for feat in data["features"]:
             if feat["geometry"]["type"] != "Point":
@@ -56,14 +107,44 @@ class AccidentClusterAnalyzer:
                 "latitude": coords[1],
                 **props
             })
-
-        self.df = pd.DataFrame(records)
-        print(f" Loaded {len(self.df)} accident records")
+        
+        df = pd.DataFrame(records)
+        log(f"📊 Loaded {len(df)} total records")
+        
+        # Apply filters
+        if self.filters.get('years') and len(self.filters['years']) > 0:
+            years = [str(y) for y in self.filters['years']]
+            df = df[df['year'].astype(str).isin(years)]
+            log(f"   Filtered by years {years}: {len(df)} records")
+        
+        if self.filters.get('location') and self.filters['location'] != 'all':
+            location = self.filters['location']
+            df = df[df['barangay'].astype(str).str.strip() == location]
+            log(f"   Filtered by location '{location}': {len(df)} records")
+        
+        if self.filters.get('offenseType') and self.filters['offenseType'] != 'all':
+            offense = self.filters['offenseType']
+            df = df[df['offensetype'].astype(str).str.strip() == offense]
+            log(f"   Filtered by offense '{offense}': {len(df)} records")
+        
+        if self.filters.get('severity') and self.filters['severity'] != 'all':
+            severity = self.filters['severity']
+            df = df[df['severity'].astype(str).str.strip() == severity]
+            log(f"   Filtered by severity '{severity}': {len(df)} records")
+        
+        if len(df) == 0:
+            log("⚠️  No records match the filters")
+            return False
+        
+        self.df = df
+        log(f"✅ Final filtered dataset: {len(df)} records")
         return True
-
+    
     def preprocess_data(self):
+        """Clean and prepare data"""
         if self.df is None:
             return False
+        
         before = len(self.df)
         self.df = self.df.dropna(subset=["latitude", "longitude"])
         self.df = self.df[
@@ -71,110 +152,90 @@ class AccidentClusterAnalyzer:
             (self.df["longitude"].between(-180, 180))
         ]
         
-        # Handle date and time columns - combine datecommitted and timecommitted
+        # Handle date and time columns
         if 'datecommitted' in self.df.columns:
             if 'timecommitted' in self.df.columns:
-                # Combine date and time
                 self.df['datetime_str'] = self.df['datecommitted'].astype(str) + ' ' + self.df['timecommitted'].astype(str)
                 try:
                     self.df['date'] = pd.to_datetime(self.df['datetime_str'], errors='coerce')
                 except:
                     self.df['date'] = pd.to_datetime(self.df['datecommitted'], errors='coerce')
             else:
-                # Just use datecommitted
                 self.df['date'] = pd.to_datetime(self.df['datecommitted'], errors='coerce')
         elif 'date' not in self.df.columns:
-            print(" No datecommitted column found. Adding current date for all records.")
             self.df['date'] = self.current_date
         
-        # Fill NaT values with current date
         self.df['date'] = self.df['date'].fillna(self.current_date)
         
         after = len(self.df)
-        print(f"  Cleaned {before - after} invalid records {after} remain")
+        if before != after:
+            log(f"🧹 Cleaned {before - after} invalid records, {after} remain")
+        
         return True
-
-    # ======================================================
-    # TEMPORAL ANALYSIS METHODS
-    # ======================================================
+    
     def calculate_temporal_weights(self, accident_dates=None):
         """Calculate exponential decay weights based on accident dates"""
         if accident_dates is None:
             accident_dates = self.df['date']
         
-        # Calculate days from current date
         days_from_now = (self.current_date - accident_dates).dt.days
-        
-        # Apply exponential decay: weight = exp(-decay_rate * days_from_now / 365)
         weights = np.exp(-self.decay_rate * days_from_now / 365.25)
-        
         return weights
     
     def analyze_accident_trends(self, locations=None, dates=None):
-        """Analyze accident trends using linear regression on time series"""
+        """Analyze accident trends using linear regression"""
         if locations is None:
             locations = self.df[['latitude', 'longitude']].values
         if dates is None:
             dates = self.df['date']
         
-        # Create DataFrame for analysis
         df_trend = pd.DataFrame({
             'date': dates,
             'lat': locations[:, 0],
             'lon': locations[:, 1]
         })
         
-        # Group by location bins and month to count accidents
         df_trend['year_month'] = df_trend['date'].dt.to_period('M')
         
-        # Create spatial bins (adjust bin size based on your coordinate system)
+        # Create spatial bins (same as cluster_hdbscan.py)
         lat_bins = pd.cut(df_trend['lat'], bins=50)
         lon_bins = pd.cut(df_trend['lon'], bins=50)
         df_trend['spatial_bin'] = lat_bins.astype(str) + '_' + lon_bins.astype(str)
         
-        # Count accidents per spatial bin per month
         monthly_counts = df_trend.groupby(['spatial_bin', 'year_month']).size().reset_index(name='count')
         
-        # Calculate trend for each spatial bin
         trends = {}
         for spatial_bin in monthly_counts['spatial_bin'].unique():
             bin_data = monthly_counts[monthly_counts['spatial_bin'] == spatial_bin]
             
-            if len(bin_data) >= 3:  # Need minimum points for trend
-                # Convert period to numeric for regression
+            if len(bin_data) >= 3:
                 x = np.arange(len(bin_data))
                 y = bin_data['count'].values
-                
-                # Calculate linear trend (slope)
                 slope, _, r_value, _, _ = stats.linregress(x, y)
-                trends[spatial_bin] = slope if abs(r_value) > 0.3 else 0  # Only significant trends
+                trends[spatial_bin] = slope if abs(r_value) > 0.3 else 0
             else:
                 trends[spatial_bin] = 0
         
-        # Map trends back to original data points
         df_trend['trend'] = df_trend['spatial_bin'].map(trends).fillna(0)
-        
         return df_trend['trend'].values
-
+    
     def calculate_danger_score(self, cluster_data):
         """Calculate composite danger score for a cluster"""
         if len(cluster_data) == 0:
             return 0
         
-        # Get temporal weights and trends for this cluster
         cluster_weights = self.calculate_temporal_weights(cluster_data['date'])
         cluster_coords = cluster_data[['latitude', 'longitude']].values
         cluster_trends = self.analyze_accident_trends(cluster_coords, cluster_data['date'])
         
-        # Calculate components
         temporal_component = np.mean(cluster_weights) * 0.4  # 40% weight
         trend_component = max(0, np.mean(cluster_trends)) * 0.3  # 30% weight (only positive trends)
         frequency_component = min(len(cluster_data) / 100, 1.0) * 0.3  # 30% weight (capped at 100)
         
         return temporal_component + trend_component + frequency_component
-
+    
     # ======================================================
-    # FAST SILHOUETTE
+    # FAST SILHOUETTE (same as cluster_hdbscan.py)
     # ======================================================
     def fast_silhouette(self, X, labels, sample_size=2000):
         if len(set(labels)) <= 1:
@@ -200,12 +261,12 @@ class AccidentClusterAnalyzer:
         # For accident data, we want TIGHT but MERGEABLE geographical clusters
         # epsilon in radians: 0.00001 rad ≈ 640m, 0.000001 rad ≈ 64m
         # Scale parameters with dataset size
-        print(f"📊 Dataset size: {n_points} points")
+        log(f"📊 Dataset size: {n_points} points")
         
         # Calculate dynamic sub-clustering threshold (scales with dataset size)
         # Rule: ~3-4% of total accidents per cluster before sub-clustering
         self.highway_cluster_threshold = max(300, int(n_points * 0.035))
-        print(f"🔧 Dynamic sub-cluster threshold: {self.highway_cluster_threshold} accidents")
+        log(f"🔧 Dynamic sub-cluster threshold: {self.highway_cluster_threshold} accidents")
         
         if n_points < 100:
             cluster_sizes = [3, 5, 8]
@@ -227,9 +288,9 @@ class AccidentClusterAnalyzer:
             # Balance between intersection-level clusters and merging nearby hotspots
             cluster_sizes = [15, 22, 30, 40]  # Smaller min allows intersections to form clusters
             epsilons = [0.000002, 0.000004, 0.000006, 0.000008]   # ~128m, ~256m, ~384m, ~512m (MORE MERGING)
-            print(f"📈 Using large dataset parameters (balanced merging + intersections)")
+            log(f"📈 Using large dataset parameters (balanced merging + intersections)")
 
-        print("\n=== PARAMETER TUNING (Tight Clusters) ===")
+        log("\n=== PARAMETER TUNING (Tight Clusters) ===")
         for size in cluster_sizes:
             for eps in epsilons:
                 clusterer = HDBSCAN(
@@ -269,9 +330,9 @@ class AccidentClusterAnalyzer:
                     "silhouette": silhouette,
                     "compactness": round(avg_compactness, 6)
                 })
-                print(f"size={size}, samples={max(3, size // 3)}, eps={eps:.7f}  "
-                      f"clusters={n_clusters}, noise={round(noise_ratio, 3)}, "
-                      f"s={silhouette}, compact={round(avg_compactness, 6)}")
+                log(f"size={size}, samples={max(3, size // 3)}, eps={eps:.7f}  "
+                    f"clusters={n_clusters}, noise={round(noise_ratio, 3)}, "
+                    f"s={silhouette}, compact={round(avg_compactness, 6)}")
 
         # Prioritize: good silhouette > reasonable cluster count > acceptable noise > compactness
         # We want to balance quality with sensible merging of nearby clusters
@@ -288,13 +349,13 @@ class AccidentClusterAnalyzer:
                          reverse=True)
         
         best = results[0]
-        print(f"\n✨ Best params: size={best['min_cluster_size']}, samples={best['min_samples']}, "
-              f"eps={best['epsilon']:.7f}, clusters={best['clusters']}, "
-              f"noise={best['noise_ratio']}, silhouette={best['silhouette']}, compactness={best['compactness']}")
+        log(f"\n✨ Best params: size={best['min_cluster_size']}, samples={best['min_samples']}, "
+            f"eps={best['epsilon']:.7f}, clusters={best['clusters']}, "
+            f"noise={best['noise_ratio']}, silhouette={best['silhouette']}, compactness={best['compactness']}")
         return best
 
     # ======================================================
-    # MAIN CLUSTERING
+    # MAIN CLUSTERING (same as cluster_hdbscan.py)
     # ======================================================
     def perform_clustering(self, min_cluster_size=15, min_samples=5, cluster_selection_epsilon=0.0001):
         coords = np.radians(self.df[["latitude", "longitude"]].values)
@@ -309,7 +370,7 @@ class AccidentClusterAnalyzer:
         self.clustered_df = self.df.copy()
         
         # Calculate temporal weights and trends for all data
-        print(" Calculating temporal weights and trends...")
+        log("⏱️  Calculating temporal weights and trends...")
         self.temporal_weights = self.calculate_temporal_weights()
         self.trend_scores = self.analyze_accident_trends()
         
@@ -318,21 +379,11 @@ class AccidentClusterAnalyzer:
         self.clustered_df['trend_score'] = self.trend_scores
         
         n_clusters = len(set(labels)) - (1 if -1 in labels else 0)
-        print(f" HDBSCAN  {n_clusters} clusters, {list(labels).count(-1)} noise")
+        log(f"✅ HDBSCAN: {n_clusters} clusters, {list(labels).count(-1)} noise")
         return labels
 
     # ======================================================
-    # SPREAD CALC
-    # ======================================================
-    def cluster_spatial_spread(self, cluster_points):
-        if len(cluster_points) < 2:
-            return 0
-        lat_range = cluster_points["latitude"].max() - cluster_points["latitude"].min()
-        lon_range = cluster_points["longitude"].max() - cluster_points["longitude"].min()
-        return max(lat_range, lon_range) * 111_000  # approx meters
-
-    # ======================================================
-    # ENHANCED SUB-CLUSTERING WITH TEMPORAL WEIGHTING
+    # TEMPORAL SUB-CLUSTERING (same as cluster_hdbscan.py)
     # ======================================================
     def temporal_subcluster_large_clusters(self, max_accidents=None):
         """Enhanced sub-clustering that uses temporal weighting for large clusters"""
@@ -343,7 +394,7 @@ class AccidentClusterAnalyzer:
             # Use dynamic threshold if set, otherwise fallback to reasonable default
             max_accidents = getattr(self, 'highway_cluster_threshold', 500)
             
-        print(f"\n Temporal sub-clustering for clusters > {max_accidents} accidents...")
+        log(f"\n🔧 Temporal sub-clustering for clusters > {max_accidents} accidents...")
         clusters_to_process = self.clustered_df["cluster"].unique()
 
         next_cluster_id = self.clustered_df["cluster"].max() + 1
@@ -359,7 +410,7 @@ class AccidentClusterAnalyzer:
             should_subcluster = accident_count > max_accidents
             
             if should_subcluster:
-                print(f"  Sub-clustering Cluster {cid} ({accident_count} accidents)")
+                log(f"  Sub-clustering Cluster {cid} ({accident_count} accidents)")
                 subclustered_count += 1
                 
                 # Extract coordinates and temporal data
@@ -411,14 +462,14 @@ class AccidentClusterAnalyzer:
                     
                     # Update cluster assignments
                     self.clustered_df.loc[cluster_points.index, "cluster"] = mapped_labels
-                    print(f"       Split into {n_sub_clusters} sub-clusters")
+                    log(f"     ✓ Split into {n_sub_clusters} sub-clusters")
                 else:
-                    print(f"        No meaningful sub-clusters found, keeping original")
+                    log(f"     • No meaningful sub-clusters found, keeping original")
 
-        print(f" Sub-clustered {subclustered_count} large clusters")
-        
-        # Remove outlier points from clusters
-        self.remove_cluster_outliers()
+        if subclustered_count > 0:
+            log(f"✅ Sub-clustered {subclustered_count} large clusters")
+        else:
+            log(f"✅ No clusters needed sub-clustering")
         
         # Renumber clusters to remove gaps
         self.renumber_clusters_sequentially()
@@ -431,7 +482,7 @@ class AccidentClusterAnalyzer:
         if self.clustered_df is None:
             return
         
-        print("\n✂️  Removing outlier points from clusters...")
+        log("\n✂️  Removing outlier points from clusters...")
         
         total_removed = 0
         
@@ -470,9 +521,9 @@ class AccidentClusterAnalyzer:
                 total_removed += n_outliers
                 
                 max_dist_m = int(distances.max() * 6371000)  # Convert to meters
-                print(f"   Cluster {cid}: Removed {n_outliers} outliers (max distance was {max_dist_m}m)")
+                log(f"   Cluster {cid}: Removed {n_outliers} outliers (max distance was {max_dist_m}m)")
         
-        print(f"✅ Removed {total_removed} outlier points total")
+        log(f"✅ Removed {total_removed} outlier points total")
 
     # ======================================================
     # RENUMBER CLUSTERS
@@ -482,13 +533,13 @@ class AccidentClusterAnalyzer:
         if self.clustered_df is None:
             return
         
-        print("\n🔢 Renumbering clusters sequentially...")
+        log("\n🔢 Renumbering clusters sequentially...")
         
         # Get unique cluster IDs (excluding noise)
         unique_clusters = sorted([c for c in self.clustered_df["cluster"].unique() if c != -1])
         
         if not unique_clusters:
-            print("   No clusters to renumber")
+            log("   No clusters to renumber")
             return
         
         # Create mapping from old IDs to new sequential IDs
@@ -498,25 +549,17 @@ class AccidentClusterAnalyzer:
         # Remap cluster IDs
         self.clustered_df["cluster"] = self.clustered_df["cluster"].map(cluster_mapping)
         
-        print(f"   Renumbered {len(unique_clusters)} clusters: 0-{len(unique_clusters)-1}")
-
-    # Legacy method for backward compatibility
-    def subcluster_large_clusters(self, max_accidents=500, max_spread_m=300):
-        """Enhanced sub-clustering method that uses temporal weighting"""
-        self.temporal_subcluster_large_clusters(max_accidents)
-
-    # ======================================================
-    # ENHANCED CLUSTER STATS WITH DANGER SCORING
-    # ======================================================
+        log(f"   Renumbered {len(unique_clusters)} clusters: 0-{len(unique_clusters)-1}")
+    
     def calculate_cluster_centers(self):
-        """Calculate cluster centers with enhanced danger scoring and validation"""
+        """Calculate cluster centers with danger scoring and validation"""
         stats = []
         invalid_clusters = []
         
         for cid in self.clustered_df["cluster"].unique():
             if cid == -1:
                 continue
-                
+            
             subset = self.clustered_df[self.clustered_df["cluster"] == cid]
             cluster_size = len(subset)
             
@@ -538,7 +581,6 @@ class AccidentClusterAnalyzer:
             
             danger_score = self.calculate_danger_score(subset)
             
-            # Calculate recent accidents (last 12 months)
             recent_cutoff = self.current_date - timedelta(days=365)
             recent_accidents = len(subset[subset['date'] > recent_cutoff])
             
@@ -556,110 +598,31 @@ class AccidentClusterAnalyzer:
         
         # Report overly spread clusters
         if invalid_clusters:
-            print(f"\n{'='*60}")
-            print(f"⚠️  QUALITY WARNING: Found {len(invalid_clusters)} overly spread clusters (>96m radius)")
-            print(f"{'='*60}")
+            log(f"\n{'='*60}")
+            log(f"⚠️  QUALITY WARNING: Found {len(invalid_clusters)} overly spread clusters (>96m radius)")
+            log(f"{'='*60}")
             for ic in invalid_clusters[:10]:  # Show first 10
-                print(f"   Cluster #{ic['id']}: {ic['size']} accidents, radius {ic['spread_m']}m")
+                log(f"   Cluster #{ic['id']}: {ic['size']} accidents, radius {ic['spread_m']}m")
             if len(invalid_clusters) > 10:
-                print(f"   ... and {len(invalid_clusters) - 10} more")
-            print(f"{'='*60}\n")
-            
-        # Sort by danger score (most dangerous first)
+                log(f"   ... and {len(invalid_clusters) - 10} more")
+            log(f"{'='*60}\n")
+        
         stats = sorted(stats, key=lambda x: x["danger_score"], reverse=True)
         self.cluster_centers = stats
-
-    def get_alert_worthy_clusters(self, threshold_percentile=20):
-        """Get clusters that should trigger mobile app alerts"""
-        if not self.cluster_centers:
-            return []
-        
-        # Calculate danger score threshold
-        danger_scores = [c["danger_score"] for c in self.cluster_centers]
-        threshold = np.percentile(danger_scores, 100 - threshold_percentile)
-        
-        # Filter clusters above threshold
-        alert_clusters = [c for c in self.cluster_centers if c["danger_score"] >= threshold]
-        
-        print(f"\n Alert-worthy clusters (top {threshold_percentile}%):")
-        print(f"   Danger score threshold: {threshold:.4f}")
-        print(f"   Number of alert clusters: {len(alert_clusters)}")
-        
-        return alert_clusters
-
-    def generate_mobile_alert_data(self, alert_clusters=None, radius_km=0.5):
-        """Generate data structure for mobile app alerts"""
-        if alert_clusters is None:
-            alert_clusters = self.get_alert_worthy_clusters()
-        
-        alert_data = []
-        
-        for cluster in alert_clusters:
-            # Categorize danger level
-            danger_score = cluster['danger_score']
-            if danger_score >= 0.7:
-                danger_level = 'HIGH'
-            elif danger_score >= 0.4:
-                danger_level = 'MEDIUM'
-            else:
-                danger_level = 'LOW'
-            
-            # Generate alert message
-            trend_text = "with increasing accidents" if cluster['avg_trend_score'] > 0.1 else ""
-            recent_text = f"{cluster['recent_accidents']} recent accidents" if cluster['recent_accidents'] > 0 else ""
-            alert_message = f"Accident-prone area ahead {trend_text}. {recent_text} reported here. Drive carefully."
-            
-            alert_info = {
-                'cluster_id': cluster['cluster_id'],
-                'center_lat': float(cluster['center_lat']),
-                'center_lon': float(cluster['center_lon']),
-                'radius_km': radius_km,
-                'danger_level': danger_level,
-                'danger_score': cluster['danger_score'],
-                'accident_count': cluster['accident_count'],
-                'recent_accidents': cluster['recent_accidents'],
-                'trend': 'increasing' if cluster['avg_trend_score'] > 0.1 else 'stable',
-                'alert_message': alert_message
-            }
-            alert_data.append(alert_info)
-        
-        return alert_data
-
-    def get_cluster_summary(self):
-        """Enhanced cluster summary with danger scoring"""
+        log(f"📍 Calculated {len(stats)} cluster centers")
+    
+    def to_geojson(self):
+        """Convert to GeoJSON format"""
         if self.clustered_df is None:
-            return
-            
-        print("\n=== ENHANCED CLUSTER SUMMARY ===")
-        print(f"Total accidents: {len(self.clustered_df)}")
-        print(f"Clusters: {len([c for c in self.clustered_df['cluster'].unique() if c != -1])}")
-        print(f"Noise: {len(self.clustered_df[self.clustered_df['cluster'] == -1])}")
+            return None
         
-        print(f"\nTop 10 most dangerous clusters:")
-        for i, c in enumerate(self.cluster_centers[:10], 1):
-            print(f" {i:2d}. Cluster {c['cluster_id']}: {c['accident_count']} accidents, "
-                  f"danger={c['danger_score']:.4f}, recent={c['recent_accidents']}, "
-                  f"trend={c['avg_trend_score']:+.4f}")
-
-    # ======================================================
-    # ENHANCED EXPORT WITH TEMPORAL DATA
-    # ======================================================
-    def export_to_geojson(self, filename="accidents_clustered.geojson"):
-        """Export with temporal weights, danger scores, and cluster centers combined for React app"""
-        if self.clustered_df is None:
-            return
-        
-        script_dir = os.path.dirname(os.path.abspath(__file__))
-        data_folder = os.path.join(script_dir, "data")
-        os.makedirs(data_folder, exist_ok=True)
-        output = os.path.join(data_folder, filename)
-
         geojson = {"type": "FeatureCollection", "features": []}
         
-        # Add accident points with type="accident_point"
+        # Add accident points
         for _, row in self.clustered_df.iterrows():
             properties = {k: row[k] for k in row.index if k not in ["longitude", "latitude"]}
-            # Convert numpy types to Python native types for JSON serialization
+            
+            # Convert numpy types to Python native types
             for key, value in properties.items():
                 if isinstance(value, (np.integer, np.floating)):
                     properties[key] = value.item()
@@ -670,7 +633,6 @@ class AccidentClusterAnalyzer:
                 elif isinstance(value, pd.Timestamp):
                     properties[key] = value.isoformat()
             
-            # Add type identifier for React app
             properties["type"] = "accident_point"
             
             geojson["features"].append({
@@ -679,102 +641,123 @@ class AccidentClusterAnalyzer:
                 "properties": properties
             })
         
-        # Add cluster centers with type="cluster_center"
+        # Add cluster centers
         if self.cluster_centers:
             for cluster in self.cluster_centers:
                 cluster_properties = cluster.copy()
                 cluster_properties["type"] = "cluster_center"
                 
                 geojson["features"].append({
-                    "type": "Feature", 
+                    "type": "Feature",
                     "geometry": {"type": "Point", "coordinates": [cluster["center_lon"], cluster["center_lat"]]},
                     "properties": cluster_properties
                 })
         
-        with open(output, "w", encoding="utf-8") as f:
-            json.dump(geojson, f, indent=2, ensure_ascii=False)
-        print(f" Exported combined GeoJSON to {output}")
-
-    def export_cluster_centers(self, filename="cluster_centers.json"):
-        """Export cluster centers with danger scores for mobile app"""
-        if not self.cluster_centers:
-            return
+        return geojson
+    
+    def run(self, auto_tune=False):
+        """Main execution pipeline with caching (same process as cluster_hdbscan.py)"""
+        log("=" * 60)
+        log("🚀 Dynamic Accident Clustering")
+        log("=" * 60)
+        log(f"Filters: {json.dumps(self.filters, indent=2)}")
+        log("")
         
-        script_dir = os.path.dirname(os.path.abspath(__file__))
-        data_folder = os.path.join(script_dir, "data")
-        os.makedirs(data_folder, exist_ok=True)
-        output = os.path.join(data_folder, filename)
-            
-        with open(output, "w", encoding="utf-8") as f:
-            json.dump(self.cluster_centers, f, indent=2, ensure_ascii=False)
-        print(f" Exported cluster centers to {output}")
-
-    def export_mobile_alerts(self, filename="mobile_alerts.json", threshold_percentile=20):
-        """Export mobile-ready alert data"""
-        alert_data = self.generate_mobile_alert_data(
-            self.get_alert_worthy_clusters(threshold_percentile)
-        )
+        # Check cache first
+        cached = self.load_cached_result()
+        if cached:
+            return cached
         
-        script_dir = os.path.dirname(os.path.abspath(__file__))
-        data_folder = os.path.join(script_dir, "data")
-        os.makedirs(data_folder, exist_ok=True)
-        output = os.path.join(data_folder, filename)
+        # Load and filter data
+        if not self.load_and_filter_data():
+            return {"type": "FeatureCollection", "features": [], "error": "No data matches filters"}
         
-        with open(output, "w", encoding="utf-8") as f:
-            json.dump(alert_data, f, indent=2, ensure_ascii=False)
-        print(f" Exported {len(alert_data)} mobile alerts to {output}")
-
-    # ======================================================
-    # MAIN PIPELINE
-    # ======================================================
-    def main(self, auto_tune=False, export_alerts=True):
-        """Enhanced main pipeline with temporal analysis"""
-        if not self.load_geojson_data(): 
-            return
-        if not self.preprocess_data(): 
-            return
+        # Preprocess
+        if not self.preprocess_data():
+            return {"type": "FeatureCollection", "features": [], "error": "Data preprocessing failed"}
         
         n_points = len(self.df)
         
         # Calculate dynamic sub-clustering threshold (scales with dataset size)
         self.highway_cluster_threshold = max(300, int(n_points * 0.035))
-        print(f"🔧 Dynamic sub-cluster threshold: {self.highway_cluster_threshold} accidents")
+        log(f"🔧 Dynamic sub-cluster threshold: {self.highway_cluster_threshold} accidents")
         
-        # FIXED parameters for FULL DATASET only (13k+ records)
-        # This script processes complete data, not filtered subsets
-        min_cluster_size = 25      # Needs 25+ accidents (statistical significance)
-        min_samples = 15           # Needs 15 points within epsilon
-        epsilon = 0.0000008        # ~51m - very tight merge radius
+        # Use STRICT, QUALITY-FOCUSED parameters
+        # These enforce tight, high-density clusters only
+        if n_points < 500:
+            # Small filtered datasets
+            min_cluster_size = 8
+            min_samples = 5
+            epsilon = 0.0000005  # ~32m
+        elif n_points < 2000:
+            # Medium filtered datasets (e.g., single year like 2018)
+            min_cluster_size = 20      # Higher threshold for quality
+            min_samples = 17           # 85% density - MAXIMUM strictness
+            epsilon = 0.0000025        # ~160m - allows nearby clusters along same road to merge
+        else:
+            # Large dataset (full 13k+ records)
+            # STRICT: Only very dense, tight groupings qualify as clusters
+            min_cluster_size = 25      # Needs 25+ accidents (statistical significance)
+            min_samples = 15           # Needs 15 points within epsilon
+            epsilon = 0.0000008        # ~51m - tight merge radius only
         
-        print(f"\n📐 Using FIXED parameters for full dataset ({n_points} points):")
-        print(f"   min_cluster_size={min_cluster_size}, min_samples={min_samples}, epsilon={epsilon:.7f}")
+        log(f"\n📐 Using FIXED parameters for {n_points} points:")
+        log(f"   min_cluster_size={min_cluster_size}, min_samples={min_samples}, epsilon={epsilon:.7f}")
         
         if auto_tune:
-            print("⚠️  Auto-tuning disabled - using proven fixed parameters")
+            log("⚠️  Auto-tuning disabled - using proven fixed parameters")
         
         self.perform_clustering(
             min_cluster_size=min_cluster_size,
             min_samples=min_samples,
             cluster_selection_epsilon=epsilon
         )
-            
-        # Use temporal sub-clustering instead of the old method
+        
+        # Temporal sub-clustering for large clusters (same as cluster_hdbscan.py)
         self.temporal_subcluster_large_clusters()
         
-        # Calculate enhanced cluster stats
+        # Remove outlier points from clusters (prevents chaining effect)
+        self.remove_cluster_outliers()
+        
+        # Calculate cluster centers with danger scoring
         self.calculate_cluster_centers()
-        self.get_cluster_summary()
         
-        # Export results
-        self.export_to_geojson()
-        self.export_cluster_centers()
+        # Generate GeoJSON
+        geojson = self.to_geojson()
         
-        if export_alerts:
-            self.export_mobile_alerts()
-            
-        print(f"\n Analysis complete! Check data folder for mobile app integration files.")
+        # Save to cache
+        if geojson:
+            self.save_to_cache(geojson)
+        
+        log("")
+        log("✅ Dynamic clustering complete!")
+        log("=" * 60)
+        
+        return geojson
+
+
+def main():
+    """Main entry point - accepts filters via command line JSON"""
+    if len(sys.argv) > 1:
+        try:
+            filters = json.loads(sys.argv[1])
+        except json.JSONDecodeError:
+            log("❌ Invalid JSON filter argument")
+            sys.exit(1)
+    else:
+        filters = {}
+    
+    analyzer = DynamicAccidentClusterAnalyzer(filters)
+    result = analyzer.run()
+    
+    if result:
+        # Output ONLY JSON to stdout for Node.js to capture
+        print(json.dumps(result))  # This is the only stdout output
+    else:
+        print(json.dumps({"type": "FeatureCollection", "features": [], "error": "Clustering failed"}))
+        sys.exit(1)
 
 
 if __name__ == "__main__":
-    analyzer = AccidentClusterAnalyzer()
-    analyzer.main()
+    main()
+

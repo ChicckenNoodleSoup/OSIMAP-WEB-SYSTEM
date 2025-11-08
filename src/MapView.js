@@ -405,6 +405,7 @@ export default function MapView() {
   const recordDetails = location.state?.recordDetails;
 
   const [accidentData, setAccidentData] = useState(null);
+  const [baseData, setBaseData] = useState(null); // For filter options
   const [showClusters, setShowClusters] = useState(true);
   const [showHeatmap, setShowHeatmap] = useState(true);
   const [showMarkers, setShowMarkers] = useState(false);
@@ -437,12 +438,43 @@ export default function MapView() {
   const [selectedLocation, setSelectedLocation] = useState("all");
   const [selectedOffenseType, setSelectedOffenseType] = useState("all");
   const [selectedSeverity, setSelectedSeverity] = useState("all");
+  
+  // Applied filters (what's actually been clustered)
+  const [appliedFilters, setAppliedFilters] = useState({
+    years: [],
+    location: "all",
+    offenseType: "all",
+    severity: "all"
+  });
+  
+  // Check if filters have changed but not applied
+  const filtersChanged = 
+    JSON.stringify(selectedYears) !== JSON.stringify(appliedFilters.years) ||
+    selectedLocation !== appliedFilters.location ||
+    selectedOffenseType !== appliedFilters.offenseType ||
+    selectedSeverity !== appliedFilters.severity;
 
-  // Extract unique years, locations, offense types, and severities
+  // Load base data once for filter options (not clustered, just raw data)
+  useEffect(() => {
+    async function fetchBaseData() {
+      try {
+        const res = await fetch("http://localhost:5000/data/accidents.geojson");
+        if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+        const data = await res.json();
+        console.log("Fetched base data for filters:", data.features?.length, "points");
+        setBaseData(data);
+      } catch (err) {
+        console.error("Failed to load base data:", err);
+      }
+    }
+    fetchBaseData();
+  }, []);
+
+  // Extract unique years, locations, offense types, and severities from BASE data
   const { availableYears, availableLocations, availableOffenseTypes, availableSeverities } = useMemo(() => {
-    if (!accidentData) return { availableYears: [], availableLocations: [], availableOffenseTypes: [], availableSeverities: [] };
+    if (!baseData) return { availableYears: [], availableLocations: [], availableOffenseTypes: [], availableSeverities: [] };
 
-    const accidents = accidentData.features.filter(f =>
+    const accidents = baseData.features.filter(f =>
       f.properties && f.geometry && f.geometry.coordinates
     );
 
@@ -460,80 +492,105 @@ export default function MapView() {
     const severities = getUniqueAndCleanValues(accidents, 'severity');
 
     return { availableYears: years, availableLocations: locations, availableOffenseTypes: offenseTypes, availableSeverities: severities };
-  }, [accidentData]);
+  }, [baseData]);
 
-  // CHANGED: Filter data based on selected filters - updated year logic
+  // Process the already-filtered and clustered data from backend
   const filteredData = useMemo(() => {
-    if (!accidentData) return { accidentPoints: [], clusterCenters: [], stats: null };
+    if (!accidentData || !accidentData.features) return { accidentPoints: [], clusterCenters: [], stats: null };
 
-    let accidents = accidentData.features.filter(f =>
+    // Separate accident points and cluster centers
+    const accidents = accidentData.features.filter(f =>
       f.properties && f.geometry && f.geometry.coordinates &&
       f.properties.type !== "cluster_center"
     );
-    let clusters = accidentData.features.filter(f =>
+    
+    const clusters = accidentData.features.filter(f =>
       f.properties && f.properties.type === "cluster_center"
     );
 
-    // Apply filters with updated year logic
-    accidents = accidents.filter(f => {
-      const { year, barangay, offensetype, severity } = f.properties;
-      
-      // Convert year to string for comparison
-      const yearStr = String(year).trim();
-      
-      // Empty selectedYears array means "all years"
-      const yearMatch = selectedYears.length === 0 || selectedYears.includes(yearStr);
-      const locationMatch = selectedLocation === "all" || String(barangay).trim() === selectedLocation;
-      const offenseMatch = selectedOffenseType === "all" || String(offensetype).trim() === selectedOffenseType;
-      const severityMatch = selectedSeverity === "all" || String(severity).trim() === selectedSeverity;
-
-      return yearMatch && locationMatch && offenseMatch && severityMatch;
-    });
-
-    // Filter clusters to only show those that contain at least one of the currently filtered accidents
-    const visibleClusterIds = new Set(accidents.map(a => a.properties.cluster));
-    const filteredClusters = clusters.filter(c => visibleClusterIds.has(c.properties.cluster_id));
-    
-    // Update cluster count based on filtered clusters
-    const updatedClusters = filteredClusters.map(c => {
-      const accidentCount = accidents.filter(a => a.properties.cluster === c.properties.cluster_id).length;
-      return {
-        ...c,
-        properties: {
-          ...c.properties,
-          accident_count: accidentCount,
-        }
-      };
-    });
-
     return {
       accidentPoints: accidents,
-      clusterCenters: updatedClusters,
+      clusterCenters: clusters,
       stats: {
         totalAccidents: accidents.length,
-        totalClusters: updatedClusters.length,
+        totalClusters: clusters.length,
         noisePoints: accidents.filter(f => f.properties.cluster === -1).length
       },
     };
-  }, [accidentData, selectedYears, selectedLocation, selectedOffenseType, selectedSeverity]);
+  }, [accidentData]);
 
+  // Fetch clustered data based on APPLIED filters (not on every filter change)
   useEffect(() => {
-    async function fetchData() {
+    async function fetchClusteredData() {
       setLoading(true);
       try {
-        let res = await fetch("http://localhost:5000/data/accidents_clustered.geojson");
-        if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-        const data = await res.json();
-        console.log("Fetched GeoJSON:", data.features?.length, "points");
-        setAccidentData(data);
+        // Check if ANY filters are applied
+        const hasFilters = 
+          appliedFilters.years.length > 0 ||
+          appliedFilters.location !== "all" ||
+          appliedFilters.offenseType !== "all" ||
+          appliedFilters.severity !== "all";
+        
+        if (!hasFilters) {
+          // No filters - use pre-computed clustered data
+          console.log("✅ No filters applied - loading pre-computed clusters");
+          const res = await fetch("http://localhost:5000/data/accidents_clustered.geojson");
+          if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+          const data = await res.json();
+          console.log("✅ Loaded pre-computed clusters:", data.features?.length, "features");
+          
+          // Count accident points vs cluster centers
+          const accidents = data.features.filter(f => f.properties?.type !== "cluster_center");
+          const clusters = data.features.filter(f => f.properties?.type === "cluster_center");
+          console.log(`   → ${accidents.length} accident points, ${clusters.length} cluster centers`);
+          
+          setAccidentData(data);
+        } else {
+          // Filters applied - use dynamic clustering API
+          const filters = {
+            years: appliedFilters.years.length > 0 ? appliedFilters.years : [],
+            location: appliedFilters.location !== "all" ? appliedFilters.location : undefined,
+            offenseType: appliedFilters.offenseType !== "all" ? appliedFilters.offenseType : undefined,
+            severity: appliedFilters.severity !== "all" ? appliedFilters.severity : undefined
+          };
+          
+          console.log("🔄 Fetching dynamically clustered data with filters:", filters);
+          
+          const res = await fetch("http://localhost:5000/api/cluster", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify(filters)
+          });
+          
+          if (!res.ok) {
+            const errorData = await res.json();
+            console.error("❌ API error:", errorData);
+            throw new Error(errorData.error || `HTTP error! status: ${res.status}`);
+          }
+          
+          const data = await res.json();
+          console.log("✅ Fetched dynamically clustered data:", data.features?.length, "features");
+          
+          // Count accident points vs cluster centers
+          const accidents = data.features.filter(f => f.properties?.type !== "cluster_center");
+          const clusters = data.features.filter(f => f.properties?.type === "cluster_center");
+          console.log(`   → ${accidents.length} accident points, ${clusters.length} cluster centers`);
+          
+          setAccidentData(data);
+        }
       } catch (err) {
-        console.error("Failed to load GeoJSON data:", err);
+        console.error("Failed to load clustered data:", err);
+        // Fallback to empty data on error
+        setAccidentData({ type: "FeatureCollection", features: [] });
       } finally {
         setLoading(false);
       }
     }
-    fetchData();
-  }, []);
+    
+    fetchClusteredData();
+  }, [appliedFilters]); // Only trigger when appliedFilters changes
 
   const handleToggle = useCallback((setter) => (e) => setter(e.target.checked), []);
 
@@ -541,6 +598,16 @@ export default function MapView() {
   const handleYearChange = useCallback((values) => {
     setSelectedYears(values);
   }, []);
+
+  // Handler for applying filters
+  const handleApplyFilters = useCallback(() => {
+    setAppliedFilters({
+      years: selectedYears,
+      location: selectedLocation,
+      offenseType: selectedOffenseType,
+      severity: selectedSeverity
+    });
+  }, [selectedYears, selectedLocation, selectedOffenseType, selectedSeverity]);
 
   // Search functionality
   const handleSearch = useCallback((term) => {
@@ -769,6 +836,16 @@ export default function MapView() {
               allLabel="All Severities"
               allValue="all"
             />
+          </div>
+
+          <div className="filter-group">
+            <button 
+              className={`apply-filters-btn ${filtersChanged ? 'filters-changed' : ''}`}
+              onClick={handleApplyFilters}
+              disabled={loading}
+            >
+              {loading ? 'Clustering...' : filtersChanged ? 'Apply Filters ⚡' : 'Filters Applied ✓'}
+            </button>
           </div>
         </div>
 

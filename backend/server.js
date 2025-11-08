@@ -292,6 +292,78 @@ app.get("/data-files", (req, res) => {
   }
 });
 
+// Dynamic clustering endpoint with filters
+app.post("/api/cluster", async (req, res) => {
+  console.log("POST /api/cluster route hit");
+  console.log("Filters received:", req.body);
+
+  const filters = req.body || {};
+  
+  try {
+    // Convert filters to JSON string for Python script
+    const filtersJson = JSON.stringify(filters);
+    const scriptPath = path.join(process.cwd(), "dynamic_cluster.py");
+    
+    console.log("Running dynamic clustering with filters:", filtersJson);
+    
+    // Spawn Python process
+    const pythonProcess = spawn("python", [scriptPath, filtersJson]);
+    
+    let outputData = "";
+    let errorData = "";
+    
+    pythonProcess.stdout.on("data", (data) => {
+      outputData += data.toString();
+    });
+    
+    pythonProcess.stderr.on("data", (data) => {
+      const errMsg = data.toString();
+      errorData += errMsg;
+      console.error("Python stderr:", errMsg);
+    });
+    
+    pythonProcess.on("close", (code) => {
+      if (code === 0) {
+        try {
+          // Parse the JSON output (stdout is now pure JSON)
+          const result = JSON.parse(outputData);
+          console.log(`✅ Dynamic clustering successful: ${result.features?.length || 0} features`);
+          res.json(result);
+        } catch (parseError) {
+          console.error("Error parsing Python output:", parseError);
+          console.error("Output was:", outputData);
+          res.status(500).json({ 
+            error: "Failed to parse clustering result",
+            details: parseError.message 
+          });
+        }
+      } else {
+        console.error(`Python script exited with code ${code}`);
+        res.status(500).json({ 
+          error: "Clustering script failed",
+          exitCode: code,
+          stderr: errorData 
+        });
+      }
+    });
+    
+    pythonProcess.on("error", (error) => {
+      console.error("Error starting Python process:", error);
+      res.status(500).json({ 
+        error: "Failed to start clustering script",
+        details: error.message 
+      });
+    });
+    
+  } catch (error) {
+    console.error("Error in /api/cluster endpoint:", error);
+    res.status(500).json({ 
+      error: "Internal server error",
+      details: error.message 
+    });
+  }
+});
+
 // Upload route with validation
 app.post("/upload", upload.single("file"), (req, res) => {
   console.log("POST /upload route hit");
