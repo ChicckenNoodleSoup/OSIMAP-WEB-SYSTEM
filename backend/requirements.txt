@@ -6,4 +6,3 @@ supabase
 openpyxl
 scikit-learn
 scipy
-xlsx
