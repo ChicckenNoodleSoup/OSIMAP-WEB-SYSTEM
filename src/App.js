@@ -15,6 +15,8 @@ import AdminDashboard from './AdminDashboard';
 import SessionTimeout from './components/SessionTimeout';
 import AccountStatusChecker from './components/AccountStatusChecker';
 import { UserProvider } from './UserContext';
+import { UploadProvider } from './contexts/UploadContext';
+import { UploadProgressWidget } from './components/UploadProgressWidget';
 import { isAuthenticated, clearUserData, extendSession } from './utils/authUtils';
 import { logAuthEvent } from './utils/loggingUtils';
 import './App.css';
@@ -69,65 +71,68 @@ function App() {
 
   return (
     <BrowserRouter>
-      <UserProvider>
-        <Routes>
-          {/* Public routes */}
-          <Route
-            path="/signin"
-            element={<SignIn setIsAuthenticated={setAuthState} />}
-          />
-          <Route
-            path="/create-account"
-            element={<CreateAccount />}
-          />
-          <Route
-            path="/forgot-password"
-            element={<ForgotPassword />}
-          />
-          <Route
-            path="/reset-password"
-            element={<ResetPassword />}
-          />
-          <Route
-            path="/download"
-            element={<DownloadPage />}
-          />
+      <UploadProvider>
+        <UserProvider>
+          <UploadProgressWidget />
+          <Routes>
+            {/* Public routes */}
+            <Route
+              path="/signin"
+              element={<SignIn setIsAuthenticated={setAuthState} />}
+            />
+            <Route
+              path="/create-account"
+              element={<CreateAccount />}
+            />
+            <Route
+              path="/forgot-password"
+              element={<ForgotPassword />}
+            />
+            <Route
+              path="/reset-password"
+              element={<ResetPassword />}
+            />
+            <Route
+              path="/download"
+              element={<DownloadPage />}
+            />
 
-          {/* Protected routes */}
-          <Route
-            path="/*"
-            element={
-              <>
-                <ProtectedRoute isAuthenticated={authState}>
-                  <>
-                    <img src="/background-image.png" alt="Background" className="bg-image" />
-                    <SessionTimeout />
-                    <AccountStatusChecker />
-                    <div style={{ display: 'flex', minHeight: '100vh', position: 'relative' }}>
-                      <Sidebar onLogout={handleLogout} />
-                      <div className="main-content">
-                      <Routes>
-                        <Route path="/" element={<Dashboard />} />
-                        <Route path="/dashboard" element={<Dashboard />} />
-                        <Route path="/map" element={<MapView />} />
-                        <Route path="/currentrecords" element={<CurrentRecords />} />
-                        <Route path="/add-record" element={<AddRecord />} />
-                        <Route path="/helpsupport" element={<HelpSupport />} />
-                        <Route path="/print" element={<Print />} />
-                        <Route path="/profile" element={<Profile />} />
-                        <Route path="/admin-dashboard" element={<AdminDashboard />} />
-                        <Route path="*" element={<div>Page Not Found</div>} />
-                      </Routes>
+            {/* Protected routes */}
+            <Route
+              path="/*"
+              element={
+                <>
+                  <ProtectedRoute isAuthenticated={authState}>
+                    <>
+                      <img src="/background-image.png" alt="Background" className="bg-image" />
+                      <SessionTimeout />
+                      <AccountStatusChecker />
+                      <div style={{ display: 'flex', minHeight: '100vh', position: 'relative' }}>
+                        <Sidebar onLogout={handleLogout} />
+                        <div className="main-content">
+                        <Routes>
+                          <Route path="/" element={<Dashboard />} />
+                          <Route path="/dashboard" element={<Dashboard />} />
+                          <Route path="/map" element={<MapView />} />
+                          <Route path="/currentrecords" element={<CurrentRecords />} />
+                          <Route path="/add-record" element={<AddRecord />} />
+                          <Route path="/helpsupport" element={<HelpSupport />} />
+                          <Route path="/print" element={<Print />} />
+                          <Route path="/profile" element={<Profile />} />
+                          <Route path="/admin-dashboard" element={<AdminDashboard />} />
+                          <Route path="*" element={<div>Page Not Found</div>} />
+                        </Routes>
+                      </div>
                     </div>
-                  </div>
-                </>
-              </ProtectedRoute>
-              <SessionTimeout />
-            </>
-          }
-        />
-      </Routes>
-    </UserProvider>
+                  </>
+                </ProtectedRoute>
+                <SessionTimeout />
+              </>
+            }
+          />
+        </Routes>
+      </UserProvider>
+    </UploadProvider>
   </BrowserRouter>
   );
 }

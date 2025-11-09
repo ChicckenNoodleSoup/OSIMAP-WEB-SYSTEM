@@ -1,0 +1,242 @@
+/* Upload Progress Widget - Fixed bottom-right corner */
+.upload-widget {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  width: 380px;
+  max-width: calc(100vw - 48px);
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.98) 0%, rgba(30, 41, 59, 0.98) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 16px;
+  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.5);
+  z-index: 9999;
+  backdrop-filter: blur(12px);
+  animation: slideInUp 0.3s ease-out;
+  max-height: calc(100vh - 100px);
+  display: flex;
+  flex-direction: column;
+}
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.upload-widget.minimized {
+  max-height: 60px;
+}
+
+.upload-widget-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 18px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  cursor: pointer;
+}
+
+.upload-widget-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.upload-widget-title svg {
+  flex-shrink: 0;
+  color: #60a5fa;
+}
+
+.upload-widget-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.widget-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  color: rgba(255, 255, 255, 0.7);
+  padding: 6px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.widget-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+  color: #ffffff;
+}
+
+.upload-widget-content {
+  padding: 12px;
+  overflow-y: auto;
+  max-height: 320px;
+}
+
+.upload-widget-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.upload-widget-content::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+}
+
+.upload-widget-content::-webkit-scrollbar-thumb {
+  background: rgba(96, 165, 250, 0.4);
+  border-radius: 10px;
+}
+
+.upload-widget-content::-webkit-scrollbar-thumb:hover {
+  background: rgba(96, 165, 250, 0.6);
+}
+
+.upload-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+  margin-bottom: 8px;
+  transition: all 0.2s ease;
+}
+
+.upload-item:last-child {
+  margin-bottom: 0;
+}
+
+.upload-item:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.upload-item-icon {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+}
+
+.upload-item.processing .upload-item-icon {
+  background: rgba(59, 130, 246, 0.15);
+  color: #60a5fa;
+}
+
+.upload-item.success .upload-item-icon {
+  background: rgba(16, 185, 129, 0.15);
+  color: #10b981;
+}
+
+.upload-item.failed .upload-item-icon {
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+}
+
+.upload-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(96, 165, 250, 0.3);
+  border-top-color: #60a5fa;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.upload-item-details {
+  flex: 1;
+  min-width: 0;
+}
+
+.upload-item-name {
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin-bottom: 4px;
+}
+
+.upload-item-meta {
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.processing-text {
+  color: #60a5fa;
+}
+
+.success-text {
+  color: #6ee7b7;
+}
+
+.error-text {
+  color: #fca5a5;
+}
+
+.remove-upload-btn {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  color: rgba(255, 255, 255, 0.5);
+  padding: 6px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  opacity: 0;
+}
+
+.upload-item:hover .remove-upload-btn {
+  opacity: 1;
+}
+
+.remove-upload-btn:hover {
+  background: rgba(239, 68, 68, 0.2);
+  color: #fca5a5;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+  .upload-widget {
+    bottom: 16px;
+    right: 16px;
+    left: 16px;
+    width: auto;
+    max-width: none;
+  }
+
+  .upload-widget-title span {
+    font-size: 13px;
+  }
+
+  .upload-item-name {
+    font-size: 12px;
+  }
+
+  .upload-item-meta {
+    font-size: 11px;
+  }
+}
+

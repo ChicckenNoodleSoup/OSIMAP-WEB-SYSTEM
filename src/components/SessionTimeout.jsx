@@ -7,10 +7,16 @@ function SessionTimeout() {
   const [timeLeft, setTimeLeft] = useState(0);
   const [showModal, setShowModal] = useState(false);
   const hasLoggedExpiration = useRef(false);
+  const intervalRef = useRef(null); // Track interval to prevent StrictMode duplicates
   const navigate = useNavigate();
 
   useEffect(() => {
-    let interval;
+    // Clear any existing interval first (prevents StrictMode duplicates)
+    if (intervalRef.current) {
+      console.log('🛑 Clearing existing session check interval');
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
 
     const checkSession = () => {
       const timeUntilExpiration = getTimeUntilExpiration();
@@ -30,7 +36,10 @@ function SessionTimeout() {
       if (timeUntilExpiration <= 0 && !hasLoggedExpiration.current) {
         hasLoggedExpiration.current = true;
         // Clear the interval immediately to prevent multiple calls
-        clearInterval(interval);
+        if (intervalRef.current) {
+          clearInterval(intervalRef.current);
+          intervalRef.current = null;
+        }
         handleLogout();
       }
     };
@@ -39,9 +48,15 @@ function SessionTimeout() {
     checkSession();
 
     // Check every second for real-time updates
-    interval = setInterval(checkSession, 1000);
+    intervalRef.current = setInterval(checkSession, 1000);
 
-    return () => clearInterval(interval);
+    return () => {
+      console.log('🧹 Cleanup: Clearing session check interval');
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+    };
   }, []);
 
   // Auto-extend session on user activity
