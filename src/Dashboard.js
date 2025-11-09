@@ -1,14 +1,34 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useUser } from './UserContext'; // Only new import added
+import { useUser } from './UserContext';
 import './Dashboard.css';
 import './PageHeader.css';
 import { DateTime } from './DateTime';
 import { createClient } from '@supabase/supabase-js';
+import { Bar } from 'react-chartjs-2';
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend
+} from 'chart.js';
 
 const SUPABASE_URL = process.env.REACT_APP_SUPABASE_URL;
 const SUPABASE_KEY = process.env.REACT_APP_SUPABASE_KEY;
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// Register ChartJS components
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend
+);
 
 function Dashboard() {
   const navigate = useNavigate();
@@ -26,6 +46,9 @@ function Dashboard() {
   const [loadingSeverity, setLoadingSeverity] = useState(false);
 
   const [barangayCounts, setBarangayCounts] = useState({});
+  const [currentPage, setCurrentPage] = useState(0);
+  const [loadingBarangays, setLoadingBarangays] = useState(false);
+  const barangaysPerPage = 10;
 
   // Fetch current user data from localStorage
   const fetchUserData = () => {
@@ -64,6 +87,7 @@ function Dashboard() {
   // Fetch clustered accidents
   const fetchClusteredAccidentCount = async (y) => {
     setLoadingClusters(true);
+    setLoadingBarangays(true);
     try {
       const { data, error } = await supabase
         .from('road_traffic_accident')
@@ -102,6 +126,7 @@ function Dashboard() {
       setBarangayCounts({});
     } finally {
       setLoadingClusters(false);
+      setLoadingBarangays(false);
     }
   };
 
@@ -133,6 +158,69 @@ function Dashboard() {
       setLoadingSeverity(false);
     }
   };
+
+  // Reset page when year changes
+  useEffect(() => {
+    setCurrentPage(0);
+  }, [year]);
+
+  // Get barangay data based on the current page
+  const getCurrentBarangayData = useCallback(() => {
+    const sortedData = Object.entries(barangayCounts)
+      .sort((a, b) => b[1] - a[1]);
+    
+    const totalData = sortedData.length;
+    const remainingItems = totalData % 10;
+    const isLastPage = currentPage === Math.floor(totalData / 10) - 1;
+
+    // First page always shows top 10 barangays
+    if (currentPage === 0) {
+      return {
+        labels: sortedData.slice(0, 10).map(([name]) => name),
+        values: sortedData.slice(0, 10).map(([, count]) => count),
+        title: "Top 10 Barangays by Accident Count"
+      };
+    }
+    
+    // If we're on the last page and there are less than 6 remaining items
+    if (isLastPage && remainingItems > 0 && remainingItems < 6) {
+      // Show current page's 10 barangays plus the remaining ones
+      const startIndex = currentPage * 10;
+      const endIndex = totalData;
+      return {
+        labels: sortedData.slice(startIndex).map(([name]) => name),
+        values: sortedData.slice(startIndex).map(([, count]) => count),
+        title: `Barangays ${startIndex + 1}-${endIndex}`
+      };
+    }
+    
+    // For regular pages, show next 10 barangays
+    const startIndex = currentPage * 10;
+    const endIndex = startIndex + 10;
+    return {
+      labels: sortedData.slice(startIndex, endIndex).map(([name]) => name),
+      values: sortedData.slice(startIndex, endIndex).map(([, count]) => count),
+      title: `Barangays ${startIndex + 1}-${Math.min(endIndex, totalData)}`
+    };
+  }, [barangayCounts, currentPage]);
+
+  // Calculate total pages based on the number of barangays and our display logic
+  const calculateTotalPages = () => {
+    const totalBarangays = Object.keys(barangayCounts).length;
+    if (totalBarangays <= 10) return 1;
+    
+    const fullPages = Math.floor(totalBarangays / 10);
+    const remainingItems = totalBarangays % 10;
+    
+    // If we have remaining items that are less than 6,
+    // they'll be shown with the last set of 10 barangays
+    if (remainingItems > 0 && remainingItems < 6) {
+      return fullPages; // No extra page needed as remaining items will be added to last page
+    }
+    
+    return Math.ceil(totalBarangays / 10);
+  };
+  const totalPages = calculateTotalPages();
 
   useEffect(() => {
     fetchUserData();
@@ -170,9 +258,9 @@ function Dashboard() {
         
         {/* Left column */}
         <div className="dashboard-column">
-          {/* Current Records */}
+          {/* Current Records - NOW WITH BARANGAY CHART */}
           <div
-            className="dashboard-card card-large"
+            className="dashboard-card card-large card-records-expanded"
             onClick={() => navigate('/currentrecords')}
             role="button"
             tabIndex={0}
@@ -182,7 +270,7 @@ function Dashboard() {
 
             <div className="dashboard-card-stat">
               <span className="stat-number">{count ?? '...'}</span>
-              <span className="stat-label">road accidents in {year}</span>
+              <span className="stat-label">Road Accidents in {year}</span>
             </div>
 
             <div className="dashboard-card-controls" onClick={e => e.stopPropagation()}>
@@ -199,11 +287,163 @@ function Dashboard() {
                 aria-label="Select year"
               />
             </div>
+
+            {/* BARANGAY SECTION MOVED HERE */}
+            <div className="barangay-section" onClick={e => e.stopPropagation()}>
+              <div className="barangay-title">Per Barangay</div>
+              {loadingBarangays ? (
+                <div className="stat-loading">Loading...</div>
+              ) : Object.keys(barangayCounts).length === 0 ? (
+                <div className="stat-none">No data</div>
+              ) : (
+                <>
+                  <div className="barangay-chart-wrapper">
+                    <button
+                      className="carousel-button prev"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setCurrentPage(prev => Math.max(0, prev - 1));
+                      }}
+                      disabled={currentPage === 0}
+                    >
+                      ←
+                    </button>
+                    <div className="barangay-chart-container">
+                      <Bar
+                        data={{
+                          labels: getCurrentBarangayData().labels,
+                          datasets: [
+                            {
+                              label: 'Number of Incidents',
+                              data: getCurrentBarangayData().values,
+                              backgroundColor: [
+                                'rgba(255, 209, 102, 0.6)',
+                                'rgba(153, 247, 109, 0.6)',
+                                'rgba(255, 107, 107, 0.6)',
+                                'rgba(66, 184, 255, 0.6)'
+                              ],
+                              borderColor: [
+                                'rgba(255, 209, 102, 1)',
+                                'rgba(153, 247, 109, 1)',
+                                'rgba(255, 107, 107, 1)',
+                                'rgba(66, 184, 255, 1)'
+                              ],
+                              borderWidth: 1,
+                              borderRadius: 8,
+                              hoverBackgroundColor: [
+                                'rgba(255, 209, 102, 0.8)',
+                                'rgba(153, 247, 109, 0.8)',
+                                'rgba(255, 107, 107, 0.8)',
+                                'rgba(66, 184, 255, 0.8)'
+                              ],
+                            },
+                          ],
+                        }}
+                        options={{
+                          responsive: true,
+                          maintainAspectRatio: false,
+                          plugins: {
+                            legend: {
+                              display: false
+                            },
+                            title: {
+                              display: true,
+                              text: getCurrentBarangayData().title,
+                              color: '#ffd166',
+                              font: {
+                                size: 14,
+                                weight: 'bold'
+                              },
+                              padding: {
+                                bottom: 15
+                              }
+                            },
+                            tooltip: {
+                              backgroundColor: 'rgba(10, 30, 60, 0.95)',
+                              titleColor: '#ffd166',
+                              bodyColor: '#FFFFFF',
+                              borderColor: 'rgba(255, 255, 255, 0.1)',
+                              borderWidth: 1,
+                              padding: 12,
+                              displayColors: false,
+                              callbacks: {
+                                title: (tooltipItems) => tooltipItems[0].label,
+                                label: (context) => `${context.parsed.y} Incidents`,
+                              }
+                            }
+                          },
+                          scales: {
+                            x: {
+                              ticks: {
+                                color: '#FFFFFF',
+                                font: {
+                                  size: 11
+                                },
+                                maxRotation: 45,
+                                minRotation: 45
+                              },
+                              grid: {
+                                display: false
+                              }
+                            },
+                            y: {
+                              beginAtZero: true,
+                              ticks: {
+                                color: '#FFFFFF',
+                                font: {
+                                  size: 12
+                                },
+                                precision: 0
+                              },
+                              grid: {
+                                color: 'rgba(255, 255, 255, 0.1)',
+                                drawBorder: false
+                              }
+                            }
+                          }
+                        }}
+                      />
+                    </div>
+                    <button
+                      className="carousel-button next"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setCurrentPage(prev => Math.min(totalPages - 1, prev + 1));
+                      }}
+                      disabled={currentPage >= totalPages - 1}
+                    >
+                      →
+                    </button>
+                  </div>
+                  {totalPages > 1 && (
+                    <div 
+                      className="carousel-info" 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setCurrentPage(currentPage === 0 ? 1 : 0);
+                      }}
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setCurrentPage(currentPage === 0 ? 1 : 0);
+                        }
+                      }}
+                      data-current-page={currentPage}
+                    >
+                      {currentPage === 0 ? 'View Other Barangays ' : 'Back to Top 10'}
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
           </div>
 
           {/* Bottom row: User Profile + Add Record (side by side) */}
           <div className="bottom-cards-row">
-            {/* User Profile - ONLY THIS SECTION WAS MODIFIED */}
+            {/* User Profile */}
             <div
               className="dashboard-card card-medium user-profile"
               onClick={() => navigate('/profile')}
@@ -220,7 +460,6 @@ function Dashboard() {
                 </div>
               </div>
             </div>
-            {/* END OF MODIFIED SECTION */}
 
             {/* Add Record */}
             <div
@@ -236,7 +475,7 @@ function Dashboard() {
 
         </div>
 
-        {/* Right column */}
+        {/* Right column - UPDATED WITHOUT BARANGAY SECTION */}
         <div className="dashboard-column">
           <div
             className="dashboard-card card-large card-map"
@@ -249,7 +488,7 @@ function Dashboard() {
 
             <div className="dashboard-card-stat">
               <span className="stat-number">{loadingClusters?'...':(clusteredAccidentsCount ?? '0')}</span>
-              <span className="stat-label">clustered accident{clusteredAccidentsCount===1?'':'s'}</span>
+              <span className="stat-label">Clustered Accident{clusteredAccidentsCount===1?'':'s'}</span>
             </div>
 
             <div className="severity-section">
@@ -272,24 +511,6 @@ function Dashboard() {
                       );
                     })
                   )}
-                </ul>
-              )}
-            </div>
-
-            <div className="barangay-section">
-              <div className="barangay-title">Per Barangay</div>
-              {Object.keys(barangayCounts).length === 0 ? (
-                <div className="stat-none">No data</div>
-              ) : (
-                <ul className="barangay-list">
-                  {Object.entries(barangayCounts)
-                    .sort((a, b) => b[1] - a[1]) // sort descending by count
-                    .map(([b, count]) => (
-                      <li key={b} className="barangay-item">
-                        <span className="barangay-name">{b}</span>
-                        <span className="barangay-count">{count}</span>
-                      </li>
-                    ))}
                 </ul>
               )}
             </div>
