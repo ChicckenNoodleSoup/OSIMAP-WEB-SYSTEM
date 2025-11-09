@@ -239,7 +239,7 @@ function runSingleScript(scriptPath, onSuccess) {
 
 
 // Function to run Python scripts sequentially (including cleanup after processing)
-const runPythonScripts = () => {
+const runPythonScripts = (shouldRunClustering = true) => {
   isProcessing = true;
   processingStartTime = new Date();
   processingError = null;
@@ -258,14 +258,20 @@ const runPythonScripts = () => {
     runSingleScript(cleanupScript, () => {
       console.log(`Step 3: Running ${script2}`);
       runSingleScript(script2, () => {
-        console.log(`Step 4: Running ${script3}`);
-        runSingleScript(script3, () => {
-          console.log(`Step 5: Uploading clusters with ${uploadScript}`);
-          runSingleScript(uploadScript, () => {
-            console.log("🎉 All Python scripts completed successfully!");
-            isProcessing = false;
+        if (shouldRunClustering) {
+          console.log(`Step 4: Running clustering ${script3} (processing all 13k+ records)`);
+          runSingleScript(script3, () => {
+            console.log(`Step 5: Uploading clusters with ${uploadScript}`);
+            runSingleScript(uploadScript, () => {
+              console.log("🎉 All Python scripts completed successfully!");
+              isProcessing = false;
+            });
           });
-        });
+        } else {
+          console.log("⚡ Skipping clustering for small upload (< 100 records) - FAST MODE");
+          console.log("🎉 Processing completed successfully (clustering skipped)!");
+          isProcessing = false;
+        }
       });
     });
   });
@@ -381,8 +387,15 @@ app.post("/upload", upload.single("file"), (req, res) => {
     sheetsProcessed: validation.sheetsProcessed
   });
 
-  // Run all Python scripts sequentially (including clustering)
-  runPythonScripts();
+  // Determine if we should run clustering
+  // Skip clustering for small uploads (< 100 records) to save time
+  const shouldRunClustering = validation.recordsProcessed >= 100;
+  
+  console.log(`Records to process: ${validation.recordsProcessed}`);
+  console.log(`Clustering will ${shouldRunClustering ? 'run' : 'be skipped (< 100 records)'}`);
+
+  // Run all Python scripts sequentially
+  runPythonScripts(shouldRunClustering);
 });
 
 // Start server
