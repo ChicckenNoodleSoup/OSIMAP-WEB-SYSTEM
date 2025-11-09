@@ -200,12 +200,12 @@ class AccidentClusterAnalyzer:
         # For accident data, we want TIGHT but MERGEABLE geographical clusters
         # epsilon in radians: 0.00001 rad ≈ 640m, 0.000001 rad ≈ 64m
         # Scale parameters with dataset size
-        print(f"📊 Dataset size: {n_points} points")
+        print(f"Dataset size: {n_points} points")
         
         # Calculate dynamic sub-clustering threshold (scales with dataset size)
         # Rule: ~3-4% of total accidents per cluster before sub-clustering
         self.highway_cluster_threshold = max(300, int(n_points * 0.035))
-        print(f"🔧 Dynamic sub-cluster threshold: {self.highway_cluster_threshold} accidents")
+        print(f"Dynamic sub-cluster threshold: {self.highway_cluster_threshold} accidents")
         
         if n_points < 100:
             cluster_sizes = [3, 5, 8]
@@ -227,7 +227,7 @@ class AccidentClusterAnalyzer:
             # Balance between intersection-level clusters and merging nearby hotspots
             cluster_sizes = [15, 22, 30, 40]  # Smaller min allows intersections to form clusters
             epsilons = [0.000002, 0.000004, 0.000006, 0.000008]   # ~128m, ~256m, ~384m, ~512m (MORE MERGING)
-            print(f"📈 Using large dataset parameters (balanced merging + intersections)")
+            print(f"Using large dataset parameters (balanced merging + intersections)")
 
         print("\n=== PARAMETER TUNING (Tight Clusters) ===")
         for size in cluster_sizes:
@@ -288,7 +288,7 @@ class AccidentClusterAnalyzer:
                          reverse=True)
         
         best = results[0]
-        print(f"\n✨ Best params: size={best['min_cluster_size']}, samples={best['min_samples']}, "
+        print(f"\nBest params: size={best['min_cluster_size']}, samples={best['min_samples']}, "
               f"eps={best['epsilon']:.7f}, clusters={best['clusters']}, "
               f"noise={best['noise_ratio']}, silhouette={best['silhouette']}, compactness={best['compactness']}")
         return best
@@ -431,7 +431,7 @@ class AccidentClusterAnalyzer:
         if self.clustered_df is None:
             return
         
-        print("\n✂️  Removing outlier points from clusters...")
+        print("\n Removing outlier points from clusters...")
         
         total_removed = 0
         
@@ -472,7 +472,7 @@ class AccidentClusterAnalyzer:
                 max_dist_m = int(distances.max() * 6371000)  # Convert to meters
                 print(f"   Cluster {cid}: Removed {n_outliers} outliers (max distance was {max_dist_m}m)")
         
-        print(f"✅ Removed {total_removed} outlier points total")
+        print(f"Removed {total_removed} outlier points total")
 
     # ======================================================
     # RENUMBER CLUSTERS
@@ -482,7 +482,7 @@ class AccidentClusterAnalyzer:
         if self.clustered_df is None:
             return
         
-        print("\n🔢 Renumbering clusters sequentially...")
+        print("\nRenumbering clusters sequentially...")
         
         # Get unique cluster IDs (excluding noise)
         unique_clusters = sorted([c for c in self.clustered_df["cluster"].unique() if c != -1])
@@ -557,7 +557,7 @@ class AccidentClusterAnalyzer:
         # Report overly spread clusters
         if invalid_clusters:
             print(f"\n{'='*60}")
-            print(f"⚠️  QUALITY WARNING: Found {len(invalid_clusters)} overly spread clusters (>96m radius)")
+            print(f" QUALITY WARNING: Found {len(invalid_clusters)} overly spread clusters (>96m radius)")
             print(f"{'='*60}")
             for ic in invalid_clusters[:10]:  # Show first 10
                 print(f"   Cluster #{ic['id']}: {ic['size']} accidents, radius {ic['spread_m']}m")
@@ -738,7 +738,7 @@ class AccidentClusterAnalyzer:
         
         # Calculate dynamic sub-clustering threshold (scales with dataset size)
         self.highway_cluster_threshold = max(300, int(n_points * 0.035))
-        print(f"🔧 Dynamic sub-cluster threshold: {self.highway_cluster_threshold} accidents")
+        print(f"Dynamic sub-cluster threshold: {self.highway_cluster_threshold} accidents")
         
         # FIXED parameters for FULL DATASET only (13k+ records)
         # This script processes complete data, not filtered subsets
@@ -746,11 +746,11 @@ class AccidentClusterAnalyzer:
         min_samples = 15           # Needs 15 points within epsilon
         epsilon = 0.0000008        # ~51m - very tight merge radius
         
-        print(f"\n📐 Using FIXED parameters for full dataset ({n_points} points):")
+        print(f"\n Using FIXED parameters for full dataset ({n_points} points):")
         print(f"   min_cluster_size={min_cluster_size}, min_samples={min_samples}, epsilon={epsilon:.7f}")
         
         if auto_tune:
-            print("⚠️  Auto-tuning disabled - using proven fixed parameters")
+            print(" Auto-tuning disabled - using proven fixed parameters")
         
         self.perform_clustering(
             min_cluster_size=min_cluster_size,

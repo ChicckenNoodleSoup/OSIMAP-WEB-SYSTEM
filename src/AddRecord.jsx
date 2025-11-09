@@ -19,6 +19,12 @@ export default function AddRecord() {
   const [processingStage, setProcessingStage] = useState("");
   const [currentStep, setCurrentStep] = useState(0);
   const [validationErrors, setValidationErrors] = useState([]);
+  const [uploadHistory, setUploadHistory] = useState(() => {
+    // Load upload history from localStorage
+    const saved = localStorage.getItem('uploadHistory');
+    return saved ? JSON.parse(saved) : [];
+  });
+  const [currentUploadSummary, setCurrentUploadSummary] = useState(null);
 
   // File validation constants
   const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
@@ -47,6 +53,14 @@ export default function AddRecord() {
     setProcessingStage("");
     setCurrentStep(0);
     setValidationErrors([]);
+    setCurrentUploadSummary(null);
+  };
+
+  // Save upload to history
+  const saveToHistory = (summary) => {
+    const newHistory = [summary, ...uploadHistory].slice(0, 10); // Keep last 10 uploads
+    setUploadHistory(newHistory);
+    localStorage.setItem('uploadHistory', JSON.stringify(newHistory));
   };
 
   // Validate file before upload
@@ -157,6 +171,22 @@ export default function AddRecord() {
           setProcessingStage("complete");
           setCurrentStep(4);
           setUploadStatus("✅ Pipeline completed successfully!");
+          
+          // Update current upload summary with completion data
+          setCurrentUploadSummary(prev => {
+            if (!prev) return null;
+            const completedSummary = {
+              ...prev,
+              status: 'success',
+              completedAt: new Date().toISOString(),
+              processingTime: statusData.processingTime || 0,
+              recordsProcessed: statusData.recordsProcessed || 'N/A',
+              sheetsProcessed: statusData.sheetsProcessed || []
+            };
+            saveToHistory(completedSummary);
+            return completedSummary;
+          });
+          
           // Log processing completion
           await logDataEvent.processingCompleted();
         } else if (statusData.isProcessing) {
@@ -303,6 +333,15 @@ export default function AddRecord() {
           // Log file upload
           await logDataEvent.fileUploaded(fileToUpload.name);
 
+          // Initialize upload summary
+          setCurrentUploadSummary({
+            id: Date.now(),
+            fileName: fileToUpload.name,
+            fileSize: fileToUpload.size,
+            uploadedAt: new Date().toISOString(),
+            status: 'processing'
+          });
+
           setProcessingStage("processing");
           setCurrentStep(2);
           setUploadStatus("📊 Processing data through pipeline...");
@@ -411,6 +450,151 @@ export default function AddRecord() {
               </div>
             );
           })}
+        </div>
+      </div>
+    );
+  };
+
+  const UploadSummary = ({ summary }) => {
+    if (!summary) return null;
+
+    const formatFileSize = (bytes) => {
+      if (bytes < 1024) return `${bytes} B`;
+      if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(2)} KB`;
+      return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
+    };
+
+    const formatDateTime = (isoString) => {
+      const date = new Date(isoString);
+      return date.toLocaleString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+      });
+    };
+
+    return (
+      <div className="upload-summary-card">
+        <h3 className="summary-title">📋 Current Upload Summary</h3>
+        <div className="summary-content">
+          <div className="summary-row">
+            <span className="summary-label">File Name:</span>
+            <span className="summary-value">{summary.fileName}</span>
+          </div>
+          <div className="summary-row">
+            <span className="summary-label">File Size:</span>
+            <span className="summary-value">{formatFileSize(summary.fileSize)}</span>
+          </div>
+          <div className="summary-row">
+            <span className="summary-label">Upload Started:</span>
+            <span className="summary-value">{formatDateTime(summary.uploadedAt)}</span>
+          </div>
+          {summary.completedAt && (
+            <div className="summary-row">
+              <span className="summary-label">Completed At:</span>
+              <span className="summary-value">{formatDateTime(summary.completedAt)}</span>
+            </div>
+          )}
+          {summary.processingTime !== undefined && (
+            <div className="summary-row">
+              <span className="summary-label">Processing Time:</span>
+              <span className="summary-value">{summary.processingTime}s</span>
+            </div>
+          )}
+          {summary.recordsProcessed && (
+            <div className="summary-row">
+              <span className="summary-label">Records Processed:</span>
+              <span className="summary-value">{summary.recordsProcessed}</span>
+            </div>
+          )}
+          {summary.sheetsProcessed && summary.sheetsProcessed.length > 0 && (
+            <div className="summary-row">
+              <span className="summary-label">Sheets Processed:</span>
+              <span className="summary-value">{summary.sheetsProcessed.join(', ')}</span>
+            </div>
+          )}
+          <div className="summary-row">
+            <span className="summary-label">Status:</span>
+            <span className={`summary-value status-badge ${summary.status}`}>
+              {summary.status === 'success' ? '✅ Success' : 
+               summary.status === 'processing' ? '⏳ Processing' : 
+               '❌ Failed'}
+            </span>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const UploadHistory = () => {
+    if (uploadHistory.length === 0) return null;
+
+    const formatFileSize = (bytes) => {
+      if (bytes < 1024) return `${bytes} B`;
+      if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(2)} KB`;
+      return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
+    };
+
+    const formatDateTime = (isoString) => {
+      const date = new Date(isoString);
+      return date.toLocaleString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    };
+
+    const clearHistory = () => {
+      if (window.confirm('Are you sure you want to clear the upload history?')) {
+        setUploadHistory([]);
+        localStorage.removeItem('uploadHistory');
+      }
+    };
+
+    return (
+      <div className="upload-history-card">
+        <div className="history-header">
+          <h3 className="history-title">📊 Upload History (Last 10)</h3>
+          <button onClick={clearHistory} className="clear-history-btn">
+            Clear History
+          </button>
+        </div>
+        <div className="history-table-container">
+          <table className="history-table">
+            <thead>
+              <tr>
+                <th>File Name</th>
+                <th>Size</th>
+                <th>Upload Time</th>
+                <th>Records</th>
+                <th>Processing Time</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {uploadHistory.map((item) => (
+                <tr key={item.id}>
+                  <td className="file-name-cell" title={item.fileName}>{item.fileName}</td>
+                  <td>{formatFileSize(item.fileSize)}</td>
+                  <td>{formatDateTime(item.uploadedAt)}</td>
+                  <td>{item.recordsProcessed || 'N/A'}</td>
+                  <td>{item.processingTime ? `${item.processingTime}s` : 'N/A'}</td>
+                  <td>
+                    <span className={`status-badge ${item.status}`}>
+                      {item.status === 'success' ? '✅' : 
+                       item.status === 'processing' ? '⏳' : 
+                       '❌'}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </div>
     );
@@ -558,6 +742,14 @@ export default function AddRecord() {
             </button>
           </div>
         )}
+
+        {/* Upload Summary */}
+        {currentUploadSummary && processingStage === "complete" && (
+          <UploadSummary summary={currentUploadSummary} />
+        )}
+
+        {/* Upload History */}
+        <UploadHistory />
       </div>
       </div>
     </div>

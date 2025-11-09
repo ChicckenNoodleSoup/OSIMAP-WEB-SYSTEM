@@ -513,3 +513,220 @@
     box-shadow: 0 0 0 0 rgba(0, 133, 255, 0);
   }
 }
+
+/* === Upload Summary Card === */
+.upload-summary-card {
+  margin-top: 30px;
+  padding: 25px;
+  background: rgba(0, 133, 255, 0.08);
+  border: 2px solid rgba(0, 133, 255, 0.3);
+  border-radius: 20px;
+  width: 100%;
+  max-width: 650px;
+  backdrop-filter: blur(10px);
+  animation: slideDown 0.3s ease-out;
+}
+
+.summary-title {
+  margin: 0 0 20px 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #0085ff;
+  text-align: center;
+}
+
+.summary-content {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.summary-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  transition: background 0.2s ease;
+}
+
+.summary-row:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.summary-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.summary-value {
+  font-size: 14px;
+  font-weight: 600;
+  color: #ffffff;
+  text-align: right;
+}
+
+.status-badge {
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+  display: inline-block;
+}
+
+.status-badge.success {
+  background: rgba(0, 255, 128, 0.2);
+  color: #00ff80;
+  border: 1px solid rgba(0, 255, 128, 0.4);
+}
+
+.status-badge.processing {
+  background: rgba(0, 133, 255, 0.2);
+  color: #0085ff;
+  border: 1px solid rgba(0, 133, 255, 0.4);
+  animation: pulse 1.5s infinite;
+}
+
+.status-badge.failed {
+  background: rgba(255, 77, 77, 0.2);
+  color: #ff4d4d;
+  border: 1px solid rgba(255, 77, 77, 0.4);
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
+/* === Upload History Card === */
+.upload-history-card {
+  margin-top: 30px;
+  padding: 25px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  width: 100%;
+  max-width: 900px;
+  backdrop-filter: blur(10px);
+  animation: slideDown 0.3s ease-out;
+}
+
+.history-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.history-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.clear-history-btn {
+  background: rgba(255, 77, 77, 0.2);
+  border: 1px solid rgba(255, 77, 77, 0.4);
+  color: #ff4d4d;
+  padding: 8px 16px;
+  border-radius: 12px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.clear-history-btn:hover {
+  background: rgba(255, 77, 77, 0.3);
+  transform: translateY(-2px);
+}
+
+.history-table-container {
+  overflow-x: auto;
+  border-radius: 12px;
+}
+
+.history-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.history-table thead {
+  background: rgba(0, 133, 255, 0.15);
+  border-radius: 8px;
+}
+
+.history-table th {
+  padding: 14px 16px;
+  text-align: left;
+  font-weight: 600;
+  color: #0085ff;
+  border-bottom: 2px solid rgba(0, 133, 255, 0.3);
+  white-space: nowrap;
+}
+
+.history-table tbody tr {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  transition: background 0.2s ease;
+}
+
+.history-table tbody tr:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.history-table td {
+  padding: 14px 16px;
+  color: rgba(255, 255, 255, 0.9);
+  white-space: nowrap;
+}
+
+.file-name-cell {
+  max-width: 250px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Mobile responsiveness for history table */
+@media (max-width: 768px) {
+  .upload-summary-card,
+  .upload-history-card {
+    padding: 20px;
+    max-width: 100%;
+  }
+
+  .history-table-container {
+    overflow-x: scroll;
+  }
+
+  .history-table {
+    font-size: 12px;
+  }
+
+  .history-table th,
+  .history-table td {
+    padding: 10px 12px;
+  }
+
+  .file-name-cell {
+    max-width: 150px;
+  }
+
+  .history-header {
+    flex-direction: column;
+    gap: 12px;
+    align-items: flex-start;
+  }
+
+  .clear-history-btn {
+    width: 100%;
+  }
+}
