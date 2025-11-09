@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useState, useEffect } from "react";
 import { useDropzone } from "react-dropzone";
 import {
   Plus,
@@ -12,13 +12,29 @@ import "./DateTime.css";
 import "./AddRecord.css";
 import "./PageHeader.css";
 import { DateTime } from "./DateTime";
-import { logDataEvent } from "./utils/loggingUtils";
+import { logDataEvent, uploadHistoryService } from "./utils/loggingUtils";
 
 export default function AddRecord() {
   const [uploadStatus, setUploadStatus] = useState("");
   const [processingStage, setProcessingStage] = useState("");
   const [currentStep, setCurrentStep] = useState(0);
   const [validationErrors, setValidationErrors] = useState([]);
+  const [uploadHistory, setUploadHistory] = useState([]);
+  const [currentUploadSummary, setCurrentUploadSummary] = useState(null);
+  const [isLoadingHistory, setIsLoadingHistory] = useState(true);
+  const [showHistoryModal, setShowHistoryModal] = useState(false);
+  const [savedUploadIds, setSavedUploadIds] = useState(new Set());
+
+  // Load upload history from Supabase on component mount
+  useEffect(() => {
+    const loadUploadHistory = async () => {
+      setIsLoadingHistory(true);
+      const history = await uploadHistoryService.fetch(10);
+      setUploadHistory(history);
+      setIsLoadingHistory(false);
+    };
+    loadUploadHistory();
+  }, []);
 
   // File validation constants
   const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
@@ -47,6 +63,49 @@ export default function AddRecord() {
     setProcessingStage("");
     setCurrentStep(0);
     setValidationErrors([]);
+    setCurrentUploadSummary(null);
+    // Clear saved upload IDs for fresh start
+    setSavedUploadIds(new Set());
+  };
+
+  // Save upload to Supabase history with log reference (prevents duplicates)
+  const saveToHistory = async (summary) => {
+    try {
+      // Check if this upload has already been saved
+      if (savedUploadIds.has(summary.id)) {
+        console.log('Upload already saved to history, skipping duplicate:', summary.id);
+        return;
+      }
+
+      // Mark this upload as saved
+      setSavedUploadIds(prev => new Set([...prev, summary.id]));
+
+      // First, log the event and get the log ID
+      const logDetails = summary.status === 'success'
+        ? `Records: ${summary.recordsProcessed}, Sheets: ${summary.sheetsProcessed?.join(', ') || 'N/A'}, Time: ${summary.processingTime}s`
+        : `Error: ${summary.errorMessage || 'Upload failed'}`;
+      
+      const logId = await logDataEvent.uploadCompleted(
+        summary.fileName,
+        summary.status,
+        logDetails
+      );
+
+      // Then save to upload history table with log reference
+      await uploadHistoryService.save(summary, logId);
+
+      // Refresh the history list
+      const updatedHistory = await uploadHistoryService.fetch(10);
+      setUploadHistory(updatedHistory);
+    } catch (error) {
+      console.error('Error saving upload history:', error);
+      // Remove from saved IDs if save failed
+      setSavedUploadIds(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(summary.id);
+        return newSet;
+      });
+    }
   };
 
   // Validate file before upload
@@ -149,16 +208,60 @@ export default function AddRecord() {
           clearInterval(pollInterval);
           setProcessingStage("error");
           setUploadStatus(`❌ Processing failed: ${statusData.processingError || "Unknown error"}`);
-          // Log processing failure
-          await logDataEvent.processingFailed(statusData.processingError || "Unknown error");
+          
+          // Update summary with error status
+          const failedSummary = await new Promise((resolve) => {
+            setCurrentUploadSummary(prev => {
+              if (!prev) {
+                resolve(null);
+                return null;
+              }
+              const summary = {
+                ...prev,
+                status: 'failed',
+                completedAt: new Date().toISOString(),
+                errorMessage: statusData.processingError || "Unknown error"
+              };
+              resolve(summary);
+              return summary;
+            });
+          });
+          
+          // Save to history once after state update
+          if (failedSummary) {
+            await saveToHistory(failedSummary);
+          }
         } else if (!statusData.isProcessing && statusData.status === "idle") {
           // Processing is complete
           clearInterval(pollInterval);
           setProcessingStage("complete");
           setCurrentStep(4);
           setUploadStatus("✅ Pipeline completed successfully!");
-          // Log processing completion
-          await logDataEvent.processingCompleted();
+          
+          // Update current upload summary with completion data
+          const completedSummary = await new Promise((resolve) => {
+            setCurrentUploadSummary(prev => {
+              if (!prev) {
+                resolve(null);
+                return null;
+              }
+              const summary = {
+                ...prev,
+                status: 'success',
+                completedAt: new Date().toISOString(),
+                processingTime: statusData.processingTime || 0,
+                recordsProcessed: statusData.recordsProcessed || 'N/A',
+                sheetsProcessed: statusData.sheetsProcessed || []
+              };
+              resolve(summary);
+              return summary;
+            });
+          });
+          
+          // Save to history once after state update
+          if (completedSummary) {
+            await saveToHistory(completedSummary);
+          }
         } else if (statusData.isProcessing) {
           // Still processing, update progress based on time
           const processingTime = statusData.processingTime || 0;
@@ -179,8 +282,29 @@ export default function AddRecord() {
         clearInterval(pollInterval);
         setProcessingStage("error");
         setUploadStatus("❌ Failed to check processing status. Please check backend server.");
-        // Log polling error
-        await logDataEvent.processingFailed(`Status polling failed: ${err.message}`);
+        
+        // Update summary with error status
+        const failedSummary = await new Promise((resolve) => {
+          setCurrentUploadSummary(prev => {
+            if (!prev) {
+              resolve(null);
+              return null;
+            }
+            const summary = {
+              ...prev,
+              status: 'failed',
+              completedAt: new Date().toISOString(),
+              errorMessage: `Status polling failed: ${err.message}`
+            };
+            resolve(summary);
+            return summary;
+          });
+        });
+        
+        // Save to history once after state update
+        if (failedSummary) {
+          await saveToHistory(failedSummary);
+        }
       }
     }, 1000); // Poll every second
 
@@ -232,7 +356,19 @@ export default function AddRecord() {
         setValidationErrors(validationErrorsList);
         setProcessingStage("error");
         setUploadStatus("❌ File validation failed");
-        logDataEvent.processingFailed(`Validation failed: ${validationErrorsList.join(', ')}`);
+        
+        // Create and save failed upload summary
+        const failedSummary = {
+          id: Date.now(),
+          fileName: file.name,
+          fileSize: file.size,
+          uploadedAt: new Date().toISOString(),
+          completedAt: new Date().toISOString(),
+          status: 'failed',
+          errorMessage: validationErrorsList.join('; ')
+        };
+        setCurrentUploadSummary(failedSummary);
+        saveToHistory(failedSummary);
         return;
       }
 
@@ -279,7 +415,19 @@ export default function AddRecord() {
             setValidationErrors(backendErrors);
             setProcessingStage("error");
             setUploadStatus("❌ File validation failed");
-            await logDataEvent.processingFailed(`Validation failed: ${backendErrors.join(', ')}`);
+            
+            // Create and save failed upload summary
+            const failedSummary = {
+              id: Date.now(),
+              fileName: fileToUpload.name,
+              fileSize: fileToUpload.size,
+              uploadedAt: new Date().toISOString(),
+              completedAt: new Date().toISOString(),
+              status: 'failed',
+              errorMessage: backendErrors.join('; ')
+            };
+            setCurrentUploadSummary(failedSummary);
+            await saveToHistory(failedSummary);
             return null;
           }
           
@@ -296,19 +444,34 @@ export default function AddRecord() {
             setValidationErrors(backendErrors);
             setProcessingStage("error");
             setUploadStatus("❌ Data validation failed");
-            await logDataEvent.processingFailed(`Backend validation failed: ${backendErrors.join(', ')}`);
+            
+            // Create and save failed upload summary
+            const failedSummary = {
+              id: Date.now(),
+              fileName: fileToUpload.name,
+              fileSize: fileToUpload.size,
+              uploadedAt: new Date().toISOString(),
+              completedAt: new Date().toISOString(),
+              status: 'failed',
+              errorMessage: backendErrors.join('; ')
+            };
+            setCurrentUploadSummary(failedSummary);
+            await saveToHistory(failedSummary);
             return;
           }
 
-          // Log file upload
-          await logDataEvent.fileUploaded(fileToUpload.name);
+          // Initialize upload summary (status: processing, no log yet)
+          setCurrentUploadSummary({
+            id: Date.now(),
+            fileName: fileToUpload.name,
+            fileSize: fileToUpload.size,
+            uploadedAt: new Date().toISOString(),
+            status: 'processing'
+          });
 
           setProcessingStage("processing");
           setCurrentStep(2);
           setUploadStatus("📊 Processing data through pipeline...");
-
-          // Log processing start
-          await logDataEvent.processingStarted();
 
           // Start polling backend status
           pollBackendStatus();
@@ -320,16 +483,29 @@ export default function AddRecord() {
           
           // Parse error message
           let errorMsg = err.message || "Unknown error";
+          let errorDetails = [];
           if (errorMsg.includes('Failed to fetch') || errorMsg.includes('NetworkError')) {
-            setValidationErrors(['❌ Cannot connect to server - please ensure the backend is running']);
+            errorDetails = ['❌ Cannot connect to server - please ensure the backend is running'];
           } else if (errorMsg.includes('timeout')) {
-            setValidationErrors(['❌ Upload timed out - the server took too long to respond']);
+            errorDetails = ['❌ Upload timed out - the server took too long to respond'];
           } else {
-            setValidationErrors([`❌ ${errorMsg}`]);
+            errorDetails = [`❌ ${errorMsg}`];
           }
           
-          // Log upload failure
-          await logDataEvent.processingFailed(`Upload failed: ${err.message}`);
+          setValidationErrors(errorDetails);
+          
+          // Create and save failed upload summary
+          const failedSummary = {
+            id: Date.now(),
+            fileName: fileToUpload.name,
+            fileSize: fileToUpload.size,
+            uploadedAt: new Date().toISOString(),
+            completedAt: new Date().toISOString(),
+            status: 'failed',
+            errorMessage: errorDetails.join('; ')
+          };
+          setCurrentUploadSummary(failedSummary);
+          await saveToHistory(failedSummary);
         });
     });
   }, []);
@@ -411,6 +587,229 @@ export default function AddRecord() {
               </div>
             );
           })}
+        </div>
+      </div>
+    );
+  };
+
+  const UploadSummary = ({ summary }) => {
+    if (!summary) return null;
+
+    const formatFileSize = (bytes) => {
+      if (bytes < 1024) return `${bytes} B`;
+      if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(2)} KB`;
+      return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
+    };
+
+    const formatDateTime = (isoString) => {
+      const date = new Date(isoString);
+      return date.toLocaleString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+      });
+    };
+
+    return (
+      <div className="upload-summary-card">
+        <h3 className="summary-title">📋 Current Upload Summary</h3>
+        <div className="summary-content">
+          <div className="summary-row">
+            <span className="summary-label">File Name:</span>
+            <span className="summary-value">{summary.fileName}</span>
+          </div>
+          <div className="summary-row">
+            <span className="summary-label">File Size:</span>
+            <span className="summary-value">{formatFileSize(summary.fileSize)}</span>
+          </div>
+          <div className="summary-row">
+            <span className="summary-label">Upload Started:</span>
+            <span className="summary-value">{formatDateTime(summary.uploadedAt)}</span>
+          </div>
+          {summary.completedAt && (
+            <div className="summary-row">
+              <span className="summary-label">Completed At:</span>
+              <span className="summary-value">{formatDateTime(summary.completedAt)}</span>
+            </div>
+          )}
+          {summary.processingTime !== undefined && (
+            <div className="summary-row">
+              <span className="summary-label">Processing Time:</span>
+              <span className="summary-value">{summary.processingTime}s</span>
+            </div>
+          )}
+          {summary.recordsProcessed && (
+            <div className="summary-row">
+              <span className="summary-label">Records Processed:</span>
+              <span className="summary-value">{summary.recordsProcessed}</span>
+            </div>
+          )}
+          {summary.sheetsProcessed && summary.sheetsProcessed.length > 0 && (
+            <div className="summary-row">
+              <span className="summary-label">Sheets Processed:</span>
+              <span className="summary-value">{summary.sheetsProcessed.join(', ')}</span>
+            </div>
+          )}
+          <div className="summary-row">
+            <span className="summary-label">Status:</span>
+            <span className={`summary-value status-badge ${summary.status}`}>
+              {summary.status === 'success' ? '✅ Success' : 
+               summary.status === 'processing' ? '⏳ Processing' : 
+               '❌ Failed'}
+            </span>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const UploadHistoryModal = () => {
+    if (!showHistoryModal) return null;
+
+    const formatFileSize = (bytes) => {
+      if (bytes < 1024) return `${bytes} B`;
+      if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(2)} KB`;
+      return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
+    };
+
+    const formatDateTime = (isoString) => {
+      const date = new Date(isoString);
+      return date.toLocaleString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    };
+
+    const clearHistory = async () => {
+      if (window.confirm('Are you sure you want to clear the upload history?')) {
+        const success = await uploadHistoryService.clear();
+        if (success) {
+          setUploadHistory([]);
+        } else {
+          alert('Failed to clear history. Please try again.');
+        }
+      }
+    };
+
+    const handleBackdropClick = (e) => {
+      if (e.target.className.includes('history-modal-backdrop')) {
+        setShowHistoryModal(false);
+      }
+    };
+
+    return (
+      <div className="history-modal-backdrop" onClick={handleBackdropClick}>
+        <div className="history-modal">
+          {/* Header */}
+          <div className="history-modal-header">
+            <div className="history-title-section">
+              <h3 className="history-title">Recent Uploads</h3>
+              <span className="history-subtitle">Last 10 uploads</span>
+            </div>
+            <div className="history-modal-actions">
+              <button 
+                onClick={clearHistory} 
+                className="clear-history-btn-modal" 
+                disabled={isLoadingHistory || uploadHistory.length === 0}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="3 6 5 6 21 6"></polyline>
+                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                </svg>
+                Clear All
+              </button>
+              <button 
+                onClick={() => setShowHistoryModal(false)} 
+                className="close-modal-btn"
+                aria-label="Close"
+              >
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+              </button>
+            </div>
+          </div>
+          
+          {/* Content */}
+          <div className="history-modal-content">
+            {isLoadingHistory ? (
+              <div className="history-loading">
+                <div className="spinner small" />
+                <p>Loading upload history...</p>
+              </div>
+            ) : uploadHistory.length === 0 ? (
+              <div className="history-empty">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                  <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                </svg>
+                <p className="empty-title">No upload history yet</p>
+                <p className="empty-subtitle">Your upload history will appear here after you upload files</p>
+              </div>
+            ) : (
+              <div className="history-table-container">
+                <table className="history-table">
+                  <thead>
+                    <tr>
+                      <th>File Name</th>
+                      <th>Size</th>
+                      <th>Upload Time</th>
+                      <th>Records</th>
+                      <th>Duration</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {uploadHistory.map((item) => (
+                      <tr key={item.id}>
+                        <td className="file-name-cell" title={item.file_name}>
+                          <div className="file-name-wrapper">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                              <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path>
+                              <polyline points="13 2 13 9 20 9"></polyline>
+                            </svg>
+                            {item.file_name}
+                          </div>
+                        </td>
+                        <td>{formatFileSize(item.file_size)}</td>
+                        <td>{formatDateTime(item.upload_started_at)}</td>
+                        <td className="records-cell">{item.records_processed || 'N/A'}</td>
+                        <td>{item.processing_time ? `${item.processing_time}s` : 'N/A'}</td>
+                        <td>
+                          <span className={`status-badge ${item.status}`}>
+                            {item.status === 'success' ? (
+                              <>
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                                  <polyline points="20 6 9 17 4 12"></polyline>
+                                </svg>
+                                Success
+                              </>
+                            ) : item.status === 'processing' ? (
+                              <>⏳ Processing</>
+                            ) : (
+                              <>
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                                  <line x1="6" y1="6" x2="18" y2="18"></line>
+                                </svg>
+                                Failed
+                              </>
+                            )}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     );
@@ -558,8 +957,32 @@ export default function AddRecord() {
             </button>
           </div>
         )}
+
+        {/* Upload Summary */}
+        {currentUploadSummary && processingStage === "complete" && (
+          <UploadSummary summary={currentUploadSummary} />
+        )}
+
+        {/* Recent Uploads Button */}
+        <div className="recent-uploads-btn-wrapper">
+          <button 
+            onClick={() => setShowHistoryModal(true)} 
+            className="recent-uploads-btn"
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+            </svg>
+            View Recent Uploads
+            {!isLoadingHistory && uploadHistory.length > 0 && (
+              <span className="upload-count-badge">{uploadHistory.length}</span>
+            )}
+          </button>
+        </div>
       </div>
       </div>
+
+      {/* Upload History Modal */}
+      <UploadHistoryModal />
     </div>
   );
 }

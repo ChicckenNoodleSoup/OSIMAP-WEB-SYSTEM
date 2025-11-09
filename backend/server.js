@@ -18,6 +18,13 @@ let isProcessing = false;
 let processingStartTime = null;
 let processingError = null;
 
+// Upload summary data
+let uploadSummary = {
+  recordsProcessed: 0,
+  sheetsProcessed: [],
+  fileName: null
+};
+
 // Ensure "data" folder exists
 const dataFolder = path.join(process.cwd(), "data");
 if (!fs.existsSync(dataFolder)) {
@@ -67,6 +74,8 @@ const ALL_REQUIRED_COLUMNS = [...REQUIRED_COLUMNS, ...SEVERITY_CALC_COLUMNS];
 // Function to validate Excel file structure
 function validateExcelFile(filePath) {
   const errors = [];
+  let totalRecords = 0;
+  const validSheets = [];
   
   try {
     console.log("Validating Excel file:", filePath);
@@ -79,7 +88,7 @@ function validateExcelFile(filePath) {
     
     if (sheetNames.length === 0) {
       errors.push("❌ Excel file contains no sheets - please add at least one sheet with data");
-      return { valid: false, errors };
+      return { valid: false, errors, recordsProcessed: 0, sheetsProcessed: [] };
     }
     
     // Validate each sheet
@@ -154,16 +163,30 @@ function validateExcelFile(filePath) {
       if (jsonData.length < 2) {
         errors.push(`❌ Sheet "${sheetName}" only has column headers but no data rows`);
       } else {
-        console.log(`✅ Sheet "${sheetName}" has ${jsonData.length - 1} data rows`);
+        const dataRows = jsonData.length - 1; // Exclude header row
+        totalRecords += dataRows;
+        validSheets.push(sheetName);
+        console.log(`✅ Sheet "${sheetName}" has ${dataRows} data rows`);
       }
     });
     
     if (errors.length === 0) {
       console.log("✅ Excel file validation passed");
-      return { valid: true, errors: [] };
+      console.log(`Total records: ${totalRecords}, Sheets: ${validSheets.join(', ')}`);
+      return { 
+        valid: true, 
+        errors: [], 
+        recordsProcessed: totalRecords, 
+        sheetsProcessed: validSheets 
+      };
     } else {
       console.log("❌ Excel file validation failed:", errors);
-      return { valid: false, errors };
+      return { 
+        valid: false, 
+        errors, 
+        recordsProcessed: 0, 
+        sheetsProcessed: [] 
+      };
     }
     
   } catch (error) {
@@ -175,7 +198,12 @@ function validateExcelFile(filePath) {
     } else {
       errors.push(`❌ Unable to read Excel file - it may be corrupted, password-protected, or have an invalid format`);
     }
-    return { valid: false, errors };
+    return { 
+      valid: false, 
+      errors, 
+      recordsProcessed: 0, 
+      sheetsProcessed: [] 
+    };
   }
 }
 
@@ -269,7 +297,9 @@ app.get("/status", (req, res) => {
     processingTime: processingTime,
     processingStartTime: processingStartTime,
     processingError: processingError,
-    status: isProcessing ? "processing" : processingError ? "error" : "idle"
+    status: isProcessing ? "processing" : processingError ? "error" : "idle",
+    recordsProcessed: uploadSummary.recordsProcessed,
+    sheetsProcessed: uploadSummary.sheetsProcessed
   };
   
   console.log("Status response:", statusResponse);
@@ -314,6 +344,13 @@ app.post("/upload", upload.single("file"), (req, res) => {
     // Validation failed - delete the uploaded file and return errors
     console.log("Validation failed, deleting uploaded file...");
     
+    // Reset upload summary
+    uploadSummary = {
+      recordsProcessed: 0,
+      sheetsProcessed: [],
+      fileName: null
+    };
+    
     try {
       fs.unlinkSync(filePath);
       console.log("Uploaded file deleted");
@@ -328,13 +365,20 @@ app.post("/upload", upload.single("file"), (req, res) => {
     });
   }
   
-  // Validation passed - proceed with processing
+  // Validation passed - store summary data
   console.log("✅ Validation passed, starting processing...");
+  uploadSummary = {
+    recordsProcessed: validation.recordsProcessed,
+    sheetsProcessed: validation.sheetsProcessed,
+    fileName: req.file.originalname
+  };
 
   // Respond to frontend
   res.json({ 
     message: "File validated successfully. Processing started...", 
-    filename: req.file.filename 
+    filename: req.file.filename,
+    recordsProcessed: validation.recordsProcessed,
+    sheetsProcessed: validation.sheetsProcessed
   });
 
   // Run all Python scripts sequentially (including clustering)

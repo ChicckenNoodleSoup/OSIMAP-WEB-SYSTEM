@@ -105,12 +105,56 @@ export const logProfileEvent = {
 
 /**
  * Logs data management events
+ * Returns the log entry ID for linking to upload history
  */
 export const logDataEvent = {
-  fileUploaded: (filename) => logUserActivity('Excel file uploaded for processing', 'INFO', `File: ${filename}`),
-  processingStarted: () => logUserActivity('Data processing pipeline started', 'INFO', 'Processing Excel data through Python scripts'),
-  processingCompleted: () => logUserActivity('Data processing pipeline completed', 'SUCCESS', 'Data successfully converted to GeoJSON'),
-  processingFailed: (errorDetails) => logUserActivity('Data processing failed', 'ERROR', `Error: ${errorDetails}`)
+  uploadCompleted: async (filename, status, details = null) => {
+    const activity = status === 'success' 
+      ? `File upload completed successfully: ${filename}`
+      : `File upload failed: ${filename}`;
+    const logType = status === 'success' ? 'SUCCESS' : 'ERROR';
+    
+    try {
+      // Get current user from localStorage
+      const adminData = localStorage.getItem('adminData');
+      const currentUser = adminData ? JSON.parse(adminData) : null;
+      const logUserId = currentUser?.id || null;
+
+      // Get user's IP address
+      let ipAddress = null;
+      try {
+        const response = await fetch('https://api.ipify.org?format=json');
+        const data = await response.json();
+        ipAddress = data.ip;
+      } catch (error) {
+        console.warn('Could not fetch IP address:', error);
+      }
+
+      // Insert log entry and return the ID
+      const { data: logData, error } = await supabase
+        .from('logs')
+        .insert({
+          user_id: logUserId,
+          activity: activity,
+          log_type: logType,
+          details: details,
+          ip_address: ipAddress
+        })
+        .select('id')
+        .single();
+
+      if (error) {
+        console.error('Error logging upload completion:', error);
+        return null;
+      }
+      
+      console.log('Upload activity logged:', activity);
+      return logData?.id;
+    } catch (error) {
+      console.error('Error in logDataEvent.uploadCompleted:', error);
+      return null;
+    }
+  }
 };
 
 /**
@@ -120,11 +164,158 @@ export const logSystemEvent = {
   printReport: (reportType = 'accident data report') => logUserActivity(`Printed ${reportType}`, 'INFO', `Report type: ${reportType}`)
 };
 
+/**
+ * Upload history management (stored in Supabase)
+ * 
+ * SECURITY NOTE: All operations are scoped to the current logged-in user
+ * using their ID from the 'police' table stored in localStorage.
+ */
+export const uploadHistoryService = {
+  /**
+   * Get current user ID from localStorage
+   * @returns {string|null} User ID (UUID) or null if not authenticated
+   */
+  _getCurrentUserId: () => {
+    try {
+      const adminData = localStorage.getItem('adminData');
+      if (!adminData) {
+        console.warn('No user data found in localStorage');
+        return null;
+      }
+      const currentUser = JSON.parse(adminData);
+      if (!currentUser?.id) {
+        console.warn('User data exists but has no ID');
+        return null;
+      }
+      return currentUser.id;
+    } catch (error) {
+      console.error('Error parsing user data:', error);
+      return null;
+    }
+  },
+
+  /**
+   * Save upload summary to Supabase
+   * @param {object} summary - Upload summary object
+   * @param {number} logId - Associated log entry ID
+   */
+  save: async (summary, logId = null) => {
+    try {
+      const userId = uploadHistoryService._getCurrentUserId();
+      if (!userId) {
+        console.error('Cannot save upload history: No user ID found');
+        return null;
+      }
+
+      const { data, error } = await supabase
+        .from('upload_history')
+        .insert({
+          user_id: userId, // SECURITY: Always use authenticated user's ID
+          log_id: logId,
+          file_name: summary.fileName,
+          file_size: summary.fileSize,
+          upload_started_at: summary.uploadedAt,
+          upload_completed_at: summary.completedAt || null,
+          processing_time: summary.processingTime || null,
+          records_processed: summary.recordsProcessed || null,
+          sheets_processed: summary.sheetsProcessed || [],
+          status: summary.status,
+          error_message: summary.errorMessage || null
+        })
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error saving upload history:', error);
+        return null;
+      }
+
+      console.log('Upload history saved to Supabase:', data);
+      return data;
+    } catch (error) {
+      console.error('Error in uploadHistoryService.save:', error);
+      return null;
+    }
+  },
+
+  /**
+   * Fetch upload history from Supabase (scoped to current user)
+   * @param {number} limit - Number of records to fetch
+   * @returns {Array} Upload history records for current user only
+   */
+  fetch: async (limit = 10) => {
+    try {
+      const userId = uploadHistoryService._getCurrentUserId();
+      if (!userId) {
+        console.warn('Cannot fetch upload history: No user ID found');
+        return [];
+      }
+
+      // SECURITY: Query is filtered by current user's ID
+      const { data, error } = await supabase
+        .from('upload_history')
+        .select('*')
+        .eq('user_id', userId) // CRITICAL: Only fetch current user's records
+        .order('created_at', { ascending: false })
+        .limit(limit);
+
+      if (error) {
+        console.error('Error fetching upload history:', error);
+        return [];
+      }
+
+      // Additional security check: Verify all returned records belong to current user
+      const filteredData = (data || []).filter(record => record.user_id === userId);
+      
+      if (filteredData.length !== (data || []).length) {
+        console.error('Security warning: Some records did not belong to current user');
+      }
+
+      return filteredData;
+    } catch (error) {
+      console.error('Error in uploadHistoryService.fetch:', error);
+      return [];
+    }
+  },
+
+  /**
+   * Clear all upload history for current user ONLY
+   * @returns {boolean} True if successful, false otherwise
+   */
+  clear: async () => {
+    try {
+      const userId = uploadHistoryService._getCurrentUserId();
+      if (!userId) {
+        console.warn('Cannot clear upload history: No user ID found');
+        return false;
+      }
+
+      // SECURITY: Delete only records belonging to current user
+      const { error } = await supabase
+        .from('upload_history')
+        .delete()
+        .eq('user_id', userId); // CRITICAL: Only delete current user's records
+
+      if (error) {
+        console.error('Error clearing upload history:', error);
+        return false;
+      }
+
+      console.log('Upload history cleared for user ID:', userId);
+      return true;
+    } catch (error) {
+      console.error('Error in uploadHistoryService.clear:', error);
+      return false;
+    }
+  }
+};
+
 export default {
   logUserActivity,
   logAuthEvent,
   logAccountEvent,
   logProfileEvent,
   logDataEvent,
-  logSystemEvent
+  logSystemEvent,
+  uploadHistoryService
 };
