@@ -564,7 +564,151 @@ class AccidentClusterAnalyzer:
             if len(invalid_clusters) > 10:
                 print(f"   ... and {len(invalid_clusters) - 10} more")
             print(f"{'='*60}\n")
+
+        # ======================================================
+        # ACCIDENT YEAR DISTRIBUTION VALIDATION (APPLIED LAST)
+        # ======================================================
+        print("🧭 Applying accident year distribution validation...")
+
+        # Tunable parameters
+        RECENT_CUTOFF = 0.60   # increasing this harsher → recent-heavy (valid)
+        OLD_CUTOFF = 0.35      # increasing this harsher → old-heavy (invalid)
+        SPARSE_LIMIT = 5       # below this value = sparse
+        DENSE_LIMIT = 10        # above this value = dense enough
+
+        valid_clusters = []
+        for cluster in stats:
+            cid = cluster["cluster_id"]
+            subset = self.clustered_df[self.clustered_df["cluster"] == cid].copy()
             
+                        # Extract accident years and normalize 2025 -> 2024
+            subset["accident_year"] = subset["date"].dt.year.replace(2025, 2024)
+
+            # Raw year counts (may skip zero-years)
+            raw_year_counts = subset["accident_year"].value_counts().to_dict()
+
+            # Build full year range (min..max) and fill missing years with 0
+            min_year = int(subset["accident_year"].min())
+            max_year = int(subset["accident_year"].max())
+            if min_year == max_year:
+                # Not enough span to evaluate distribution; treat as single-year cluster
+                continue
+
+            years = np.arange(min_year, max_year + 1)
+            counts = np.array([float(raw_year_counts.get(int(y), 0.0)) for y in years])
+
+            # mean_count across the full year range (includes zeros)
+            mean_count = counts.mean()
+
+            # Normalize years to 0–1 (recent → closer to 1)
+            weights = (years - years.min()) / (years.max() - years.min() + 1e-12)
+
+            # If cluster has zero total (shouldn't happen), avoid division by zero
+            if counts.sum() == 0:
+                recency_score = 0.0
+            else:
+                recency_score = float(np.average(weights, weights=counts))
+
+            # Use mean_count for sparse/dense checks
+            sparse = mean_count < SPARSE_LIMIT
+            dense = mean_count >= DENSE_LIMIT
+
+            # Determine validity based on weighted recency
+            valid = False
+            reason = ""
+
+            if recency_score >= RECENT_CUTOFF:
+                valid = True
+                reason = f"Recent-heavy (score={recency_score:.2f})"
+            elif recency_score <= OLD_CUTOFF:
+                valid = False
+                reason = f"Old-heavy (score={recency_score:.2f})"
+            elif dense:
+                valid = True
+                reason = f"Dense distribution (mean_count={mean_count:.2f})"
+            elif sparse:
+                valid = False
+                reason = f"Sparse data (mean_count={mean_count:.2f})"
+            else:
+                valid = False
+                reason = f"Neutral/Sparse (mean_count={mean_count:.2f}, recency={recency_score:.2f})"
+
+            cluster["valid"] = valid
+            cluster["validation_reason"] = reason
+            cluster["mean_count"] = round(mean_count, 2)
+            cluster["recency_score"] = round(recency_score, 3)
+
+            # Append valid clusters
+            if valid:
+                valid_clusters.append(cluster)
+
+            # Optional debug print
+            print(f"Cluster {cid}: mean_count={mean_count:.1f}, recency={recency_score:.2f}, valid={valid}, reason={reason}")
+
+        print(f"✅ Valid clusters after year-distribution check: {len(valid_clusters)}/{len(stats)}")
+
+
+        # ======================================================
+        # LOG ALL CLUSTERS (Valid + Invalid), SORTED BY CLUSTER #
+        # ======================================================
+        all_clusters_sorted = sorted(stats, key=lambda c: c["cluster_id"])
+        valid_sorted = sorted([c for c in stats if c.get("valid", False)], key=lambda c: c["cluster_id"])
+        invalid_sorted = sorted([c for c in stats if not c.get("valid", False)], key=lambda c: c["cluster_id"])
+
+                # logging loop for valid clusters (same for invalid)
+        print(f"\n==================== VALID CLUSTERS (SORTED) ====================")
+        for cluster in valid_sorted:
+            cid = cluster["cluster_id"]
+            subset = self.clustered_df[self.clustered_df["cluster"] == cid].copy()
+            subset["accident_year"] = subset["date"].dt.year.replace(2025, 2024)
+
+            # Build full year range for display
+            min_year = int(subset["accident_year"].min())
+            max_year = int(subset["accident_year"].max())
+            years = np.arange(min_year, max_year + 1)
+            raw_counts = subset["accident_year"].value_counts().to_dict()
+            counts = [int(raw_counts.get(int(y), 0)) for y in years]
+            year_summary = " | ".join(f"{int(y)}: {c}" for y, c in zip(years, counts))
+
+            # Use mean_count computed earlier if available, else compute now
+            mean_count = cluster.get("mean_count")
+            if mean_count is None:
+                mean_count = float(np.mean(counts)) if counts else 0.0
+
+            recency_score = cluster.get("recency_score", "")
+            print(f" Cluster {cid:3d}: {len(subset):4d} total — {year_summary} | mean_count={mean_count:.2f} "
+                  f"(recency={recency_score}) {cluster.get('validation_reason','')}")
+
+        # logging loop for invalid clusters (same for valid)
+        print(f"\n==================== INVALID CLUSTERS (SORTED) ====================")
+        for cluster in invalid_sorted:
+            cid = cluster["cluster_id"]
+            subset = self.clustered_df[self.clustered_df["cluster"] == cid].copy()
+            subset["accident_year"] = subset["date"].dt.year.replace(2025, 2024)
+
+            # Build full year range for display
+            min_year = int(subset["accident_year"].min())
+            max_year = int(subset["accident_year"].max())
+            years = np.arange(min_year, max_year + 1)
+            raw_counts = subset["accident_year"].value_counts().to_dict()
+            counts = [int(raw_counts.get(int(y), 0)) for y in years]
+            year_summary = " | ".join(f"{int(y)}: {c}" for y, c in zip(years, counts))
+
+            # Use mean_count computed earlier if available, else compute now
+            mean_count = cluster.get("mean_count")
+            if mean_count is None:
+                mean_count = float(np.mean(counts)) if counts else 0.0
+
+            recency_score = cluster.get("recency_score", "")
+            print(f" Cluster {cid:3d}: {len(subset):4d} total — {year_summary} | mean_count={mean_count:.2f} "
+                  f"(recency={recency_score}) {cluster.get('validation_reason','')}")
+
+
+
+        # Replace full stats with only valid clusters
+        stats = valid_clusters
+
+
         # Sort by danger score (most dangerous first)
         stats = sorted(stats, key=lambda x: x["danger_score"], reverse=True)
         self.cluster_centers = stats
