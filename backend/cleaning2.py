@@ -174,7 +174,31 @@ class ExcelToSupabase:
             return 'Unknown'
 
     def dataframe_to_dict_list(self, df: pd.DataFrame) -> List[Dict[str, Any]]:
-        return df.to_dict('records')
+        """Convert DataFrame to list of dictionaries with proper JSON serialization"""
+        import datetime
+        
+        # Convert to dict first
+        records = df.to_dict('records')
+        
+        # Clean each record to ensure JSON serialization
+        cleaned_records = []
+        for record in records:
+            cleaned_record = {}
+            for key, value in record.items():
+                # Handle different datetime types
+                if isinstance(value, (pd.Timestamp, datetime.datetime)):
+                    cleaned_record[key] = value.strftime('%Y-%m-%d %H:%M:%S')
+                elif isinstance(value, datetime.time):
+                    cleaned_record[key] = value.strftime('%H:%M:%S')
+                elif isinstance(value, datetime.date):
+                    cleaned_record[key] = value.strftime('%Y-%m-%d')
+                elif pd.isna(value):
+                    cleaned_record[key] = None
+                else:
+                    cleaned_record[key] = value
+            cleaned_records.append(cleaned_record)
+        
+        return cleaned_records
 
     def check_existing_data(self, table_name: str) -> Dict[str, Any]:
         """Get existing data with optimized duplicate checking using sets - OPTIMIZED VERSION"""

@@ -29,18 +29,15 @@ let uploadSummary = {
 const dataFolder = path.join(process.cwd(), "data");
 if (!fs.existsSync(dataFolder)) {
   fs.mkdirSync(dataFolder);
-  console.log("Created data folder at:", dataFolder);
 }
 
 // Serve static files from the data directory
 app.use('/data', express.static(dataFolder));
-console.log("Static files served from:", dataFolder);
 
 // Multer storage configuration
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     const fullPath = path.join(process.cwd(), "data");
-    console.log("Saving file to:", fullPath);
     cb(null, fullPath);
   },
   filename: (req, file, cb) => {
@@ -78,13 +75,9 @@ function validateExcelFile(filePath) {
   const validSheets = [];
   
   try {
-    console.log("Validating Excel file:", filePath);
-    
     // Read the Excel file
     const workbook = XLSX.readFile(filePath);
     const sheetNames = workbook.SheetNames;
-    
-    console.log("Found sheets:", sheetNames);
     
     if (sheetNames.length === 0) {
       errors.push("❌ Excel file contains no sheets - please add at least one sheet with data");
@@ -99,8 +92,6 @@ function validateExcelFile(filePath) {
       
       if (!yearMatch) {
         errors.push(`❌ Sheet name "${sheetName}" must include a 4-digit year (e.g., "2023", "Accidents_2024", or "Data_2025")`);
-      } else {
-        console.log(`✅ Sheet "${sheetName}" contains year: ${yearMatch[0]}`);
       }
       
       // 2. Check if sheet has required columns
@@ -117,9 +108,6 @@ function validateExcelFile(filePath) {
       const normalizedHeaders = headers.map(h => 
         String(h).trim().toLowerCase().replace(/\s+/g, '_').replace(/[^\w]/g, '')
       );
-      
-      console.log(`Sheet "${sheetName}" columns:`, normalizedHeaders);
-      console.log(`Required columns:`, ALL_REQUIRED_COLUMNS);
       
       // Check for required columns - use exact matching
       const missingColumns = ALL_REQUIRED_COLUMNS.filter(col => {
@@ -143,8 +131,6 @@ function validateExcelFile(filePath) {
       });
       
       if (missingColumns.length > 0) {
-        console.log(`❌ Sheet "${sheetName}" missing columns:`, missingColumns);
-        
         // Group missing columns for better readability
         const missingBasic = missingColumns.filter(col => REQUIRED_COLUMNS.includes(col));
         const missingSeverity = missingColumns.filter(col => SEVERITY_CALC_COLUMNS.includes(col));
@@ -155,8 +141,6 @@ function validateExcelFile(filePath) {
         if (missingSeverity.length > 0) {
           errors.push(`❌ Sheet "${sheetName}" is missing severity columns: ${missingSeverity.join(', ')}`);
         }
-      } else {
-        console.log(`✅ Sheet "${sheetName}" has all required columns`);
       }
       
       // Check if sheet has data rows
@@ -166,13 +150,11 @@ function validateExcelFile(filePath) {
         const dataRows = jsonData.length - 1; // Exclude header row
         totalRecords += dataRows;
         validSheets.push(sheetName);
-        console.log(`✅ Sheet "${sheetName}" has ${dataRows} data rows`);
       }
     });
     
     if (errors.length === 0) {
-      console.log("✅ Excel file validation passed");
-      console.log(`Total records: ${totalRecords}, Sheets: ${validSheets.join(', ')}`);
+      console.log(`✅ Validation passed: ${totalRecords} records in ${validSheets.length} sheet(s)`);
       return { 
         valid: true, 
         errors: [], 
@@ -180,7 +162,6 @@ function validateExcelFile(filePath) {
         sheetsProcessed: validSheets 
       };
     } else {
-      console.log("❌ Excel file validation failed:", errors);
       return { 
         valid: false, 
         errors, 
@@ -209,31 +190,33 @@ function validateExcelFile(filePath) {
 
 // Function to run a Python script (using spawn instead of exec)
 function runSingleScript(scriptPath, onSuccess) {
+  const scriptName = path.basename(scriptPath);
   const process = spawn("python", [scriptPath]);
 
-  process.stdout.on("data", (data) => {
-    console.log(`${scriptPath} stdout: ${data.toString()}`);
-  });
-
+  // Only log errors from stderr
   process.stderr.on("data", (data) => {
-    console.error(`${scriptPath} stderr: ${data.toString()}`);
+    const output = data.toString();
+    // Only show actual errors, not warnings
+    if (output.includes('ERROR') || output.includes('Traceback')) {
+      console.error(`[${scriptName}] ${output}`);
+    }
   });
 
   process.on("close", (code) => {
     if (code === 0) {
-      console.log(`${scriptPath} finished successfully.`);
+      console.log(`✅ ${scriptName} completed`);
       if (onSuccess) onSuccess();
     } else {
-      console.error(`${scriptPath} exited with code ${code}`);
+      console.error(`❌ ${scriptName} failed with exit code ${code}`);
       isProcessing = false;
-      processingError = `Script ${path.basename(scriptPath)} failed with exit code ${code}`;
+      processingError = `Script ${scriptName} failed with exit code ${code}`;
     }
   });
 
   process.on("error", (error) => {
-    console.error(`Error starting ${scriptPath}:`, error);
+    console.error(`❌ Failed to start ${scriptName}:`, error.message);
     isProcessing = false;
-    processingError = `Failed to start ${path.basename(scriptPath)}: ${error.message}`;
+    processingError = `Failed to start ${scriptName}: ${error.message}`;
   });
 }
 
@@ -250,26 +233,21 @@ const runPythonScripts = (shouldRunClustering = true) => {
   const cleanupScript = path.join(process.cwd(), "cleanup_files.py");
   const uploadScript = path.join(process.cwd(), "mobile_cluster_fetch.py");
 
-  console.log("Starting Python script execution...");
-  console.log(`Step 1: Running ${script1}`);
+  console.log("📊 Starting data processing pipeline...");
 
   runSingleScript(script1, () => {
-    console.log(`Step 2: Running cleanup script ${cleanupScript}`);
     runSingleScript(cleanupScript, () => {
-      console.log(`Step 3: Running ${script2}`);
       runSingleScript(script2, () => {
         if (shouldRunClustering) {
-          console.log(`Step 4: Running clustering ${script3} (processing all 13k+ records)`);
+          console.log("🔄 Running clustering on full dataset...");
           runSingleScript(script3, () => {
-            console.log(`Step 5: Uploading clusters with ${uploadScript}`);
             runSingleScript(uploadScript, () => {
-              console.log("🎉 All Python scripts completed successfully!");
+              console.log("✅ Pipeline completed successfully!");
               isProcessing = false;
             });
           });
         } else {
-          console.log("⚡ Skipping clustering for small upload (< 100 records) - FAST MODE");
-          console.log("🎉 Processing completed successfully (clustering skipped)!");
+          console.log("✅ Pipeline completed (clustering skipped - small upload)");
           isProcessing = false;
         }
       });
@@ -294,7 +272,6 @@ app.get("/test", (req, res) => {
 
 // Route to check processing status
 app.get("/status", (req, res) => {
-  console.log("Status endpoint hit - isProcessing:", isProcessing);
   const processingTime = processingStartTime ? 
     Math.floor((new Date() - processingStartTime) / 1000) : 0;
   
@@ -308,7 +285,6 @@ app.get("/status", (req, res) => {
     sheetsProcessed: uploadSummary.sheetsProcessed
   };
   
-  console.log("Status response:", statusResponse);
   res.json(statusResponse);
 });
 
@@ -330,9 +306,6 @@ app.get("/data-files", (req, res) => {
 
 // Upload route with validation
 app.post("/upload", upload.single("file"), (req, res) => {
-  console.log("POST /upload route hit");
-  console.log("File received:", req.file);
-
   if (!req.file) {
     return res.status(400).json({ 
       message: "No file uploaded",
@@ -341,14 +314,14 @@ app.post("/upload", upload.single("file"), (req, res) => {
   }
 
   const filePath = req.file.path;
+  const fileName = req.file.originalname;
   
   // Validate the Excel file structure BEFORE processing
-  console.log("Validating Excel file structure...");
   const validation = validateExcelFile(filePath);
   
   if (!validation.valid) {
     // Validation failed - delete the uploaded file and return errors
-    console.log("Validation failed, deleting uploaded file...");
+    console.log(`❌ Validation failed for "${fileName}"`);
     
     // Reset upload summary
     uploadSummary = {
@@ -359,7 +332,6 @@ app.post("/upload", upload.single("file"), (req, res) => {
     
     try {
       fs.unlinkSync(filePath);
-      console.log("Uploaded file deleted");
     } catch (err) {
       console.error("Error deleting file:", err);
     }
@@ -372,12 +344,20 @@ app.post("/upload", upload.single("file"), (req, res) => {
   }
   
   // Validation passed - store summary data
-  console.log("✅ Validation passed, starting processing...");
   uploadSummary = {
     recordsProcessed: validation.recordsProcessed,
     sheetsProcessed: validation.sheetsProcessed,
-    fileName: req.file.originalname
+    fileName: fileName
   };
+
+  // Determine if we should run clustering
+  const shouldRunClustering = validation.recordsProcessed >= 100;
+  
+  console.log(`\n${'='.repeat(60)}`);
+  console.log(`📁 File: ${fileName}`);
+  console.log(`📊 Records: ${validation.recordsProcessed} | Sheets: ${validation.sheetsProcessed.join(', ')}`);
+  console.log(`⚡ Mode: ${shouldRunClustering ? 'Full processing (with clustering)' : 'Fast mode (no clustering)'}`);
+  console.log(`${'='.repeat(60)}\n`);
 
   // Respond to frontend
   res.json({ 
@@ -387,20 +367,13 @@ app.post("/upload", upload.single("file"), (req, res) => {
     sheetsProcessed: validation.sheetsProcessed
   });
 
-  // Determine if we should run clustering
-  // Skip clustering for small uploads (< 100 records) to save time
-  const shouldRunClustering = validation.recordsProcessed >= 100;
-  
-  console.log(`Records to process: ${validation.recordsProcessed}`);
-  console.log(`Clustering will ${shouldRunClustering ? 'run' : 'be skipped (< 100 records)'}`);
-
   // Run all Python scripts sequentially
   runPythonScripts(shouldRunClustering);
 });
 
 // Start server
 app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
-  console.log(`Data files available at: http://localhost:${PORT}/data/`);
-  console.log(`Check available files at: http://localhost:${PORT}/data-files`);
+  console.log(`\n🚀 OSIMAP Backend Server`);
+  console.log(`📍 Running on http://localhost:${PORT}`);
+  console.log(`📂 Data folder: ${dataFolder}\n`);
 });
