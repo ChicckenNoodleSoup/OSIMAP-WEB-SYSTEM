@@ -53,8 +53,6 @@ export const logUserActivity = async (activity, logType = 'INFO', details = null
 
     if (error) {
       console.error('Error logging user activity:', error);
-    } else {
-      console.log('Activity logged:', activity);
     }
   } catch (error) {
     console.error('Error in logUserActivity:', error);
@@ -148,7 +146,6 @@ export const logDataEvent = {
         return null;
       }
       
-      console.log('Upload activity logged:', activity);
       return logData?.id;
     } catch (error) {
       console.error('Error in logDataEvent.uploadCompleted:', error);
@@ -178,15 +175,11 @@ export const uploadHistoryService = {
   _getCurrentUserId: () => {
     try {
       const adminData = localStorage.getItem('adminData');
-      if (!adminData) {
-        console.warn('No user data found in localStorage');
-        return null;
-      }
+      if (!adminData) return null;
+      
       const currentUser = JSON.parse(adminData);
-      if (!currentUser?.id) {
-        console.warn('User data exists but has no ID');
-        return null;
-      }
+      if (!currentUser?.id) return null;
+      
       return currentUser.id;
     } catch (error) {
       console.error('Error parsing user data:', error);
@@ -230,7 +223,6 @@ export const uploadHistoryService = {
         return null;
       }
 
-      console.log('Upload history saved to Supabase:', data);
       return data;
     } catch (error) {
       console.error('Error in uploadHistoryService.save:', error);
@@ -246,10 +238,7 @@ export const uploadHistoryService = {
   fetch: async (limit = 10) => {
     try {
       const userId = uploadHistoryService._getCurrentUserId();
-      if (!userId) {
-        console.warn('Cannot fetch upload history: No user ID found');
-        return [];
-      }
+      if (!userId) return [];
 
       // SECURITY: Query is filtered by current user's ID
       const { data, error } = await supabase
@@ -285,10 +274,7 @@ export const uploadHistoryService = {
   clear: async () => {
     try {
       const userId = uploadHistoryService._getCurrentUserId();
-      if (!userId) {
-        console.warn('Cannot clear upload history: No user ID found');
-        return false;
-      }
+      if (!userId) return false;
 
       // SECURITY: Delete only records belonging to current user
       const { error } = await supabase
@@ -301,7 +287,6 @@ export const uploadHistoryService = {
         return false;
       }
 
-      console.log('Upload history cleared for user ID:', userId);
       return true;
     } catch (error) {
       console.error('Error in uploadHistoryService.clear:', error);

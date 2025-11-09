@@ -13,7 +13,6 @@ function SessionTimeout() {
   useEffect(() => {
     // Clear any existing interval first (prevents StrictMode duplicates)
     if (intervalRef.current) {
-      console.log('🛑 Clearing existing session check interval');
       clearInterval(intervalRef.current);
       intervalRef.current = null;
     }
@@ -22,11 +21,8 @@ function SessionTimeout() {
       const timeUntilExpiration = getTimeUntilExpiration();
       setTimeLeft(timeUntilExpiration);
 
-      console.log('Session check - Time left:', timeUntilExpiration, 'ms');
-
       // Show warning when 2 minutes left (for 15-minute sessions)
       if (timeUntilExpiration <= 2 * 60 * 1000 && timeUntilExpiration > 0) {
-        console.log('Showing session timeout modal');
         setShowModal(true);
       } else {
         setShowModal(false);
@@ -51,7 +47,6 @@ function SessionTimeout() {
     intervalRef.current = setInterval(checkSession, 1000);
 
     return () => {
-      console.log('🧹 Cleanup: Clearing session check interval');
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
         intervalRef.current = null;

@@ -312,7 +312,6 @@ export default function AddRecord() {
       let fileToUpload = file;
       if (sanitizedFileName !== file.name) {
         fileToUpload = new File([file], sanitizedFileName, { type: file.type });
-        console.log(`File name sanitized: "${file.name}" → "${sanitizedFileName}"`);
       }
 
       const formData = new FormData();
@@ -357,8 +356,6 @@ export default function AddRecord() {
         })
         .then(async (data) => {
           if (!data) return; // Already handled error above
-          
-          console.log("Backend response:", data);
 
           // Check if backend returned validation errors (shouldn't happen if res.ok, but safety check)
           if (data.error || data.validationErrors) {

@@ -48,46 +48,35 @@ export const UploadProvider = ({ children }) => {
     
     // Clear any existing interval first (prevents StrictMode duplicates)
     if (pollingIntervalRef.current) {
-      console.log('🛑 Clearing existing polling interval');
       clearInterval(pollingIntervalRef.current);
       pollingIntervalRef.current = null;
     }
 
     if (processingUploads.length === 0) {
-      console.log('ℹ️ No processing uploads, polling stopped');
       return;
     }
 
-    console.log('🚀 Starting polling for', processingUploads.length, 'upload(s)');
     pollingIntervalRef.current = setInterval(async () => {
-      console.log('📡 Polling backend status...');
-      
       try {
         const res = await fetch('http://localhost:5000/status');
         if (!res.ok) return;
 
         const statusData = await res.json();
-        console.log('📊 Backend status:', statusData);
         
         // Process each upload based on status
         for (const upload of processingUploads) {
-          console.log('🔍 Checking upload:', upload.id, 'Status:', upload.status, 'Backend status:', statusData.status);
-          
           // Skip if already completed
           if (completedUploadIdsRef.current.has(upload.id)) {
-            console.log('⏭️ Skipping - already in completed IDs');
             continue;
           }
 
-          // IMPORTANT: Also skip if upload status is no longer "processing"
+          // Also skip if upload status is no longer "processing"
           if (upload.status !== 'processing') {
-            console.log('⏭️ Skipping - upload status is:', upload.status);
             continue;
           }
 
           if (statusData.status === 'error') {
             // Processing failed
-            console.log('❌ Backend error detected, completing upload as failed');
             await completeUpload(upload.id, {
               status: 'failed',
               errorMessage: statusData.processingError || 'Unknown error',
@@ -95,7 +84,6 @@ export const UploadProvider = ({ children }) => {
             });
           } else if (!statusData.isProcessing && statusData.status === 'idle') {
             // Processing complete
-            console.log('✅ Backend idle detected, completing upload as success');
             await completeUpload(upload.id, {
               status: 'success',
               processingTime: statusData.processingTime || 0,
@@ -104,7 +92,6 @@ export const UploadProvider = ({ children }) => {
             });
           } else if (statusData.isProcessing) {
             // Update processing time
-            console.log('⏳ Still processing, updating time:', statusData.processingTime);
             updateUpload(upload.id, {
               processingTime: statusData.processingTime || 0
             });
@@ -116,7 +103,6 @@ export const UploadProvider = ({ children }) => {
     }, 2000); // Poll every 2 seconds
 
     return () => {
-      console.log('🧹 Cleanup: Clearing polling interval');
       if (pollingIntervalRef.current) {
         clearInterval(pollingIntervalRef.current);
         pollingIntervalRef.current = null;
@@ -150,29 +136,21 @@ export const UploadProvider = ({ children }) => {
   };
 
   const completeUpload = async (uploadId, completionData) => {
-    console.log('🔔 completeUpload called for ID:', uploadId, 'Status:', completionData.status);
-    console.log('📋 Currently completed IDs:', Array.from(completedUploadIdsRef.current));
-    console.log('🔒 Current locks:', Array.from(completionLocksRef.current.keys()));
-    
     // FIRST CHECK: Already completed?
     if (completedUploadIdsRef.current.has(uploadId)) {
-      console.log('⚠️ DUPLICATE PREVENTED (already completed):', uploadId);
       return;
     }
     
     // SECOND CHECK: Is completion already in progress?
     if (completionLocksRef.current.has(uploadId)) {
-      console.log('⚠️ DUPLICATE PREVENTED (completion in progress):', uploadId);
       return;
     }
     
     // Lock this upload completion
     completionLocksRef.current.set(uploadId, true);
-    console.log('🔒 Locked upload for completion:', uploadId);
     
     // Add IMMEDIATELY to completed IDs
     completedUploadIdsRef.current.add(uploadId);
-    console.log('✅ Marked as completed:', uploadId);
 
     // Get upload data BEFORE setState (avoid StrictMode re-execution)
     let upload = null;
@@ -182,7 +160,6 @@ export const UploadProvider = ({ children }) => {
     });
 
     if (!upload) {
-      console.log('⚠️ Upload not found:', uploadId);
       completionLocksRef.current.delete(uploadId);
       completedUploadIdsRef.current.delete(uploadId);
       return;
@@ -196,8 +173,6 @@ export const UploadProvider = ({ children }) => {
 
     // Save to history OUTSIDE of setState (prevents StrictMode double-execution)
     try {
-      console.log('💾 Starting save for upload:', upload.fileName, 'ID:', uploadId);
-      
       const logDetails = completionData.status === 'success'
         ? `Records: ${completionData.recordsProcessed}, Sheets: ${completionData.sheetsProcessed?.join(', ') || 'N/A'}, Time: ${completionData.processingTime}s`
         : `Error: ${completionData.errorMessage || 'Upload failed'}`;
@@ -208,8 +183,6 @@ export const UploadProvider = ({ children }) => {
         completionData.status,
         logDetails
       );
-
-      console.log('📝 Log created with ID:', logId);
 
       // Save to upload_history table
       const savedHistory = await uploadHistoryService.save({
@@ -224,10 +197,6 @@ export const UploadProvider = ({ children }) => {
         errorMessage: completionData.errorMessage
       }, logId);
 
-      if (savedHistory) {
-        console.log('✅ Upload saved to history successfully with ID:', savedHistory.id);
-      }
-
       // Show notification
       showNotification(
         completionData.status === 'success' 
@@ -237,13 +206,11 @@ export const UploadProvider = ({ children }) => {
       
       // Unlock after successful save
       completionLocksRef.current.delete(uploadId);
-      console.log('🔓 Unlocked upload:', uploadId);
     } catch (error) {
-      console.error('❌ Error saving upload to history:', error);
+      console.error('Error saving upload to history:', error);
       // Remove from completed IDs and locks if save failed to allow retry
       completedUploadIdsRef.current.delete(uploadId);
       completionLocksRef.current.delete(uploadId);
-      console.log('🔓 Unlocked upload after error:', uploadId);
     }
 
     // NOW update state (after save is complete)
