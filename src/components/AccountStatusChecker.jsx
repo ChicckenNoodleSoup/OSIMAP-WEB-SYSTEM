@@ -11,7 +11,7 @@ function AccountStatusChecker() {
     // Only run if user is authenticated
     if (!isAuthenticated()) return;
 
-    const checkStatus = () => {
+    const checkStatus = async () => {
       try {
         // Double check authentication before proceeding
         if (!isAuthenticated()) return;
@@ -28,7 +28,7 @@ function AccountStatusChecker() {
         if (userData.status === 'rejected' || userData.status === 'revoked') {
           console.log('User account has been rejected/revoked, logging out...');
           // Clear user data and navigate to login
-          clearAll(); // SECURITY: Clear all upload data
+          await clearAll(); // SECURITY: Clear all upload data and cancel processing
           clearUserData();
           navigate('/signin', { replace: true });
         }

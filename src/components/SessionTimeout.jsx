@@ -10,7 +10,7 @@ function SessionTimeout() {
   const hasLoggedExpiration = useRef(false);
   const intervalRef = useRef(null); // Track interval to prevent StrictMode duplicates
   const navigate = useNavigate();
-  const { clearAll } = useUpload();
+  const { clearAll, hasActiveUploads } = useUpload();
 
   useEffect(() => {
     // Clear any existing interval first (prevents StrictMode duplicates)
@@ -86,7 +86,7 @@ function SessionTimeout() {
 
   const handleLogout = async () => {
     await logAuthEvent.sessionExpired();
-    clearAll(); // SECURITY: Clear all upload data
+    await clearAll(); // SECURITY: Clear all upload data and cancel processing
     clearUserData();
     navigate('/signin', { replace: true });
   };

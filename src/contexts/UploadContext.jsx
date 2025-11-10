@@ -249,8 +249,31 @@ export const UploadProvider = ({ children }) => {
     setActiveUploads(prev => prev.filter(u => u.status === 'processing'));
   };
 
-  const clearAll = () => {
+  const cancelUpload = async () => {
+    try {
+      const res = await fetch('http://localhost:5000/cancel', { method: 'POST' });
+      const data = await res.json();
+      
+      if (res.ok) {
+        console.log('Upload cancelled successfully');
+        return true;
+      } else {
+        console.error('Failed to cancel upload:', data.message);
+        return false;
+      }
+    } catch (error) {
+      console.error('Error cancelling upload:', error);
+      return false;
+    }
+  };
+
+  const clearAll = async (shouldCancelBackend = true) => {
     // SECURITY: Clear all upload data (called on logout)
+    
+    // Cancel backend processing if requested
+    if (shouldCancelBackend && activeUploads.some(u => u.status === 'processing')) {
+      await cancelUpload();
+    }
     
     // Stop polling interval immediately
     if (pollingIntervalRef.current) {
@@ -285,9 +308,10 @@ export const UploadProvider = ({ children }) => {
 
   // SECURITY: Monitor authentication and clear uploads on logout
   useEffect(() => {
-    const checkAuth = () => {
+    const checkAuth = async () => {
       if (!isAuthenticated() && (activeUploads.length > 0 || lastCompletedUpload)) {
         // User logged out but uploads still exist - clear them
+        // Don't cancel backend (already done by logout handler)
         if (pollingIntervalRef.current) {
           clearInterval(pollingIntervalRef.current);
           pollingIntervalRef.current = null;
@@ -310,6 +334,10 @@ export const UploadProvider = ({ children }) => {
     return () => clearInterval(authCheckInterval);
   }, [activeUploads.length, lastCompletedUpload]);
 
+  const hasActiveUploads = () => {
+    return activeUploads.some(u => u.status === 'processing');
+  };
+
   const value = {
     activeUploads,
     lastCompletedUpload,
@@ -319,7 +347,9 @@ export const UploadProvider = ({ children }) => {
     removeUpload,
     clearCompleted,
     clearLastCompleted,
-    clearAll
+    clearAll,
+    cancelUpload,
+    hasActiveUploads
   };
 
   return (

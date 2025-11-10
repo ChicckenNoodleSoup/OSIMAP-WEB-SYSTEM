@@ -31,7 +31,7 @@ function ProtectedRoute({ isAuthenticated, children }) {
 function AppContent() {
   const [authState, setAuthState] = useState(isAuthenticated());
   const [authReady, setAuthReady] = useState(false);
-  const { clearAll } = useUpload();
+  const { clearAll, hasActiveUploads } = useUpload();
 
   useEffect(() => {
     // Check authentication status on app load
@@ -61,8 +61,25 @@ function AppContent() {
   }, []);
 
   const handleLogout = async () => {
+    // Check if there are active uploads
+    if (hasActiveUploads()) {
+      const confirmLogout = window.confirm(
+        '⚠️ Upload in Progress\n\n' +
+        'A file is currently being uploaded and processed.\n\n' +
+        'If you log out now:\n' +
+        '• The upload will be cancelled\n' +
+        '• Processing will stop immediately\n' +
+        '• Uploaded data may be incomplete\n\n' +
+        'Do you want to cancel the upload and log out?'
+      );
+      
+      if (!confirmLogout) {
+        return; // User chose to stay and let upload finish
+      }
+    }
+    
     await logAuthEvent.logout();
-    clearAll(); // SECURITY: Clear all upload data
+    await clearAll(); // SECURITY: Clear all upload data and cancel backend processing
     clearUserData();
     setAuthState(false);
   };

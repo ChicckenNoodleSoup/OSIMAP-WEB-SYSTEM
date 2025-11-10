@@ -31,6 +31,9 @@ let uploadSummary = {
 let actualNewRecords = 0;
 let actualDuplicates = 0;
 
+// Track running Python processes for cancellation
+let currentProcesses = [];
+
 // Ensure "data" folder exists
 const dataFolder = path.join(process.cwd(), "data");
 if (!fs.existsSync(dataFolder)) {
@@ -198,6 +201,9 @@ function validateExcelFile(filePath) {
 function runSingleScript(scriptPath, onSuccess) {
   const scriptName = path.basename(scriptPath);
   const process = spawn("python", [scriptPath]);
+  
+  // Track this process for potential cancellation
+  currentProcesses.push(process);
 
   // Capture stdout to parse upsert summary
   process.stdout.on("data", (data) => {
@@ -245,8 +251,18 @@ function runSingleScript(scriptPath, onSuccess) {
     }
   });
 
-  process.on("close", (code) => {
-    if (code === 0) {
+  process.on("close", (code, signal) => {
+    // Remove from tracking array
+    const index = currentProcesses.indexOf(process);
+    if (index > -1) {
+      currentProcesses.splice(index, 1);
+    }
+    
+    if (signal === 'SIGTERM' || signal === 'SIGKILL') {
+      console.log(`🛑 ${scriptName} was cancelled`);
+      isProcessing = false;
+      processingError = 'Upload cancelled by user';
+    } else if (code === 0) {
       console.log(`✅ ${scriptName} completed`);
       if (onSuccess) onSuccess();
     } else {
@@ -337,6 +353,45 @@ app.get("/status", (req, res) => {
   };
   
   res.json(statusResponse);
+});
+
+// Route to cancel ongoing upload/processing
+app.post("/cancel", (req, res) => {
+  if (!isProcessing) {
+    return res.status(400).json({ 
+      message: "No upload is currently being processed",
+      error: "NOTHING_TO_CANCEL"
+    });
+  }
+
+  console.log('🛑 Cancellation requested - terminating all Python processes...');
+  
+  // Kill all running Python processes
+  currentProcesses.forEach((proc) => {
+    try {
+      proc.kill('SIGTERM'); // Graceful termination
+      setTimeout(() => {
+        if (!proc.killed) {
+          proc.kill('SIGKILL'); // Force kill if still running
+        }
+      }, 2000);
+    } catch (error) {
+      console.error('Error killing process:', error);
+    }
+  });
+  
+  // Clear process array
+  currentProcesses = [];
+  
+  // Reset processing state
+  isProcessing = false;
+  processingError = 'Upload cancelled by user';
+  processingStartTime = null;
+  
+  res.json({ 
+    message: "Upload cancelled successfully",
+    success: true
+  });
 });
 
 // Route to check available data files
