@@ -26,6 +26,10 @@ export const clearUserData = () => {
   localStorage.removeItem('userRole');
   localStorage.removeItem('adminData');
   localStorage.removeItem('authExpiresAt');
+  
+  // SECURITY: Clear upload data to prevent cross-user data leakage
+  localStorage.removeItem('activeUploads');
+  localStorage.removeItem('lastCompletedUpload');
 };
 
 export const setUserData = (userData) => {
