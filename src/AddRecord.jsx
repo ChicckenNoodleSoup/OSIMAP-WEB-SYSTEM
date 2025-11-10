@@ -66,6 +66,7 @@ export default function AddRecord() {
       setProcessingStage("complete");
       setCurrentStep(4);
       setUploadStatus("✅ Pipeline completed successfully!");
+      
       setCurrentUploadSummary({
         id: latestUpload.id,
         fileName: latestUpload.fileName,
@@ -75,6 +76,8 @@ export default function AddRecord() {
         processingTime: latestUpload.processingTime,
         recordsProcessed: latestUpload.recordsProcessed,
         sheetsProcessed: latestUpload.sheetsProcessed,
+        newRecords: latestUpload.newRecords,
+        duplicateRecords: latestUpload.duplicateRecords,
         status: 'success'
       });
     } else if (latestUpload.status === 'failed') {
@@ -539,9 +542,21 @@ export default function AddRecord() {
               <span className="summary-value">{summary.processingTime}s</span>
             </div>
           )}
-          {summary.recordsProcessed && (
+          {summary.newRecords !== undefined && summary.newRecords !== null && (
             <div className="summary-row">
-              <span className="summary-label">Records Processed:</span>
+              <span className="summary-label">New Records:</span>
+              <span className="summary-value summary-highlight">{summary.newRecords}</span>
+            </div>
+          )}
+          {summary.duplicateRecords !== undefined && summary.duplicateRecords !== null && summary.duplicateRecords > 0 && (
+            <div className="summary-row">
+              <span className="summary-label">Duplicates Skipped:</span>
+              <span className="summary-value summary-duplicate">{summary.duplicateRecords}</span>
+            </div>
+          )}
+          {summary.recordsProcessed !== undefined && summary.recordsProcessed !== null && (
+            <div className="summary-row">
+              <span className="summary-label">Total Records:</span>
               <span className="summary-value">{summary.recordsProcessed}</span>
             </div>
           )}
@@ -659,7 +674,8 @@ export default function AddRecord() {
                       <th>File Name</th>
                       <th>Size</th>
                       <th>Upload Time</th>
-                      <th>Records</th>
+                      <th>New</th>
+                      <th>Duplicates</th>
                       <th>Duration</th>
                       <th>Status</th>
                     </tr>
@@ -667,7 +683,7 @@ export default function AddRecord() {
                   <tbody>
                     {uploadHistory.map((item) => (
                       <tr key={item.id}>
-                        <td className="file-name-cell" title={item.file_name}>
+                        <td className="file-name-cell">
                           <div className="file-name-wrapper">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                               <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path>
@@ -678,7 +694,12 @@ export default function AddRecord() {
                         </td>
                         <td>{formatFileSize(item.file_size)}</td>
                         <td>{formatDateTime(item.upload_started_at)}</td>
-                        <td className="records-cell">{item.records_processed || 'N/A'}</td>
+                        <td className="new-records-cell">
+                          {item.new_records !== null && item.new_records !== undefined ? item.new_records : 'N/A'}
+                        </td>
+                        <td className="duplicate-records-cell">
+                          {item.duplicate_records !== null && item.duplicate_records !== undefined ? item.duplicate_records : 'N/A'}
+                        </td>
                         <td>{item.processing_time ? `${item.processing_time}s` : 'N/A'}</td>
                         <td>
                           <span className={`status-badge ${item.status}`}>

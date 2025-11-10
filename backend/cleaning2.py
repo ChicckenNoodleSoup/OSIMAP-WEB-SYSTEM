@@ -402,32 +402,39 @@ class ExcelToSupabase:
         """Use Supabase upsert with comprehensive conflict resolution including offense type"""
         try:
             total_records = len(data)
-            logger.info(f" Starting to upsert {total_records} records into {table_name}")
-            logger.info(" Using upsert mode - will update existing records or insert new ones")
+            
+            inserted_count = 0
+            duplicate_count = 0
             
             for i in range(0, total_records, batch_size):
                 batch = data[i:i + batch_size]
                 
                 try:
-                    # OPTIMIZED: Use upsert with ignore_duplicates to silently skip existing records
-                    # This works much faster than checking each record manually
+                    # OPTIMIZED: Use upsert with count to track new inserts
                     result = self.supabase.table(table_name).upsert(
                         batch,
                         ignore_duplicates=True,  # Skip duplicates silently
-                        count='None'  # Don't count affected rows for better performance
+                        count='exact'  # Count affected rows to track new inserts
                     ).execute()
                     
-                    # Success - batch processed (duplicates were silently ignored)
-                    logger.info(f" Batch {i//batch_size + 1}/{(total_records + batch_size - 1)//batch_size} processed")
+                    # Count new inserts (count will be 0 for duplicates)
+                    batch_inserted = result.count if hasattr(result, 'count') and result.count else 0
+                    inserted_count += batch_inserted
+                    duplicate_count += (len(batch) - batch_inserted)
                         
                 except Exception as e:
-                    # Only log if it's NOT a duplicate key error (those are expected and OK)
+                    # Only log if it's NOT a duplicate key error
                     error_str = str(e)
                     if 'duplicate key' not in error_str.lower() and '23505' not in error_str:
                         logger.error(f" Batch {i//batch_size + 1} error: {str(e)}")
-                    # Silently continue - duplicates are handled by the constraint
+                    else:
+                        # All duplicates in this batch
+                        duplicate_count += len(batch)
             
-            logger.info(f" Successfully upserted all {total_records} records")
+            # Output summary for server.js to parse (hidden markers + visible message)
+            print(f"[SUMMARY]INSERTED:{inserted_count}", flush=True)  # Hidden marker
+            print(f"[SUMMARY]DUPLICATES:{duplicate_count}", flush=True)  # Hidden marker
+            print(f"   Upsert complete: {inserted_count} new, {duplicate_count} duplicates", flush=True)
             return True
             
         except Exception as e:

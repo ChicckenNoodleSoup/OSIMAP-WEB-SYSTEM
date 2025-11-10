@@ -568,6 +568,16 @@
   text-align: right;
 }
 
+.summary-value.summary-highlight {
+  color: #10b981;
+  font-size: 16px;
+}
+
+.summary-value.summary-duplicate {
+  color: rgba(255, 193, 7, 0.9);
+  font-size: 14px;
+}
+
 .status-badge {
   padding: 6px 14px;
   border-radius: 20px;
@@ -1010,10 +1020,17 @@
   opacity: 0.6;
 }
 
-/* Records cell */
-.records-cell {
+/* New records cell - highlighted in green */
+.new-records-cell {
+  font-weight: 700;
+  color: #10b981;
+  font-size: 15px;
+}
+
+/* Duplicate records cell - highlighted in yellow */
+.duplicate-records-cell {
   font-weight: 600;
-  color: #0085ff;
+  color: rgba(255, 193, 7, 0.9);
 }
 
 /* Enhanced status badges */

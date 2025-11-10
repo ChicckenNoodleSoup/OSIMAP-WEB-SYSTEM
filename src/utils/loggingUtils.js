@@ -212,6 +212,8 @@ export const uploadHistoryService = {
           processing_time: summary.processingTime || null,
           records_processed: summary.recordsProcessed || null,
           sheets_processed: summary.sheetsProcessed || [],
+          new_records: summary.newRecords !== undefined ? summary.newRecords : null,
+          duplicate_records: summary.duplicateRecords !== undefined ? summary.duplicateRecords : null,
           status: summary.status,
           error_message: summary.errorMessage || null
         })
