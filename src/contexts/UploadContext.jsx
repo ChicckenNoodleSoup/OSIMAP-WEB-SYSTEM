@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { logDataEvent, uploadHistoryService } from '../utils/loggingUtils';
+import { isAuthenticated } from '../utils/authUtils';
 
 const UploadContext = createContext();
 
@@ -248,6 +249,23 @@ export const UploadProvider = ({ children }) => {
     setActiveUploads(prev => prev.filter(u => u.status === 'processing'));
   };
 
+  const clearAll = () => {
+    // SECURITY: Clear all upload data (called on logout)
+    
+    // Stop polling interval immediately
+    if (pollingIntervalRef.current) {
+      clearInterval(pollingIntervalRef.current);
+      pollingIntervalRef.current = null;
+    }
+    
+    setActiveUploads([]);
+    setLastCompletedUpload(null);
+    completedUploadIdsRef.current.clear();
+    completionLocksRef.current.clear();
+    localStorage.removeItem('activeUploads');
+    localStorage.removeItem('lastCompletedUpload');
+  };
+
   const showNotification = (message) => {
     // Show browser notification if permitted
     if ('Notification' in window && Notification.permission === 'granted') {
@@ -265,6 +283,33 @@ export const UploadProvider = ({ children }) => {
     }
   }, []);
 
+  // SECURITY: Monitor authentication and clear uploads on logout
+  useEffect(() => {
+    const checkAuth = () => {
+      if (!isAuthenticated() && (activeUploads.length > 0 || lastCompletedUpload)) {
+        // User logged out but uploads still exist - clear them
+        if (pollingIntervalRef.current) {
+          clearInterval(pollingIntervalRef.current);
+          pollingIntervalRef.current = null;
+        }
+        setActiveUploads([]);
+        setLastCompletedUpload(null);
+        completedUploadIdsRef.current.clear();
+        completionLocksRef.current.clear();
+        localStorage.removeItem('activeUploads');
+        localStorage.removeItem('lastCompletedUpload');
+      }
+    };
+
+    // Check immediately
+    checkAuth();
+
+    // Check periodically (every second)
+    const authCheckInterval = setInterval(checkAuth, 1000);
+
+    return () => clearInterval(authCheckInterval);
+  }, [activeUploads.length, lastCompletedUpload]);
+
   const value = {
     activeUploads,
     lastCompletedUpload,
@@ -273,7 +318,8 @@ export const UploadProvider = ({ children }) => {
     completeUpload,
     removeUpload,
     clearCompleted,
-    clearLastCompleted
+    clearLastCompleted,
+    clearAll
   };
 
   return (

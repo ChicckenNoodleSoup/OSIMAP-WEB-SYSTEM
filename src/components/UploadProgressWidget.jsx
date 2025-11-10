@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 import { useUpload } from '../contexts/UploadContext';
+import { isAuthenticated } from '../utils/authUtils';
 import './UploadProgressWidget.css';
 
 export const UploadProgressWidget = () => {
   const { activeUploads, removeUpload, clearCompleted } = useUpload();
   const [isMinimized, setIsMinimized] = useState(false);
 
-  if (activeUploads.length === 0) return null;
+  // SECURITY: Hide widget when not authenticated
+  if (!isAuthenticated() || activeUploads.length === 0) return null;
 
   const processingCount = activeUploads.filter(u => u.status === 'processing').length;
   const completedCount = activeUploads.filter(u => u.status === 'success').length;

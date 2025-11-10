@@ -15,7 +15,7 @@ import AdminDashboard from './AdminDashboard';
 import SessionTimeout from './components/SessionTimeout';
 import AccountStatusChecker from './components/AccountStatusChecker';
 import { UserProvider } from './UserContext';
-import { UploadProvider } from './contexts/UploadContext';
+import { UploadProvider, useUpload } from './contexts/UploadContext';
 import { UploadProgressWidget } from './components/UploadProgressWidget';
 import { isAuthenticated, clearUserData, extendSession } from './utils/authUtils';
 import { logAuthEvent } from './utils/loggingUtils';
@@ -27,15 +27,16 @@ function ProtectedRoute({ isAuthenticated, children }) {
   return isAuthenticated ? children : <Navigate to="/signin" />;
 }
 
-function App() {
+// Main app component that has access to UploadContext
+function AppContent() {
   const [authState, setAuthState] = useState(isAuthenticated());
   const [authReady, setAuthReady] = useState(false);
+  const { clearAll } = useUpload();
 
   useEffect(() => {
     // Check authentication status on app load
     const checkAuth = () => {
       const authStatus = isAuthenticated();
-      console.log('Auth check - status:', authStatus);
       setAuthState(authStatus);
       setAuthReady(true);
     };
@@ -61,6 +62,7 @@ function App() {
 
   const handleLogout = async () => {
     await logAuthEvent.logout();
+    clearAll(); // SECURITY: Clear all upload data
     clearUserData();
     setAuthState(false);
   };
@@ -71,69 +73,76 @@ function App() {
 
   return (
     <BrowserRouter>
-      <UploadProvider>
-        <UserProvider>
-          <UploadProgressWidget />
-          <Routes>
-            {/* Public routes */}
-            <Route
-              path="/signin"
-              element={<SignIn setIsAuthenticated={setAuthState} />}
-            />
-            <Route
-              path="/create-account"
-              element={<CreateAccount />}
-            />
-            <Route
-              path="/forgot-password"
-              element={<ForgotPassword />}
-            />
-            <Route
-              path="/reset-password"
-              element={<ResetPassword />}
-            />
-            <Route
-              path="/download"
-              element={<DownloadPage />}
-            />
-
-            {/* Protected routes */}
-            <Route
-              path="/*"
-              element={
-                <>
-                  <ProtectedRoute isAuthenticated={authState}>
-                    <>
-                      <img src="/background-image.png" alt="Background" className="bg-image" />
-                      <SessionTimeout />
-                      <AccountStatusChecker />
-                      <div style={{ display: 'flex', minHeight: '100vh', position: 'relative' }}>
-                        <Sidebar onLogout={handleLogout} />
-                        <div className="main-content">
-                        <Routes>
-                          <Route path="/" element={<Dashboard />} />
-                          <Route path="/dashboard" element={<Dashboard />} />
-                          <Route path="/map" element={<MapView />} />
-                          <Route path="/currentrecords" element={<CurrentRecords />} />
-                          <Route path="/add-record" element={<AddRecord />} />
-                          <Route path="/helpsupport" element={<HelpSupport />} />
-                          <Route path="/print" element={<Print />} />
-                          <Route path="/profile" element={<Profile />} />
-                          <Route path="/admin-dashboard" element={<AdminDashboard />} />
-                          <Route path="*" element={<div>Page Not Found</div>} />
-                        </Routes>
-                      </div>
-                    </div>
-                  </>
-                </ProtectedRoute>
-                <SessionTimeout />
-              </>
-            }
+      <UserProvider>
+        <UploadProgressWidget />
+        <Routes>
+          {/* Public routes */}
+          <Route
+            path="/signin"
+            element={<SignIn setIsAuthenticated={setAuthState} />}
           />
-        </Routes>
-      </UserProvider>
-    </UploadProvider>
+          <Route
+            path="/create-account"
+            element={<CreateAccount />}
+          />
+          <Route
+            path="/forgot-password"
+            element={<ForgotPassword />}
+          />
+          <Route
+            path="/reset-password"
+            element={<ResetPassword />}
+          />
+          <Route
+            path="/download"
+            element={<DownloadPage />}
+          />
+
+          {/* Protected routes */}
+          <Route
+            path="/*"
+            element={
+              <>
+                <ProtectedRoute isAuthenticated={authState}>
+                  <>
+                    <img src="/background-image.png" alt="Background" className="bg-image" />
+                    <SessionTimeout />
+                    <AccountStatusChecker />
+                    <div style={{ display: 'flex', minHeight: '100vh', position: 'relative' }}>
+                      <Sidebar onLogout={handleLogout} />
+                      <div className="main-content">
+                      <Routes>
+                        <Route path="/" element={<Dashboard />} />
+                        <Route path="/dashboard" element={<Dashboard />} />
+                        <Route path="/map" element={<MapView />} />
+                        <Route path="/currentrecords" element={<CurrentRecords />} />
+                        <Route path="/add-record" element={<AddRecord />} />
+                        <Route path="/helpsupport" element={<HelpSupport />} />
+                        <Route path="/print" element={<Print />} />
+                        <Route path="/profile" element={<Profile />} />
+                        <Route path="/admin-dashboard" element={<AdminDashboard />} />
+                        <Route path="*" element={<div>Page Not Found</div>} />
+                      </Routes>
+                    </div>
+                  </div>
+                </>
+              </ProtectedRoute>
+              <SessionTimeout />
+            </>
+          }
+        />
+      </Routes>
+    </UserProvider>
   </BrowserRouter>
+  );
+}
+
+// Wrapper component that provides UploadContext
+function App() {
+  return (
+    <UploadProvider>
+      <AppContent />
+    </UploadProvider>
   );
 }
 

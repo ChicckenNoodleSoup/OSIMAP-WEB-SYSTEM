@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getTimeUntilExpiration, extendSession, clearUserData, isAuthenticated } from '../utils/authUtils';
 import { logAuthEvent } from '../utils/loggingUtils';
+import { useUpload } from '../contexts/UploadContext';
 
 function SessionTimeout() {
   const [timeLeft, setTimeLeft] = useState(0);
@@ -9,6 +10,7 @@ function SessionTimeout() {
   const hasLoggedExpiration = useRef(false);
   const intervalRef = useRef(null); // Track interval to prevent StrictMode duplicates
   const navigate = useNavigate();
+  const { clearAll } = useUpload();
 
   useEffect(() => {
     // Clear any existing interval first (prevents StrictMode duplicates)
@@ -84,6 +86,7 @@ function SessionTimeout() {
 
   const handleLogout = async () => {
     await logAuthEvent.sessionExpired();
+    clearAll(); // SECURITY: Clear all upload data
     clearUserData();
     navigate('/signin', { replace: true });
   };

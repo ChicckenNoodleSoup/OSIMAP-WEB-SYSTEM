@@ -1,9 +1,11 @@
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { clearUserData, isAuthenticated } from '../utils/authUtils';
+import { useUpload } from '../contexts/UploadContext';
 
 function AccountStatusChecker() {
   const navigate = useNavigate();
+  const { clearAll } = useUpload();
 
   useEffect(() => {
     // Only run if user is authenticated
@@ -26,6 +28,7 @@ function AccountStatusChecker() {
         if (userData.status === 'rejected' || userData.status === 'revoked') {
           console.log('User account has been rejected/revoked, logging out...');
           // Clear user data and navigate to login
+          clearAll(); // SECURITY: Clear all upload data
           clearUserData();
           navigate('/signin', { replace: true });
         }
