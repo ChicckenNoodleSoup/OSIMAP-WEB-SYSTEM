@@ -222,7 +222,7 @@ export default function DownloadPage() {
           </div>
           <div className="section-content-right">
             <h2 className="section-title">
-              OSIMAP was brought to life by a team of <span className="highlight-blue">student researchers</span>.
+              OSIMAP was brought to life by a team of <span className="highlight-blue">student researchers.</span>
             </h2>
             <p className="section-text">
               Transforming complex data into a real-world safety solution for the City of San Fernando, Pampanga.
