@@ -22,8 +22,14 @@ let processingError = null;
 let uploadSummary = {
   recordsProcessed: 0,
   sheetsProcessed: [],
-  fileName: null
+  fileName: null,
+  newRecords: 0,
+  duplicateRecords: 0
 };
+
+// Track actual new records inserted (not duplicates)
+let actualNewRecords = 0;
+let actualDuplicates = 0;
 
 // Ensure "data" folder exists
 const dataFolder = path.join(process.cwd(), "data");
@@ -193,6 +199,43 @@ function runSingleScript(scriptPath, onSuccess) {
   const scriptName = path.basename(scriptPath);
   const process = spawn("python", [scriptPath]);
 
+  // Capture stdout to parse upsert summary
+  process.stdout.on("data", (data) => {
+    const output = data.toString();
+    
+    // Parse ALL summary markers in this output chunk (don't return early)
+    let shouldSkipDisplay = false;
+    
+    if (output.includes('[SUMMARY]INSERTED:')) {
+      const match = output.match(/\[SUMMARY\]INSERTED:(\d+)/);
+      if (match) {
+        actualNewRecords = parseInt(match[1]);
+        uploadSummary.newRecords = actualNewRecords;
+      }
+      shouldSkipDisplay = true;
+    }
+    
+    if (output.includes('[SUMMARY]DUPLICATES:')) {
+      const match = output.match(/\[SUMMARY\]DUPLICATES:(\d+)/);
+      if (match) {
+        actualDuplicates = parseInt(match[1]);
+        uploadSummary.duplicateRecords = actualDuplicates;
+      }
+      shouldSkipDisplay = true;
+    }
+    
+    // Skip display if this was a summary marker line
+    if (shouldSkipDisplay) {
+      return;
+    }
+    
+    // Show important output lines (checkmark or "Upsert complete" prefixed lines)
+    const trimmed = output.trim();
+    if (trimmed.startsWith('✅') || trimmed.includes('Upsert complete:')) {
+      console.log(trimmed);
+    }
+  });
+
   // Only log errors from stderr
   process.stderr.on("data", (data) => {
     const output = data.toString();
@@ -222,10 +265,11 @@ function runSingleScript(scriptPath, onSuccess) {
 
 
 // Function to run Python scripts sequentially (including cleanup after processing)
-const runPythonScripts = (shouldRunClustering = true) => {
+const runPythonScripts = () => {
   isProcessing = true;
   processingStartTime = new Date();
   processingError = null;
+  actualNewRecords = 0; // Reset counter
   
   const script1 = path.join(process.cwd(), "cleaning2.py");
   const script2 = path.join(process.cwd(), "export_geojson.py");
@@ -235,11 +279,15 @@ const runPythonScripts = (shouldRunClustering = true) => {
 
   console.log("📊 Starting data processing pipeline...");
 
+  // Step 1: Upload to Supabase and track NEW records
   runSingleScript(script1, () => {
     runSingleScript(cleanupScript, () => {
       runSingleScript(script2, () => {
+        // SMART DECISION: Only run clustering if we have 100+ NEW records
+        const shouldRunClustering = actualNewRecords >= 100;
+        
         if (shouldRunClustering) {
-          console.log("🔄 Running clustering on full dataset...");
+          console.log(`🔄 Running clustering (${actualNewRecords} new records warrant re-clustering)...`);
           runSingleScript(script3, () => {
             runSingleScript(uploadScript, () => {
               console.log("✅ Pipeline completed successfully!");
@@ -247,7 +295,8 @@ const runPythonScripts = (shouldRunClustering = true) => {
             });
           });
         } else {
-          console.log("✅ Pipeline completed (clustering skipped - small upload)");
+          console.log(`⚡ Clustering skipped (only ${actualNewRecords} new records, threshold: 100)`);
+          console.log("✅ Pipeline completed!");
           isProcessing = false;
         }
       });
@@ -282,7 +331,9 @@ app.get("/status", (req, res) => {
     processingError: processingError,
     status: isProcessing ? "processing" : processingError ? "error" : "idle",
     recordsProcessed: uploadSummary.recordsProcessed,
-    sheetsProcessed: uploadSummary.sheetsProcessed
+    sheetsProcessed: uploadSummary.sheetsProcessed,
+    newRecords: uploadSummary.newRecords,
+    duplicateRecords: uploadSummary.duplicateRecords
   };
   
   res.json(statusResponse);
@@ -327,7 +378,9 @@ app.post("/upload", upload.single("file"), (req, res) => {
     uploadSummary = {
       recordsProcessed: 0,
       sheetsProcessed: [],
-      fileName: null
+      fileName: null,
+      newRecords: 0,
+      duplicateRecords: 0
     };
     
     try {
@@ -347,16 +400,14 @@ app.post("/upload", upload.single("file"), (req, res) => {
   uploadSummary = {
     recordsProcessed: validation.recordsProcessed,
     sheetsProcessed: validation.sheetsProcessed,
-    fileName: fileName
+    fileName: fileName,
+    newRecords: 0,
+    duplicateRecords: 0
   };
-
-  // Determine if we should run clustering
-  const shouldRunClustering = validation.recordsProcessed >= 100;
   
   console.log(`\n${'='.repeat(60)}`);
   console.log(`📁 File: ${fileName}`);
-  console.log(`📊 Records: ${validation.recordsProcessed} | Sheets: ${validation.sheetsProcessed.join(', ')}`);
-  console.log(`⚡ Mode: ${shouldRunClustering ? 'Full processing (with clustering)' : 'Fast mode (no clustering)'}`);
+  console.log(`📊 Total records: ${validation.recordsProcessed} | Sheets: ${validation.sheetsProcessed.join(', ')}`);
   console.log(`${'='.repeat(60)}\n`);
 
   // Respond to frontend
@@ -367,8 +418,8 @@ app.post("/upload", upload.single("file"), (req, res) => {
     sheetsProcessed: validation.sheetsProcessed
   });
 
-  // Run all Python scripts sequentially
-  runPythonScripts(shouldRunClustering);
+  // Run pipeline - clustering decision made AFTER checking for duplicates
+  runPythonScripts();
 });
 
 // Start server

@@ -88,7 +88,9 @@ export const UploadProvider = ({ children }) => {
               status: 'success',
               processingTime: statusData.processingTime || 0,
               recordsProcessed: statusData.recordsProcessed || 'N/A',
-              sheetsProcessed: statusData.sheetsProcessed || []
+              sheetsProcessed: statusData.sheetsProcessed || [],
+              newRecords: statusData.newRecords !== undefined ? statusData.newRecords : 0,
+              duplicateRecords: statusData.duplicateRecords !== undefined ? statusData.duplicateRecords : 0
             });
           } else if (statusData.isProcessing) {
             // Update processing time
@@ -193,6 +195,8 @@ export const UploadProvider = ({ children }) => {
         processingTime: completionData.processingTime,
         recordsProcessed: completionData.recordsProcessed,
         sheetsProcessed: completionData.sheetsProcessed,
+        newRecords: completionData.newRecords,
+        duplicateRecords: completionData.duplicateRecords,
         status: completionData.status,
         errorMessage: completionData.errorMessage
       }, logId);
