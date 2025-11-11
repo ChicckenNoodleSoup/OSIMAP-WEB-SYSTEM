@@ -306,11 +306,12 @@ function CurrentRecords() {
         return;
       }
       
-      // Start tracking as background task with clustering type
+      // Start tracking as background task with clustering type and taskId
       startUpload({
         fileName: 'Clustering Analysis',
         fileSize: 0,
-        type: 'clustering'
+        type: 'clustering',
+        taskId: data.taskId // Pass backend task ID for tracking
       });
       
       setMessage('🔄 Clustering started in background - you can continue using the app');

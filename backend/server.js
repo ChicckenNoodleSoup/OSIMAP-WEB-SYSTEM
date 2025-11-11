@@ -13,12 +13,13 @@ const PORT = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 
-// Global processing state
-let isProcessing = false;
+// Task Queue System
+let taskQueue = []; // Queue of pending tasks
+let currentTask = null; // Currently executing task
 let processingStartTime = null;
 let processingError = null;
 
-// Upload summary data
+// Global upload summary data (for backward compatibility during processing)
 let uploadSummary = {
   recordsProcessed: 0,
   sheetsProcessed: [],
@@ -30,6 +31,9 @@ let uploadSummary = {
 // Track actual new records inserted (not duplicates)
 let actualNewRecords = 0;
 let actualDuplicates = 0;
+
+// Completed tasks storage (keep last 10 for status queries)
+let completedTasks = [];
 
 // Track running Python processes for cancellation
 let currentProcesses = [];
@@ -245,8 +249,8 @@ function runSingleScript(scriptPath, onSuccess) {
   // Only log errors from stderr
   process.stderr.on("data", (data) => {
     const output = data.toString();
-    // Only show actual errors, not warnings
-    if (output.includes('ERROR') || output.includes('Traceback')) {
+    // Only show actual errors, not warnings or info
+    if (output.includes('ERROR') || output.includes('Traceback') || output.includes('Error:')) {
       console.error(`[${scriptName}] ${output}`);
     }
   });
@@ -260,31 +264,89 @@ function runSingleScript(scriptPath, onSuccess) {
     
     if (signal === 'SIGTERM' || signal === 'SIGKILL') {
       console.log(`🛑 ${scriptName} was cancelled`);
-      isProcessing = false;
-      processingError = 'Upload cancelled by user';
+      processingError = 'Task cancelled by user';
+      completeCurrentTask(false, processingError);
     } else if (code === 0) {
       console.log(`✅ ${scriptName} completed`);
       if (onSuccess) onSuccess();
     } else {
       console.error(`❌ ${scriptName} failed with exit code ${code}`);
-      isProcessing = false;
       processingError = `Script ${scriptName} failed with exit code ${code}`;
+      completeCurrentTask(false, processingError);
     }
   });
 
   process.on("error", (error) => {
     console.error(`❌ Failed to start ${scriptName}:`, error.message);
-    isProcessing = false;
     processingError = `Failed to start ${scriptName}: ${error.message}`;
+    completeCurrentTask(false, processingError);
   });
 }
 
 
-// Function to run Python scripts sequentially (including cleanup after processing)
-const runPythonScripts = () => {
-  isProcessing = true;
+// Task Queue Processor - processes one task at a time
+const processQueue = () => {
+  // If already processing or queue is empty, do nothing
+  if (currentTask || taskQueue.length === 0) {
+    return;
+  }
+
+  // Get next task from queue
+  currentTask = taskQueue.shift();
   processingStartTime = new Date();
   processingError = null;
+  currentTask.status = 'processing';
+
+  console.log(`\n📋 Processing task from queue: ${currentTask.type} (${taskQueue.length} remaining in queue)`);
+
+  // Execute the task
+  currentTask.execute();
+};
+
+// Complete current task and process next
+const completeCurrentTask = (success = true, errorMessage = null) => {
+  if (!currentTask) return;
+  
+  console.log(`✅ Task completed: ${currentTask.type}`);
+  
+  // Calculate final processing time
+  const finalProcessingTime = processingStartTime ? 
+    Math.floor((new Date() - processingStartTime) / 1000) : 0;
+  
+  // Save task completion data
+  const completedTask = {
+    ...currentTask,
+    status: success ? 'completed' : 'failed',
+    completedAt: new Date().toISOString(),
+    processingTime: finalProcessingTime,
+    errorMessage: errorMessage
+  };
+  
+  // For upload tasks, save the summary data
+  if (currentTask.type === 'upload') {
+    completedTask.recordsProcessed = uploadSummary.recordsProcessed;
+    completedTask.sheetsProcessed = uploadSummary.sheetsProcessed;
+    completedTask.newRecords = uploadSummary.newRecords;
+    completedTask.duplicateRecords = uploadSummary.duplicateRecords;
+  }
+  
+  // Add to completed tasks (keep last 10)
+  completedTasks.unshift(completedTask);
+  if (completedTasks.length > 10) {
+    completedTasks = completedTasks.slice(0, 10);
+  }
+  
+  // Reset current task and processing state
+  currentTask = null;
+  processingStartTime = null;
+  processingError = null;
+  
+  // Process next task in queue
+  setTimeout(processQueue, 500); // Small delay before next task
+};
+
+// Function to run file upload pipeline
+const runUploadPipeline = () => {
   actualNewRecords = 0; // Reset counter
   
   const script1 = path.join(process.cwd(), "cleaning2.py");
@@ -293,7 +355,7 @@ const runPythonScripts = () => {
   const cleanupScript = path.join(process.cwd(), "cleanup_files.py");
   const uploadScript = path.join(process.cwd(), "mobile_cluster_fetch.py");
 
-  console.log("📊 Starting data processing pipeline...");
+  console.log("📊 Starting file upload pipeline...");
 
   // Step 1: Upload to Supabase and track NEW records
   runSingleScript(script1, () => {
@@ -306,15 +368,36 @@ const runPythonScripts = () => {
           console.log(`🔄 Running clustering (${actualNewRecords} new records warrant re-clustering)...`);
           runSingleScript(script3, () => {
             runSingleScript(uploadScript, () => {
-              console.log("✅ Pipeline completed successfully!");
-              isProcessing = false;
+              console.log("✅ Upload pipeline completed!");
+              completeCurrentTask();
             });
           });
         } else {
           console.log(`⚡ Clustering skipped (only ${actualNewRecords} new records, threshold: 100)`);
-          console.log("✅ Pipeline completed!");
-          isProcessing = false;
+          console.log("✅ Upload pipeline completed!");
+          completeCurrentTask();
         }
+      });
+    });
+  });
+};
+
+// Function to run clustering pipeline
+const runClusteringPipeline = () => {
+  const script2 = path.join(process.cwd(), "export_geojson.py");
+  const script3 = path.join(process.cwd(), "cluster_hdbscan.py");
+  const uploadScript = path.join(process.cwd(), "mobile_cluster_fetch.py");
+  
+  console.log("📊 Starting clustering pipeline...");
+  
+  // Step 1: Export fresh data from Supabase
+  runSingleScript(script2, () => {
+    // Step 2: Run clustering
+    runSingleScript(script3, () => {
+      // Step 3: Upload cluster results
+      runSingleScript(uploadScript, () => {
+        console.log("✅ Clustering pipeline completed!");
+        completeCurrentTask();
       });
     });
   });
@@ -331,21 +414,88 @@ app.get("/test", (req, res) => {
   res.json({ 
     message: "Backend is accessible", 
     timestamp: new Date().toISOString(),
-    isProcessing: isProcessing 
+    isProcessing: currentTask !== null,
+    queueLength: taskQueue.length
   });
 });
 
-// Route to check processing status
+// Route to check processing status with task-specific information
 app.get("/status", (req, res) => {
+  const { taskId } = req.query;
+  
+  // If taskId is provided, return status for that specific task
+  if (taskId) {
+    // Check if it's the current task
+    if (currentTask?.id === taskId) {
+      const processingTime = processingStartTime ? 
+        Math.floor((new Date() - processingStartTime) / 1000) : 0;
+      
+      return res.json({
+        isProcessing: true,
+        processingTime: processingTime,
+        status: 'processing',
+        taskId: currentTask.id,
+        taskType: currentTask.type,
+        queuePosition: 0,
+        recordsProcessed: currentTask.type === 'upload' ? uploadSummary.recordsProcessed : undefined,
+        sheetsProcessed: currentTask.type === 'upload' ? uploadSummary.sheetsProcessed : undefined,
+        newRecords: currentTask.type === 'upload' ? uploadSummary.newRecords : undefined,
+        duplicateRecords: currentTask.type === 'upload' ? uploadSummary.duplicateRecords : undefined,
+        processingError: processingError
+      });
+    }
+    
+    // Check if it's in the queue
+    const queuedTask = taskQueue.find(t => t.id === taskId);
+    if (queuedTask) {
+      return res.json({
+        isProcessing: false,
+        processingTime: 0,
+        status: 'queued',
+        taskId: queuedTask.id,
+        taskType: queuedTask.type,
+        queuePosition: taskQueue.findIndex(t => t.id === taskId) + 1
+      });
+    }
+    
+    // Check if it's completed
+    const completedTask = completedTasks.find(t => t.id === taskId);
+    if (completedTask) {
+      return res.json({
+        isProcessing: false,
+        processingTime: completedTask.processingTime,
+        status: completedTask.status === 'completed' ? 'idle' : 'error',
+        taskId: completedTask.id,
+        taskType: completedTask.type,
+        queuePosition: 0,
+        recordsProcessed: completedTask.recordsProcessed,
+        sheetsProcessed: completedTask.sheetsProcessed,
+        newRecords: completedTask.newRecords,
+        duplicateRecords: completedTask.duplicateRecords,
+        processingError: completedTask.errorMessage
+      });
+    }
+    
+    // Task not found
+    return res.json({
+      isProcessing: false,
+      status: "idle",
+      taskId: taskId
+    });
+  }
+  
+  // General status - backward compatibility
   const processingTime = processingStartTime ? 
     Math.floor((new Date() - processingStartTime) / 1000) : 0;
   
   const statusResponse = {
-    isProcessing,
+    isProcessing: currentTask !== null,
     processingTime: processingTime,
     processingStartTime: processingStartTime,
     processingError: processingError,
-    status: isProcessing ? "processing" : processingError ? "error" : "idle",
+    status: currentTask ? "processing" : processingError ? "error" : "idle",
+    currentTask: currentTask ? { id: currentTask.id, type: currentTask.type } : null,
+    queueLength: taskQueue.length,
     recordsProcessed: uploadSummary.recordsProcessed,
     sheetsProcessed: uploadSummary.sheetsProcessed,
     newRecords: uploadSummary.newRecords,
@@ -357,9 +507,9 @@ app.get("/status", (req, res) => {
 
 // Route to cancel ongoing upload/processing
 app.post("/cancel", (req, res) => {
-  if (!isProcessing) {
+  if (!currentTask) {
     return res.status(400).json({ 
-      message: "No upload is currently being processed",
+      message: "No task is currently being processed",
       error: "NOTHING_TO_CANCEL"
     });
   }
@@ -383,15 +533,51 @@ app.post("/cancel", (req, res) => {
   // Clear process array
   currentProcesses = [];
   
+  // Clear queue
+  taskQueue = [];
+  
   // Reset processing state
-  isProcessing = false;
-  processingError = 'Upload cancelled by user';
+  currentTask = null;
+  processingError = 'Task cancelled by user';
   processingStartTime = null;
   
   res.json({ 
-    message: "Upload cancelled successfully",
+    message: "Task cancelled successfully",
     success: true
   });
+});
+
+// Route to manually trigger clustering
+app.post("/run-clustering", (req, res) => {
+  console.log('🔄 Manual clustering requested...');
+  
+  // Create clustering task
+  const taskId = Date.now().toString();
+  const clusteringTask = {
+    id: taskId,
+    type: 'clustering',
+    status: 'queued',
+    execute: runClusteringPipeline
+  };
+  
+  // Add to queue
+  taskQueue.push(clusteringTask);
+  
+  const queuePosition = taskQueue.length;
+  const message = queuePosition === 1 && !currentTask
+    ? "Clustering started successfully."
+    : `Clustering queued. Position in queue: ${queuePosition}`;
+  
+  // Respond to frontend immediately
+  res.json({ 
+    message: message,
+    success: true,
+    taskId: taskId,
+    queuePosition: queuePosition
+  });
+  
+  // Start processing queue
+  processQueue();
 });
 
 // Route to check available data files
@@ -465,16 +651,36 @@ app.post("/upload", upload.single("file"), (req, res) => {
   console.log(`📊 Total records: ${validation.recordsProcessed} | Sheets: ${validation.sheetsProcessed.join(', ')}`);
   console.log(`${'='.repeat(60)}\n`);
 
+  // Create upload task
+  const taskId = Date.now().toString();
+  const uploadTask = {
+    id: taskId,
+    type: 'upload',
+    status: 'queued',
+    fileName: fileName,
+    execute: runUploadPipeline
+  };
+  
+  // Add to queue
+  taskQueue.push(uploadTask);
+  
+  const queuePosition = taskQueue.length;
+  const queueMessage = queuePosition === 1 && !currentTask
+    ? "Processing started..."
+    : ` Queued at position ${queuePosition}`;
+
   // Respond to frontend
   res.json({ 
-    message: "File validated successfully. Processing started...", 
+    message: "File validated successfully." + queueMessage, 
     filename: req.file.filename,
     recordsProcessed: validation.recordsProcessed,
-    sheetsProcessed: validation.sheetsProcessed
+    sheetsProcessed: validation.sheetsProcessed,
+    taskId: taskId,
+    queuePosition: queuePosition
   });
 
-  // Run pipeline - clustering decision made AFTER checking for duplicates
-  runPythonScripts();
+  // Start processing queue
+  processQueue();
 });
 
 // Start server

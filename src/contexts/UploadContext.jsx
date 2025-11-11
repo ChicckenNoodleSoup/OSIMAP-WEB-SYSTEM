@@ -59,13 +59,14 @@ export const UploadProvider = ({ children }) => {
 
     pollingIntervalRef.current = setInterval(async () => {
       try {
-        const res = await fetch('http://localhost:5000/status');
-        if (!res.ok) return;
-
-        const statusData = await res.json();
-        
-        // Process each upload based on status
+        // Poll status for each processing upload with its taskId
         for (const upload of processingUploads) {
+          if (!upload.taskId) continue; // Skip if no taskId
+          
+          const res = await fetch(`http://localhost:5000/status?taskId=${upload.taskId}`);
+          if (!res.ok) continue;
+
+          const statusData = await res.json();
           // Skip if already completed
           if (completedUploadIdsRef.current.has(upload.id)) {
             continue;
@@ -76,7 +77,7 @@ export const UploadProvider = ({ children }) => {
             continue;
           }
 
-          if (statusData.status === 'error') {
+          if (statusData.status === 'error' || statusData.processingError) {
             // Processing failed
             await completeUpload(upload.id, {
               status: 'failed',
@@ -93,7 +94,7 @@ export const UploadProvider = ({ children }) => {
               newRecords: statusData.newRecords !== undefined ? statusData.newRecords : 0,
               duplicateRecords: statusData.duplicateRecords !== undefined ? statusData.duplicateRecords : 0
             });
-          } else if (statusData.isProcessing) {
+          } else if (statusData.isProcessing || statusData.status === 'processing') {
             // Update processing time
             updateUpload(upload.id, {
               processingTime: statusData.processingTime || 0
@@ -116,6 +117,7 @@ export const UploadProvider = ({ children }) => {
   const startUpload = (uploadData) => {
     const newUpload = {
       id: Date.now(),
+      taskId: uploadData.taskId || null, // Backend task ID for tracking
       fileName: uploadData.fileName,
       fileSize: uploadData.fileSize,
       uploadedAt: new Date().toISOString(),

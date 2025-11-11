@@ -385,10 +385,11 @@ export default function AddRecord() {
             status: 'processing'
           });
 
-          // Start background upload tracking (continues even if user navigates away)
+          // Start background upload tracking with taskId from backend
           startUpload({
             fileName: fileToUpload.name,
-            fileSize: fileToUpload.size
+            fileSize: fileToUpload.size,
+            taskId: data.taskId // Pass backend task ID for tracking
           });
 
           setProcessingStage("processing");

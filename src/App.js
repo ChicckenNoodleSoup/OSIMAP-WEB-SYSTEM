@@ -32,7 +32,7 @@ function ProtectedRoute({ isAuthenticated, children }) {
 function AppContent() {
   const [authState, setAuthState] = useState(isAuthenticated());
   const [authReady, setAuthReady] = useState(false);
-  const { clearAll, hasActiveUploads } = useUpload();
+  const { clearAll, hasActiveUploads, activeUploads } = useUpload();
   const clearPageStates = useClearPageStates();
 
   useEffect(() => {
@@ -64,19 +64,48 @@ function AppContent() {
 
   const handleLogout = async () => {
     // Check if there are active uploads
-    if (hasActiveUploads()) {
+    const processingTasks = activeUploads.filter(u => u.status === 'processing');
+    
+    if (processingTasks.length > 0) {
+      // Determine task type(s)
+      const hasUpload = processingTasks.some(t => t.type === 'upload');
+      const hasClustering = processingTasks.some(t => t.type === 'clustering');
+      
+      let title, description, consequences;
+      
+      if (hasUpload && hasClustering) {
+        // Both types
+        title = '⚠️ Tasks in Progress';
+        description = 'File upload and clustering analysis are currently running.';
+        consequences = '• Both tasks will be cancelled\n' +
+                      '• Processing will stop immediately\n' +
+                      '• Uploaded data may be incomplete';
+      } else if (hasClustering) {
+        // Only clustering
+        title = '⚠️ Clustering in Progress';
+        description = 'Clustering analysis is currently running.';
+        consequences = '• The clustering task will be cancelled\n' +
+                      '• Analysis will stop immediately\n' +
+                      '• Cluster data may be incomplete';
+      } else {
+        // Only upload
+        title = '⚠️ Upload in Progress';
+        description = 'A file is currently being uploaded and processed.';
+        consequences = '• The upload will be cancelled\n' +
+                      '• Processing will stop immediately\n' +
+                      '• Uploaded data may be incomplete';
+      }
+      
       const confirmLogout = window.confirm(
-        '⚠️ Upload in Progress\n\n' +
-        'A file is currently being uploaded and processed.\n\n' +
+        `${title}\n\n` +
+        `${description}\n\n` +
         'If you log out now:\n' +
-        '• The upload will be cancelled\n' +
-        '• Processing will stop immediately\n' +
-        '• Uploaded data may be incomplete\n\n' +
-        'Do you want to cancel the upload and log out?'
+        consequences + '\n\n' +
+        'Do you want to cancel and log out?'
       );
       
       if (!confirmLogout) {
-        return; // User chose to stay and let upload finish
+        return; // User chose to stay and let task(s) finish
       }
     }
     
