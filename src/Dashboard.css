@@ -754,7 +754,6 @@
     gap: 8px;
   }
 }
-
 /* Right column full height for single card (Clustered Map) */
 .dashboard-column.right-column {
   display: flex;

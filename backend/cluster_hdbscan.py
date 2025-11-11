@@ -568,7 +568,7 @@ class AccidentClusterAnalyzer:
         # ======================================================
         # ACCIDENT YEAR DISTRIBUTION VALIDATION (APPLIED LAST)
         # ======================================================
-        print("🧭 Applying accident year distribution validation...")
+        print("Applying accident year distribution validation...")
 
         # Tunable parameters
         RECENT_CUTOFF = 0.60   # increasing this harsher → recent-heavy (valid)
@@ -645,7 +645,7 @@ class AccidentClusterAnalyzer:
             # Optional debug print
             print(f"Cluster {cid}: mean_count={mean_count:.1f}, recency={recency_score:.2f}, valid={valid}, reason={reason}")
 
-        print(f"✅ Valid clusters after year-distribution check: {len(valid_clusters)}/{len(stats)}")
+        print(f"Valid clusters after year-distribution check: {len(valid_clusters)}/{len(stats)}")
 
 
         # ======================================================

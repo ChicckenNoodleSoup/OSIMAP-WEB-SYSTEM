@@ -121,7 +121,8 @@ export const UploadProvider = ({ children }) => {
       uploadedAt: new Date().toISOString(),
       status: 'processing',
       processingTime: 0,
-      currentStep: 'uploading'
+      currentStep: 'uploading',
+      type: uploadData.type || 'upload' // 'upload' or 'clustering'
     };
 
     setActiveUploads(prev => [...prev, newUpload]);

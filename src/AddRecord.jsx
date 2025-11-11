@@ -39,7 +39,9 @@ export default function AddRecord() {
 
   // Sync local state with global upload context (restore state when returning to page)
   useEffect(() => {
-    const latestUpload = activeUploads[activeUploads.length - 1];
+    // Filter out clustering tasks - only show file uploads on this page
+    const fileUploads = activeUploads.filter(u => u.type !== 'clustering');
+    const latestUpload = fileUploads[fileUploads.length - 1];
     
     if (!latestUpload) {
       return;
@@ -96,9 +98,11 @@ export default function AddRecord() {
     }
   }, [activeUploads]);
 
-  // Reload history when upload completes
+  // Reload history when upload completes (only for file uploads, not clustering)
   useEffect(() => {
-    const hasCompleted = activeUploads.some(u => u.status === 'success' || u.status === 'failed');
+    const hasCompleted = activeUploads.some(u => 
+      u.type !== 'clustering' && (u.status === 'success' || u.status === 'failed')
+    );
     if (hasCompleted) {
       // Delay to ensure Supabase has the data
       const timer = setTimeout(async () => {
@@ -110,8 +114,9 @@ export default function AddRecord() {
   }, [activeUploads]);
 
   // Show lastCompletedUpload summary even if it's been removed from activeUploads
+  // BUT only for file uploads, not clustering tasks
   useEffect(() => {
-    if (lastCompletedUpload && !currentUploadSummary) {
+    if (lastCompletedUpload && !currentUploadSummary && lastCompletedUpload.type !== 'clustering') {
       // Show the completed upload summary
       if (lastCompletedUpload.status === 'success') {
         setProcessingStage("complete");

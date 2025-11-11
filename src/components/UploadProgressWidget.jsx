@@ -10,9 +10,14 @@ export const UploadProgressWidget = () => {
   // SECURITY: Hide widget when not authenticated
   if (!isAuthenticated() || activeUploads.length === 0) return null;
 
-  const processingCount = activeUploads.filter(u => u.status === 'processing').length;
+  const processingUploads = activeUploads.filter(u => u.status === 'processing');
+  const processingCount = processingUploads.length;
   const completedCount = activeUploads.filter(u => u.status === 'success').length;
   const failedCount = activeUploads.filter(u => u.status === 'failed').length;
+  
+  // Check if we're processing clustering tasks
+  const hasClusteringTask = processingUploads.some(u => u.type === 'clustering');
+  const hasUploadTask = processingUploads.some(u => u.type === 'upload');
 
   const formatFileSize = (bytes) => {
     if (bytes < 1024) return `${bytes} B`;
@@ -32,8 +37,12 @@ export const UploadProgressWidget = () => {
           </svg>
           <span>
             {processingCount > 0 
-              ? `Uploading ${processingCount} file${processingCount > 1 ? 's' : ''}...`
-              : `${completedCount + failedCount} Upload${completedCount + failedCount > 1 ? 's' : ''} Complete`
+              ? hasClusteringTask && !hasUploadTask
+                ? 'Running Clustering Analysis...'
+                : hasClusteringTask && hasUploadTask
+                ? `Processing ${processingCount} task${processingCount > 1 ? 's' : ''}...`
+                : `Uploading ${processingCount} file${processingCount > 1 ? 's' : ''}...`
+              : `${completedCount + failedCount} Task${completedCount + failedCount > 1 ? 's' : ''} Complete`
             }
           </span>
         </div>
@@ -94,13 +103,18 @@ export const UploadProgressWidget = () => {
                 <div className="upload-item-meta">
                   {upload.status === 'processing' && (
                     <span className="processing-text">
-                      Processing... {upload.processingTime > 0 && `(${upload.processingTime}s)`}
+                      {upload.type === 'clustering' 
+                        ? `Analyzing data... ${upload.processingTime > 0 ? `(${upload.processingTime}s)` : ''}`
+                        : `Processing... ${upload.processingTime > 0 ? `(${upload.processingTime}s)` : ''}`
+                      }
                     </span>
                   )}
                   {upload.status === 'success' && (
                     <span className="success-text">
-                      ✓ Completed • {formatFileSize(upload.fileSize)}
-                      {upload.recordsProcessed && ` • ${upload.recordsProcessed} records`}
+                      {upload.type === 'clustering'
+                        ? `✓ Clustering Complete • ${upload.processingTime || 0}s`
+                        : `✓ Completed • ${formatFileSize(upload.fileSize)}${upload.recordsProcessed ? ` • ${upload.recordsProcessed} records` : ''}`
+                      }
                     </span>
                   )}
                   {upload.status === 'failed' && (
