@@ -576,7 +576,7 @@ class AccidentClusterAnalyzer:
         # === Global parameters ===
         RECENCY_ALPHA = 1.8        # higher = stronger preference for recent years
         SPARSITY_THRESHOLD = 40    # total count below this = invalid (sparse)
-        MIN_RECENCY_SCORE = 0.35   # below this = too old / declining
+        MIN_RECENCY_SCORE = 0.37   # below this = too old / declining
         CONSISTENT_THRESHOLD = 10  # per-year avg ≥ this = considered stable/high
         DECLINE_RATIO_LIMIT = 4.0  # early/recent ratio > this = declining trend
         MIN_YEARLY_STD = 10.0      # variance below this → stable (helps consistent clusters)  
