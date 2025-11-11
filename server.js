@@ -4,7 +4,7 @@ const cors = require('cors');
 require('dotenv').config();
 
 const app = express();
-const PORT = process.env.PORT || 3002; // Changed from 3001 to 3002
+const PORT = 3002; // Root server on port 3002 (fixed, not from .env)
 
 // Middleware
 app.use(cors());
