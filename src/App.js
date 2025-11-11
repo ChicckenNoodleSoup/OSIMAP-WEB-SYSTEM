@@ -16,6 +16,7 @@ import SessionTimeout from './components/SessionTimeout';
 import AccountStatusChecker from './components/AccountStatusChecker';
 import { UserProvider } from './UserContext';
 import { UploadProvider, useUpload } from './contexts/UploadContext';
+import { PageStateProvider, useClearPageStates } from './contexts/PageStateContext';
 import { UploadProgressWidget } from './components/UploadProgressWidget';
 import { isAuthenticated, clearUserData, extendSession } from './utils/authUtils';
 import { logAuthEvent } from './utils/loggingUtils';
@@ -27,11 +28,12 @@ function ProtectedRoute({ isAuthenticated, children }) {
   return isAuthenticated ? children : <Navigate to="/signin" />;
 }
 
-// Main app component that has access to UploadContext
+// Main app component that has access to UploadContext and PageStateContext
 function AppContent() {
   const [authState, setAuthState] = useState(isAuthenticated());
   const [authReady, setAuthReady] = useState(false);
   const { clearAll, hasActiveUploads } = useUpload();
+  const clearPageStates = useClearPageStates();
 
   useEffect(() => {
     // Check authentication status on app load
@@ -80,6 +82,7 @@ function AppContent() {
     
     await logAuthEvent.logout();
     await clearAll(); // SECURITY: Clear all upload data and cancel backend processing
+    clearPageStates(); // Clear all saved page states
     clearUserData();
     setAuthState(false);
   };
@@ -154,11 +157,13 @@ function AppContent() {
   );
 }
 
-// Wrapper component that provides UploadContext
+// Wrapper component that provides UploadContext and PageStateContext
 function App() {
   return (
     <UploadProvider>
-      <AppContent />
+      <PageStateProvider>
+        <AppContent />
+      </PageStateProvider>
     </UploadProvider>
   );
 }

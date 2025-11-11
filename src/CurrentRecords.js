@@ -5,6 +5,7 @@ import "./PageHeader.css";
 import { DateTime } from "./DateTime";
 import { createClient } from "@supabase/supabase-js";
 import { useNavigate } from "react-router-dom";
+import { usePageState } from "./contexts/PageStateContext";
 import SingleSelectDropdown from "./SingleSelectDropdown";
 import { isAdministrator } from "./utils/authUtils";
 
@@ -13,18 +14,18 @@ const SUPABASE_KEY = process.env.REACT_APP_SUPABASE_KEY;
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 function CurrentRecords() {
-  const [searchTerm, setSearchTerm] = useState("");
+  // Use persistent state for filters, search, sort, and pagination
+  const [searchTerm, setSearchTerm] = usePageState("searchTerm", "");
+  const [currentPage, setCurrentPage] = usePageState("currentPage", 1);
+  const [selectedBarangay, setSelectedBarangay] = usePageState("selectedBarangay", "all");
+  const [selectedSeverity, setSelectedSeverity] = usePageState("selectedSeverity", "all");
+  const [sortBy, setSortBy] = usePageState("sortBy", "date-desc"); // date-desc, date-asc, severity, severity-asc
+  
   const [records, setRecords] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [currentPage, setCurrentPage] = useState(1);
   const recordsPerPage = 50;
   const navigate = useNavigate();
-  
-  // Filter states
-  const [selectedBarangay, setSelectedBarangay] = useState("all");
-  const [selectedSeverity, setSelectedSeverity] = useState("all");
   const [barangayList, setBarangayList] = useState([]);
-  const [sortBy, setSortBy] = useState("date-desc"); // date-desc, date-asc, severity, severity-asc
   
   // CRUD states
   const [isAdmin, setIsAdmin] = useState(false);

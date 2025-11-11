@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from './UserContext';
+import { usePageState } from './contexts/PageStateContext';
 import './Dashboard.css';
 import './PageHeader.css';
 import { DateTime } from './DateTime';
@@ -36,7 +37,11 @@ function Dashboard() {
   const { user } = useUser();
   const [userData, setUserData] = useState(null);
   const currentYearDefault = new Date().getFullYear();
-  const [year, setYear] = useState(currentYearDefault);
+  
+  // Use persistent state for year and currentPage
+  const [year, setYear] = usePageState('year', currentYearDefault);
+  const [currentPage, setCurrentPage] = usePageState('currentPage', 0);
+  
   const [count, setCount] = useState(null);
   const [loadingCount, setLoadingCount] = useState(false);
 
@@ -47,7 +52,6 @@ function Dashboard() {
   const [loadingSeverity, setLoadingSeverity] = useState(false);
 
   const [barangayCounts, setBarangayCounts] = useState({});
-  const [currentPage, setCurrentPage] = useState(0);
   const [loadingBarangays, setLoadingBarangays] = useState(false);
   const barangaysPerPage = 10;
 
