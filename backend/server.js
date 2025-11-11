@@ -13,34 +13,44 @@ const PORT = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 
-// Global processing state
-let isProcessing = false;
+// Task Queue System
+let taskQueue = []; // Queue of pending tasks
+let currentTask = null; // Currently executing task
 let processingStartTime = null;
 let processingError = null;
 
-// Upload summary data
+// Global upload summary data (for backward compatibility during processing)
 let uploadSummary = {
   recordsProcessed: 0,
   sheetsProcessed: [],
-  fileName: null
+  fileName: null,
+  newRecords: 0,
+  duplicateRecords: 0
 };
+
+// Track actual new records inserted (not duplicates)
+let actualNewRecords = 0;
+let actualDuplicates = 0;
+
+// Completed tasks storage (keep last 10 for status queries)
+let completedTasks = [];
+
+// Track running Python processes for cancellation
+let currentProcesses = [];
 
 // Ensure "data" folder exists
 const dataFolder = path.join(process.cwd(), "data");
 if (!fs.existsSync(dataFolder)) {
   fs.mkdirSync(dataFolder);
-  console.log("Created data folder at:", dataFolder);
 }
 
 // Serve static files from the data directory
 app.use('/data', express.static(dataFolder));
-console.log("Static files served from:", dataFolder);
 
 // Multer storage configuration
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     const fullPath = path.join(process.cwd(), "data");
-    console.log("Saving file to:", fullPath);
     cb(null, fullPath);
   },
   filename: (req, file, cb) => {
@@ -78,13 +88,9 @@ function validateExcelFile(filePath) {
   const validSheets = [];
   
   try {
-    console.log("Validating Excel file:", filePath);
-    
     // Read the Excel file
     const workbook = XLSX.readFile(filePath);
     const sheetNames = workbook.SheetNames;
-    
-    console.log("Found sheets:", sheetNames);
     
     if (sheetNames.length === 0) {
       errors.push("❌ Excel file contains no sheets - please add at least one sheet with data");
@@ -99,8 +105,6 @@ function validateExcelFile(filePath) {
       
       if (!yearMatch) {
         errors.push(`❌ Sheet name "${sheetName}" must include a 4-digit year (e.g., "2023", "Accidents_2024", or "Data_2025")`);
-      } else {
-        console.log(`✅ Sheet "${sheetName}" contains year: ${yearMatch[0]}`);
       }
       
       // 2. Check if sheet has required columns
@@ -117,9 +121,6 @@ function validateExcelFile(filePath) {
       const normalizedHeaders = headers.map(h => 
         String(h).trim().toLowerCase().replace(/\s+/g, '_').replace(/[^\w]/g, '')
       );
-      
-      console.log(`Sheet "${sheetName}" columns:`, normalizedHeaders);
-      console.log(`Required columns:`, ALL_REQUIRED_COLUMNS);
       
       // Check for required columns - use exact matching
       const missingColumns = ALL_REQUIRED_COLUMNS.filter(col => {
@@ -143,8 +144,6 @@ function validateExcelFile(filePath) {
       });
       
       if (missingColumns.length > 0) {
-        console.log(`❌ Sheet "${sheetName}" missing columns:`, missingColumns);
-        
         // Group missing columns for better readability
         const missingBasic = missingColumns.filter(col => REQUIRED_COLUMNS.includes(col));
         const missingSeverity = missingColumns.filter(col => SEVERITY_CALC_COLUMNS.includes(col));
@@ -155,8 +154,6 @@ function validateExcelFile(filePath) {
         if (missingSeverity.length > 0) {
           errors.push(`❌ Sheet "${sheetName}" is missing severity columns: ${missingSeverity.join(', ')}`);
         }
-      } else {
-        console.log(`✅ Sheet "${sheetName}" has all required columns`);
       }
       
       // Check if sheet has data rows
@@ -166,13 +163,11 @@ function validateExcelFile(filePath) {
         const dataRows = jsonData.length - 1; // Exclude header row
         totalRecords += dataRows;
         validSheets.push(sheetName);
-        console.log(`✅ Sheet "${sheetName}" has ${dataRows} data rows`);
       }
     });
     
     if (errors.length === 0) {
-      console.log("✅ Excel file validation passed");
-      console.log(`Total records: ${totalRecords}, Sheets: ${validSheets.join(', ')}`);
+      console.log(`✅ Validation passed: ${totalRecords} records in ${validSheets.length} sheet(s)`);
       return { 
         valid: true, 
         errors: [], 
@@ -180,7 +175,6 @@ function validateExcelFile(filePath) {
         sheetsProcessed: validSheets 
       };
     } else {
-      console.log("❌ Excel file validation failed:", errors);
       return { 
         valid: false, 
         errors, 
@@ -209,40 +203,151 @@ function validateExcelFile(filePath) {
 
 // Function to run a Python script (using spawn instead of exec)
 function runSingleScript(scriptPath, onSuccess) {
+  const scriptName = path.basename(scriptPath);
   const process = spawn("python", [scriptPath]);
+  
+  // Track this process for potential cancellation
+  currentProcesses.push(process);
 
+  // Capture stdout to parse upsert summary
   process.stdout.on("data", (data) => {
-    console.log(`${scriptPath} stdout: ${data.toString()}`);
+    const output = data.toString();
+    
+    // Parse ALL summary markers in this output chunk (don't return early)
+    let shouldSkipDisplay = false;
+    
+    if (output.includes('[SUMMARY]INSERTED:')) {
+      const match = output.match(/\[SUMMARY\]INSERTED:(\d+)/);
+      if (match) {
+        actualNewRecords = parseInt(match[1]);
+        uploadSummary.newRecords = actualNewRecords;
+      }
+      shouldSkipDisplay = true;
+    }
+    
+    if (output.includes('[SUMMARY]DUPLICATES:')) {
+      const match = output.match(/\[SUMMARY\]DUPLICATES:(\d+)/);
+      if (match) {
+        actualDuplicates = parseInt(match[1]);
+        uploadSummary.duplicateRecords = actualDuplicates;
+      }
+      shouldSkipDisplay = true;
+    }
+    
+    // Skip display if this was a summary marker line
+    if (shouldSkipDisplay) {
+      return;
+    }
+    
+    // Show important output lines (checkmark or "Upsert complete" prefixed lines)
+    const trimmed = output.trim();
+    if (trimmed.startsWith('✅') || trimmed.includes('Upsert complete:')) {
+      console.log(trimmed);
+    }
   });
 
+  // Only log errors from stderr
   process.stderr.on("data", (data) => {
-    console.error(`${scriptPath} stderr: ${data.toString()}`);
+    const output = data.toString();
+    // Only show actual errors, not warnings or info
+    if (output.includes('ERROR') || output.includes('Traceback') || output.includes('Error:')) {
+      console.error(`[${scriptName}] ${output}`);
+    }
   });
 
-  process.on("close", (code) => {
-    if (code === 0) {
-      console.log(`${scriptPath} finished successfully.`);
+  process.on("close", (code, signal) => {
+    // Remove from tracking array
+    const index = currentProcesses.indexOf(process);
+    if (index > -1) {
+      currentProcesses.splice(index, 1);
+    }
+    
+    if (signal === 'SIGTERM' || signal === 'SIGKILL') {
+      console.log(`🛑 ${scriptName} was cancelled`);
+      processingError = 'Task cancelled by user';
+      completeCurrentTask(false, processingError);
+    } else if (code === 0) {
+      console.log(`✅ ${scriptName} completed`);
       if (onSuccess) onSuccess();
     } else {
-      console.error(`${scriptPath} exited with code ${code}`);
-      isProcessing = false;
-      processingError = `Script ${path.basename(scriptPath)} failed with exit code ${code}`;
+      console.error(`❌ ${scriptName} failed with exit code ${code}`);
+      processingError = `Script ${scriptName} failed with exit code ${code}`;
+      completeCurrentTask(false, processingError);
     }
   });
 
   process.on("error", (error) => {
-    console.error(`Error starting ${scriptPath}:`, error);
-    isProcessing = false;
-    processingError = `Failed to start ${path.basename(scriptPath)}: ${error.message}`;
+    console.error(`❌ Failed to start ${scriptName}:`, error.message);
+    processingError = `Failed to start ${scriptName}: ${error.message}`;
+    completeCurrentTask(false, processingError);
   });
 }
 
 
-// Function to run Python scripts sequentially (including cleanup after processing)
-const runPythonScripts = () => {
-  isProcessing = true;
+// Task Queue Processor - processes one task at a time
+const processQueue = () => {
+  // If already processing or queue is empty, do nothing
+  if (currentTask || taskQueue.length === 0) {
+    return;
+  }
+
+  // Get next task from queue
+  currentTask = taskQueue.shift();
   processingStartTime = new Date();
   processingError = null;
+  currentTask.status = 'processing';
+
+  console.log(`\n📋 Processing task from queue: ${currentTask.type} (${taskQueue.length} remaining in queue)`);
+
+  // Execute the task
+  currentTask.execute();
+};
+
+// Complete current task and process next
+const completeCurrentTask = (success = true, errorMessage = null) => {
+  if (!currentTask) return;
+  
+  console.log(`✅ Task completed: ${currentTask.type}`);
+  
+  // Calculate final processing time
+  const finalProcessingTime = processingStartTime ? 
+    Math.floor((new Date() - processingStartTime) / 1000) : 0;
+  
+  // Save task completion data
+  const completedTask = {
+    ...currentTask,
+    status: success ? 'completed' : 'failed',
+    completedAt: new Date().toISOString(),
+    processingTime: finalProcessingTime,
+    errorMessage: errorMessage
+  };
+  
+  // For upload tasks, save the summary data
+  if (currentTask.type === 'upload') {
+    completedTask.recordsProcessed = uploadSummary.recordsProcessed;
+    completedTask.sheetsProcessed = uploadSummary.sheetsProcessed;
+    completedTask.newRecords = uploadSummary.newRecords;
+    completedTask.duplicateRecords = uploadSummary.duplicateRecords;
+  }
+  
+  // Add to completed tasks (keep last 10)
+  completedTasks.unshift(completedTask);
+  if (completedTasks.length > 10) {
+    completedTasks = completedTasks.slice(0, 10);
+  }
+  
+  // Reset current task and processing state
+  currentTask = null;
+  processingStartTime = null;
+  processingError = null;
+  
+  // Process next task in queue
+  setTimeout(processQueue, 500); // Small delay before next task
+};
+
+// Function to run file upload pipeline
+const runUploadPipeline = () => {
+  actualNewRecords = 0; // Reset counter
   
   const script1 = path.join(process.cwd(), "cleaning2.py");
   const script2 = path.join(process.cwd(), "export_geojson.py");
@@ -250,22 +355,49 @@ const runPythonScripts = () => {
   const cleanupScript = path.join(process.cwd(), "cleanup_files.py");
   const uploadScript = path.join(process.cwd(), "mobile_cluster_fetch.py");
 
-  console.log("Starting Python script execution...");
-  console.log(`Step 1: Running ${script1}`);
+  console.log("📊 Starting file upload pipeline...");
 
+  // Step 1: Upload to Supabase and track NEW records
   runSingleScript(script1, () => {
-    console.log(`Step 2: Running cleanup script ${cleanupScript}`);
     runSingleScript(cleanupScript, () => {
-      console.log(`Step 3: Running ${script2}`);
       runSingleScript(script2, () => {
-        console.log(`Step 4: Running ${script3}`);
-        runSingleScript(script3, () => {
-          console.log(`Step 5: Uploading clusters with ${uploadScript}`);
-          runSingleScript(uploadScript, () => {
-            console.log("🎉 All Python scripts completed successfully!");
-            isProcessing = false;
+        // SMART DECISION: Only run clustering if we have 100+ NEW records
+        const shouldRunClustering = actualNewRecords >= 100;
+        
+        if (shouldRunClustering) {
+          console.log(`🔄 Running clustering (${actualNewRecords} new records warrant re-clustering)...`);
+          runSingleScript(script3, () => {
+            runSingleScript(uploadScript, () => {
+              console.log("✅ Upload pipeline completed!");
+              completeCurrentTask();
+            });
           });
-        });
+        } else {
+          console.log(`⚡ Clustering skipped (only ${actualNewRecords} new records, threshold: 100)`);
+          console.log("✅ Upload pipeline completed!");
+          completeCurrentTask();
+        }
+      });
+    });
+  });
+};
+
+// Function to run clustering pipeline
+const runClusteringPipeline = () => {
+  const script2 = path.join(process.cwd(), "export_geojson.py");
+  const script3 = path.join(process.cwd(), "cluster_hdbscan.py");
+  const uploadScript = path.join(process.cwd(), "mobile_cluster_fetch.py");
+  
+  console.log("📊 Starting clustering pipeline...");
+  
+  // Step 1: Export fresh data from Supabase
+  runSingleScript(script2, () => {
+    // Step 2: Run clustering
+    runSingleScript(script3, () => {
+      // Step 3: Upload cluster results
+      runSingleScript(uploadScript, () => {
+        console.log("✅ Clustering pipeline completed!");
+        completeCurrentTask();
       });
     });
   });
@@ -282,28 +414,170 @@ app.get("/test", (req, res) => {
   res.json({ 
     message: "Backend is accessible", 
     timestamp: new Date().toISOString(),
-    isProcessing: isProcessing 
+    isProcessing: currentTask !== null,
+    queueLength: taskQueue.length
   });
 });
 
-// Route to check processing status
+// Route to check processing status with task-specific information
 app.get("/status", (req, res) => {
-  console.log("Status endpoint hit - isProcessing:", isProcessing);
+  const { taskId } = req.query;
+  
+  // If taskId is provided, return status for that specific task
+  if (taskId) {
+    // Check if it's the current task
+    if (currentTask?.id === taskId) {
+      const processingTime = processingStartTime ? 
+        Math.floor((new Date() - processingStartTime) / 1000) : 0;
+      
+      return res.json({
+        isProcessing: true,
+        processingTime: processingTime,
+        status: 'processing',
+        taskId: currentTask.id,
+        taskType: currentTask.type,
+        queuePosition: 0,
+        recordsProcessed: currentTask.type === 'upload' ? uploadSummary.recordsProcessed : undefined,
+        sheetsProcessed: currentTask.type === 'upload' ? uploadSummary.sheetsProcessed : undefined,
+        newRecords: currentTask.type === 'upload' ? uploadSummary.newRecords : undefined,
+        duplicateRecords: currentTask.type === 'upload' ? uploadSummary.duplicateRecords : undefined,
+        processingError: processingError
+      });
+    }
+    
+    // Check if it's in the queue
+    const queuedTask = taskQueue.find(t => t.id === taskId);
+    if (queuedTask) {
+      return res.json({
+        isProcessing: false,
+        processingTime: 0,
+        status: 'queued',
+        taskId: queuedTask.id,
+        taskType: queuedTask.type,
+        queuePosition: taskQueue.findIndex(t => t.id === taskId) + 1
+      });
+    }
+    
+    // Check if it's completed
+    const completedTask = completedTasks.find(t => t.id === taskId);
+    if (completedTask) {
+      return res.json({
+        isProcessing: false,
+        processingTime: completedTask.processingTime,
+        status: completedTask.status === 'completed' ? 'idle' : 'error',
+        taskId: completedTask.id,
+        taskType: completedTask.type,
+        queuePosition: 0,
+        recordsProcessed: completedTask.recordsProcessed,
+        sheetsProcessed: completedTask.sheetsProcessed,
+        newRecords: completedTask.newRecords,
+        duplicateRecords: completedTask.duplicateRecords,
+        processingError: completedTask.errorMessage
+      });
+    }
+    
+    // Task not found
+    return res.json({
+      isProcessing: false,
+      status: "idle",
+      taskId: taskId
+    });
+  }
+  
+  // General status - backward compatibility
   const processingTime = processingStartTime ? 
     Math.floor((new Date() - processingStartTime) / 1000) : 0;
   
   const statusResponse = {
-    isProcessing,
+    isProcessing: currentTask !== null,
     processingTime: processingTime,
     processingStartTime: processingStartTime,
     processingError: processingError,
-    status: isProcessing ? "processing" : processingError ? "error" : "idle",
+    status: currentTask ? "processing" : processingError ? "error" : "idle",
+    currentTask: currentTask ? { id: currentTask.id, type: currentTask.type } : null,
+    queueLength: taskQueue.length,
     recordsProcessed: uploadSummary.recordsProcessed,
-    sheetsProcessed: uploadSummary.sheetsProcessed
+    sheetsProcessed: uploadSummary.sheetsProcessed,
+    newRecords: uploadSummary.newRecords,
+    duplicateRecords: uploadSummary.duplicateRecords
   };
   
-  console.log("Status response:", statusResponse);
   res.json(statusResponse);
+});
+
+// Route to cancel ongoing upload/processing
+app.post("/cancel", (req, res) => {
+  if (!currentTask) {
+    return res.status(400).json({ 
+      message: "No task is currently being processed",
+      error: "NOTHING_TO_CANCEL"
+    });
+  }
+
+  console.log('🛑 Cancellation requested - terminating all Python processes...');
+  
+  // Kill all running Python processes
+  currentProcesses.forEach((proc) => {
+    try {
+      proc.kill('SIGTERM'); // Graceful termination
+      setTimeout(() => {
+        if (!proc.killed) {
+          proc.kill('SIGKILL'); // Force kill if still running
+        }
+      }, 2000);
+    } catch (error) {
+      console.error('Error killing process:', error);
+    }
+  });
+  
+  // Clear process array
+  currentProcesses = [];
+  
+  // Clear queue
+  taskQueue = [];
+  
+  // Reset processing state
+  currentTask = null;
+  processingError = 'Task cancelled by user';
+  processingStartTime = null;
+  
+  res.json({ 
+    message: "Task cancelled successfully",
+    success: true
+  });
+});
+
+// Route to manually trigger clustering
+app.post("/run-clustering", (req, res) => {
+  console.log('🔄 Manual clustering requested...');
+  
+  // Create clustering task
+  const taskId = Date.now().toString();
+  const clusteringTask = {
+    id: taskId,
+    type: 'clustering',
+    status: 'queued',
+    execute: runClusteringPipeline
+  };
+  
+  // Add to queue
+  taskQueue.push(clusteringTask);
+  
+  const queuePosition = taskQueue.length;
+  const message = queuePosition === 1 && !currentTask
+    ? "Clustering started successfully."
+    : `Clustering queued. Position in queue: ${queuePosition}`;
+  
+  // Respond to frontend immediately
+  res.json({ 
+    message: message,
+    success: true,
+    taskId: taskId,
+    queuePosition: queuePosition
+  });
+  
+  // Start processing queue
+  processQueue();
 });
 
 // Route to check available data files
@@ -324,9 +598,6 @@ app.get("/data-files", (req, res) => {
 
 // Upload route with validation
 app.post("/upload", upload.single("file"), (req, res) => {
-  console.log("POST /upload route hit");
-  console.log("File received:", req.file);
-
   if (!req.file) {
     return res.status(400).json({ 
       message: "No file uploaded",
@@ -335,25 +606,26 @@ app.post("/upload", upload.single("file"), (req, res) => {
   }
 
   const filePath = req.file.path;
+  const fileName = req.file.originalname;
   
   // Validate the Excel file structure BEFORE processing
-  console.log("Validating Excel file structure...");
   const validation = validateExcelFile(filePath);
   
   if (!validation.valid) {
     // Validation failed - delete the uploaded file and return errors
-    console.log("Validation failed, deleting uploaded file...");
+    console.log(`❌ Validation failed for "${fileName}"`);
     
     // Reset upload summary
     uploadSummary = {
       recordsProcessed: 0,
       sheetsProcessed: [],
-      fileName: null
+      fileName: null,
+      newRecords: 0,
+      duplicateRecords: 0
     };
     
     try {
       fs.unlinkSync(filePath);
-      console.log("Uploaded file deleted");
     } catch (err) {
       console.error("Error deleting file:", err);
     }
@@ -366,28 +638,54 @@ app.post("/upload", upload.single("file"), (req, res) => {
   }
   
   // Validation passed - store summary data
-  console.log("✅ Validation passed, starting processing...");
   uploadSummary = {
     recordsProcessed: validation.recordsProcessed,
     sheetsProcessed: validation.sheetsProcessed,
-    fileName: req.file.originalname
+    fileName: fileName,
+    newRecords: 0,
+    duplicateRecords: 0
   };
+  
+  console.log(`\n${'='.repeat(60)}`);
+  console.log(`📁 File: ${fileName}`);
+  console.log(`📊 Total records: ${validation.recordsProcessed} | Sheets: ${validation.sheetsProcessed.join(', ')}`);
+  console.log(`${'='.repeat(60)}\n`);
+
+  // Create upload task
+  const taskId = Date.now().toString();
+  const uploadTask = {
+    id: taskId,
+    type: 'upload',
+    status: 'queued',
+    fileName: fileName,
+    execute: runUploadPipeline
+  };
+  
+  // Add to queue
+  taskQueue.push(uploadTask);
+  
+  const queuePosition = taskQueue.length;
+  const queueMessage = queuePosition === 1 && !currentTask
+    ? "Processing started..."
+    : ` Queued at position ${queuePosition}`;
 
   // Respond to frontend
   res.json({ 
-    message: "File validated successfully. Processing started...", 
+    message: "File validated successfully." + queueMessage, 
     filename: req.file.filename,
     recordsProcessed: validation.recordsProcessed,
-    sheetsProcessed: validation.sheetsProcessed
+    sheetsProcessed: validation.sheetsProcessed,
+    taskId: taskId,
+    queuePosition: queuePosition
   });
 
-  // Run all Python scripts sequentially (including clustering)
-  runPythonScripts();
+  // Start processing queue
+  processQueue();
 });
 
 // Start server
 app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
-  console.log(`Data files available at: http://localhost:${PORT}/data/`);
-  console.log(`Check available files at: http://localhost:${PORT}/data-files`);
+  console.log(`\n🚀 OSIMAP Backend Server`);
+  console.log(`📍 Running on http://localhost:${PORT}`);
+  console.log(`📂 Data folder: ${dataFolder}\n`);
 });

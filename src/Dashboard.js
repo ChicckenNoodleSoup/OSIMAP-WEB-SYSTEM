@@ -1,10 +1,12 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from './UserContext';
+import { usePageState } from './contexts/PageStateContext';
 import './Dashboard.css';
 import './PageHeader.css';
 import { DateTime } from './DateTime';
 import { createClient } from '@supabase/supabase-js';
+import DashboardMapInsightsCarousel from './components/DashboardMapInsightsCarousel';
 import { Bar } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
@@ -35,7 +37,11 @@ function Dashboard() {
   const { user } = useUser();
   const [userData, setUserData] = useState(null);
   const currentYearDefault = new Date().getFullYear();
-  const [year, setYear] = useState(currentYearDefault);
+  
+  // Use persistent state for year and currentPage
+  const [year, setYear] = usePageState('year', currentYearDefault);
+  const [currentPage, setCurrentPage] = usePageState('currentPage', 0);
+  
   const [count, setCount] = useState(null);
   const [loadingCount, setLoadingCount] = useState(false);
 
@@ -46,7 +52,6 @@ function Dashboard() {
   const [loadingSeverity, setLoadingSeverity] = useState(false);
 
   const [barangayCounts, setBarangayCounts] = useState({});
-  const [currentPage, setCurrentPage] = useState(0);
   const [loadingBarangays, setLoadingBarangays] = useState(false);
   const barangaysPerPage = 10;
 
@@ -84,27 +89,43 @@ function Dashboard() {
     }
   };
 
-  // Fetch clustered accidents
+  // Fetch clustered accidents with pagination
   const fetchClusteredAccidentCount = async (y) => {
     setLoadingClusters(true);
     setLoadingBarangays(true);
     try {
-      const { data, error } = await supabase
-        .from('road_traffic_accident')
-        .select('lat,lng,barangay')
-        .eq('year', Number(y));
+      let allRecords = [];
+      const pageSize = 1000;
+      let from = 0;
+      let to = pageSize - 1;
+      let done = false;
 
-      if (error) {
-        console.error(error);
-        setClusteredAccidentsCount(0);
-        setBarangayCounts({});
-        return;
+      // Fetch all records with pagination
+      while (!done) {
+        const { data, error } = await supabase
+          .from('road_traffic_accident')
+          .select('lat,lng,barangay')
+          .eq('year', Number(y))
+          .range(from, to);
+
+        if (error) {
+          console.error('Error fetching clustered data:', error);
+          done = true;
+        } else {
+          allRecords = [...allRecords, ...(data || [])];
+          if (!data || data.length < pageSize) {
+            done = true;
+          } else {
+            from += pageSize;
+            to += pageSize;
+          }
+        }
       }
 
       const grid = new Map();
       const bCounts = {};
 
-      (data || []).forEach(r => {
+      allRecords.forEach(r => {
         const lat = Number(r.lat);
         const lng = Number(r.lng);
         const barangay = r.barangay || 'Unknown';
@@ -121,7 +142,7 @@ function Dashboard() {
       setClusteredAccidentsCount(clusteredSum);
       setBarangayCounts(bCounts);
     } catch (err) {
-      console.error(err);
+      console.error('Error in fetchClusteredAccidentCount:', err);
       setClusteredAccidentsCount(0);
       setBarangayCounts({});
     } finally {
@@ -130,29 +151,48 @@ function Dashboard() {
     }
   };
 
-  // Fetch severity counts
+  // Fetch severity counts with pagination to handle large datasets
   const fetchSeverityCounts = async (y) => {
     setLoadingSeverity(true);
     try {
-      const { data, error } = await supabase
-        .from('road_traffic_accident')
-        .select('severity')
-        .eq('year', Number(y));
+      let allRecords = [];
+      const pageSize = 1000;
+      let from = 0;
+      let to = pageSize - 1;
+      let done = false;
 
-      if (error) {
-        console.error(error);
-        setSeverityCounts({});
-        return;
+      // Fetch all records with pagination
+      while (!done) {
+        const { data, error } = await supabase
+          .from('road_traffic_accident')
+          .select('severity')
+          .eq('year', Number(y))
+          .range(from, to);
+
+        if (error) {
+          console.error('Error fetching severity data:', error);
+          done = true;
+        } else {
+          allRecords = [...allRecords, ...(data || [])];
+          if (!data || data.length < pageSize) {
+            done = true;
+          } else {
+            from += pageSize;
+            to += pageSize;
+          }
+        }
       }
 
-      const counts = (data || []).reduce((acc,row)=>{
-        const s = (row.severity??'Unknown').toString();
-        acc[s] = (acc[s]||0)+1;
+      // Aggregate severity counts from all records
+      const counts = allRecords.reduce((acc, row) => {
+        const s = (row.severity ?? 'Unknown').toString();
+        acc[s] = (acc[s] || 0) + 1;
         return acc;
-      },{});
+      }, {});
+      
       setSeverityCounts(counts);
-    } catch(err){
-      console.error(err);
+    } catch (err) {
+      console.error('Error in fetchSeverityCounts:', err);
       setSeverityCounts({});
     } finally {
       setLoadingSeverity(false);
@@ -514,6 +554,9 @@ function Dashboard() {
                 </ul>
               )}
             </div>
+
+            {/* Insights Carousel */}
+            <DashboardMapInsightsCarousel selectedYear={year} supabaseClient={supabase} />
           </div>
         </div>
       </div>

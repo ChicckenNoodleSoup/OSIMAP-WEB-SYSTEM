@@ -133,7 +133,7 @@
 }
 
 .card-map {
-  height: 550px;
+  height: 885px; /* Match left column total height (700px + 30px gap + 150px) */
 }
 
 .icon-container {
@@ -754,7 +754,6 @@
     gap: 8px;
   }
 }
-
 /* Right column full height for single card (Clustered Map) */
 .dashboard-column.right-column {
   display: flex;

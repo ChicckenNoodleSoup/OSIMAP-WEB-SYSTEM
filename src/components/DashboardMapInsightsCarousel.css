@@ -1,0 +1,248 @@
+/* Insights Carousel - Match Dashboard Design System */
+.insights-carousel-wrapper {
+  margin-top: 1.2rem;
+  padding-top: 1.2rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+  max-width: 100%;
+  overflow: hidden;
+  position: relative;
+}
+
+/* Mask container to clip slide edges */
+.insights-carousel-wrapper .carousel-mask-container {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+}
+
+/* Visual fade overlay that does NOT affect arrows (placed above slides only) */
+.insights-carousel-wrapper .carousel-mask-container::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  /* Use a subtle gradient to fade slide edges without masking arrows */
+  /* background: linear-gradient(
+    to right,
+    rgba(0, 0, 0, 0.0) 0%,
+    rgba(0, 0, 0, 0.0) 6.5%,
+    rgba(0, 0, 0, 0.25) 7%,
+    rgba(0, 0, 0, 0.25) 93%,
+    rgba(0, 0, 0, 0.0) 93.5%,
+    rgba(0, 0, 0, 0.0) 100%
+  ); */
+  z-index: 5;
+}
+
+/* Clip container to hide slide edges */
+.insights-carousel-wrapper .swiper {
+  position: relative;
+  padding: 0 4% 2.5rem 4%;
+  margin: 0;
+  max-width: 100%;
+  width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+/* Additional clipping layer to prevent edge bleeding */
+.insights-carousel-wrapper .swiper-container {
+  overflow: hidden;
+  position: relative;
+}
+
+/* Navigation buttons - OUTSIDE chart area, matching Dashboard style */
+.insights-carousel-wrapper .swiper-button-next,
+.insights-carousel-wrapper .swiper-button-prev {
+  color: #ffd166 !important;
+  background: rgba(255, 209, 102, 0.3) !important;
+  border: 2px solid rgba(255, 209, 102, 0.6);
+  width: 2.2rem;
+  height: 2.2rem;
+  border-radius: 50%;
+  backdrop-filter: blur(10px);
+  transition: all 0.2s ease;
+  top: 50%;
+  transform: translateY(-50%);
+  margin-top: -1.2rem;
+  z-index: 1001; /* above overlay */
+  mix-blend-mode: normal; /* avoid blending with overlay */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3), 
+              0 0 20px rgba(255, 209, 102, 0.2),
+              inset 0 1px 2px rgba(255, 255, 255, 0.1);
+  opacity: 1 !important;
+}
+
+.insights-carousel-wrapper .swiper-button-next {
+  right: 0.2rem;
+}
+
+.insights-carousel-wrapper .swiper-button-prev {
+  left: 0.2rem;
+}
+
+.insights-carousel-wrapper .swiper-button-next:after,
+.insights-carousel-wrapper .swiper-button-prev:after {
+  font-size: 1rem;
+  font-weight: bold;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+}
+
+.insights-carousel-wrapper .swiper-button-next:hover:not(.swiper-button-disabled),
+.insights-carousel-wrapper .swiper-button-prev:hover:not(.swiper-button-disabled) {
+  background: rgba(255, 209, 102, 0.5) !important;
+  border-color: #ffd166;
+  transform: translateY(-50%) scale(1.12);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4), 
+              0 0 30px rgba(255, 209, 102, 0.4),
+              inset 0 1px 2px rgba(255, 255, 255, 0.15);
+  text-shadow: 0 0 12px rgba(255, 209, 102, 0.6);
+}
+
+.insights-carousel-wrapper .swiper-button-disabled {
+  opacity: 0.5 !important;
+  cursor: not-allowed;
+  background: rgba(255, 209, 102, 0.15) !important;
+  border-color: rgba(255, 209, 102, 0.3);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+/* Pagination dots - Match Dashboard theme */
+.insights-carousel-wrapper .swiper-pagination {
+  bottom: 10px;
+}
+
+.insights-carousel-wrapper .swiper-pagination-bullet {
+  background: rgba(255, 209, 102, 0.4);
+  opacity: 1;
+  width: 8px;
+  height: 8px;
+  transition: all 0.3s ease;
+}
+
+.insights-carousel-wrapper .swiper-pagination-bullet-active {
+  background: #ffd166;
+  width: 20px;
+  border-radius: 4px;
+  box-shadow: 0 0 8px rgba(255, 209, 102, 0.4);
+}
+
+/* Swiper wrapper - contained within clipped area */
+.insights-carousel-wrapper .swiper-wrapper {
+  position: relative;
+}
+
+/* Chart container within slides */
+.insights-carousel-wrapper .swiper-slide {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 32px; /* add inner gutter between charts */
+  width: 100% !important;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
+  flex-shrink: 0;
+  position: relative;
+}
+
+/* Chart content responsive container */
+.insights-carousel-wrapper .swiper-slide > div {
+  max-width: 100%;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Responsive adjustments for tablets */
+@media (max-width: 1024px) {
+  .insights-carousel-wrapper .swiper {
+    padding: 0 7% 2.3rem 7%;
+  }
+  
+  .insights-carousel-wrapper .swiper-button-next,
+  .insights-carousel-wrapper .swiper-button-prev {
+    width: 2rem;
+    height: 2rem;
+    opacity: 1 !important;
+  }
+  
+  .insights-carousel-wrapper .swiper-button-next:after,
+  .insights-carousel-wrapper .swiper-button-prev:after {
+    font-size: 0.9rem;
+  }
+}
+
+/* Responsive adjustments for mobile */
+@media (max-width: 768px) {
+  .insights-carousel-wrapper .swiper {
+    padding: 0 6% 2rem 6%;
+  }
+
+  .insights-carousel-wrapper .swiper-button-next,
+  .insights-carousel-wrapper .swiper-button-prev {
+    width: 1.8rem;
+    height: 1.8rem;
+    opacity: 1 !important;
+    background: rgba(255, 209, 102, 0.35) !important;
+  }
+
+  .insights-carousel-wrapper .swiper-button-next:after,
+  .insights-carousel-wrapper .swiper-button-prev:after {
+    font-size: 0.8rem;
+  }
+}
+
+/* Small mobile devices */
+@media (max-width: 480px) {
+  .insights-carousel-wrapper .swiper {
+    padding: 0 5% 1.8rem 5%;
+  }
+
+  .insights-carousel-wrapper .swiper-button-next,
+  .insights-carousel-wrapper .swiper-button-prev {
+    width: 1.6rem;
+    height: 1.6rem;
+    opacity: 1 !important;
+    background: rgba(255, 209, 102, 0.4) !important;
+    border-width: 1.5px;
+  }
+
+  .insights-carousel-wrapper .swiper-button-next:after,
+  .insights-carousel-wrapper .swiper-button-prev:after {
+    font-size: 0.7rem;
+  }
+  
+  .insights-carousel-wrapper .swiper-pagination-bullet {
+    width: 0.35rem;
+    height: 0.35rem;
+  }
+  
+  .insights-carousel-wrapper .swiper-pagination-bullet-active {
+    width: 1rem;
+  }
+}
+
+/* Extra small devices and high zoom levels */
+@media (max-width: 360px) {
+  .insights-carousel-wrapper {
+    margin-top: 0.9rem;
+    padding-top: 0.9rem;
+  }
+  
+  .insights-carousel-wrapper .swiper {
+    padding: 0 4.5% 1.6rem 4.5%;
+  }
+  
+  .insights-carousel-wrapper .swiper-button-next,
+  .insights-carousel-wrapper .swiper-button-prev {
+    width: 1.5rem;
+    height: 1.5rem;
+    opacity: 1 !important;
+    background: rgba(255, 209, 102, 0.45) !important;
+  }
+  
+  .insights-carousel-wrapper .swiper-button-next:after,
+  .insights-carousel-wrapper .swiper-button-prev:after {
+    font-size: 0.65rem;
+  }
+}

@@ -5,26 +5,28 @@ import "./PageHeader.css";
 import { DateTime } from "./DateTime";
 import { createClient } from "@supabase/supabase-js";
 import { useNavigate } from "react-router-dom";
+import { usePageState } from "./contexts/PageStateContext";
 import SingleSelectDropdown from "./SingleSelectDropdown";
 import { isAdministrator } from "./utils/authUtils";
+import { useUpload } from "./contexts/UploadContext";
 
 const SUPABASE_URL = process.env.REACT_APP_SUPABASE_URL;
 const SUPABASE_KEY = process.env.REACT_APP_SUPABASE_KEY;
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 function CurrentRecords() {
-  const [searchTerm, setSearchTerm] = useState("");
+  // Use persistent state for filters, search, sort, and pagination
+  const [searchTerm, setSearchTerm] = usePageState("searchTerm", "");
+  const [currentPage, setCurrentPage] = usePageState("currentPage", 1);
+  const [selectedBarangay, setSelectedBarangay] = usePageState("selectedBarangay", "all");
+  const [selectedSeverity, setSelectedSeverity] = usePageState("selectedSeverity", "all");
+  const [sortBy, setSortBy] = usePageState("sortBy", "date-desc"); // date-desc, date-asc, severity, severity-asc
+  
   const [records, setRecords] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [currentPage, setCurrentPage] = useState(1);
   const recordsPerPage = 50;
   const navigate = useNavigate();
-  
-  // Filter states
-  const [selectedBarangay, setSelectedBarangay] = useState("all");
-  const [selectedSeverity, setSelectedSeverity] = useState("all");
   const [barangayList, setBarangayList] = useState([]);
-  const [sortBy, setSortBy] = useState("date-desc"); // date-desc, date-asc, severity, severity-asc
   
   // CRUD states
   const [isAdmin, setIsAdmin] = useState(false);
@@ -42,6 +44,12 @@ function CurrentRecords() {
     year: ''
   });
   const [message, setMessage] = useState('');
+
+  // Clustering with background task support
+  const { startUpload, activeUploads } = useUpload();
+  const isClusteringRunning = activeUploads.some(u => 
+    u.type === 'clustering' && u.status === 'processing'
+  );
 
   useEffect(() => {
     setIsAdmin(isAdministrator());
@@ -274,6 +282,47 @@ function CurrentRecords() {
     setShowModal(false);
     setEditingRecord(null);
   };
+
+  const handleRunClustering = async () => {
+    if (isClusteringRunning) {
+      setMessage('⏳ Clustering is already running');
+      setTimeout(() => setMessage(''), 3000);
+      return;
+    }
+
+    try {
+      const response = await fetch("http://localhost:5000/run-clustering", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      
+      const data = await response.json();
+      
+      if (!response.ok) {
+        setMessage(`❌ ${data.message || "Failed to start clustering"}`);
+        setTimeout(() => setMessage(''), 5000);
+        return;
+      }
+      
+      // Start tracking as background task with clustering type and taskId
+      startUpload({
+        fileName: 'Clustering Analysis',
+        fileSize: 0,
+        type: 'clustering',
+        taskId: data.taskId // Pass backend task ID for tracking
+      });
+      
+      setMessage('🔄 Clustering started in background - you can continue using the app');
+      setTimeout(() => setMessage(''), 5000);
+      
+    } catch (error) {
+      console.error("Error running clustering:", error);
+      setMessage("❌ Failed to connect to server");
+      setTimeout(() => setMessage(''), 5000);
+    }
+  };
   
 
 
@@ -401,12 +450,42 @@ function CurrentRecords() {
           </div>
         </div>
 
-        {/* Search Bar and Add New Record Button */}
+        {/* Search Bar and Action Buttons */}
         <div className="search-actions">
           {isAdmin && (
-            <button onClick={handleCreate} className="add-record-btn">
-              + Add New Record
-            </button>
+            <>
+              <button onClick={handleCreate} className="add-record-btn">
+                + Add New Record
+              </button>
+              <button 
+                onClick={handleRunClustering} 
+                className="run-clustering-btn"
+                disabled={isClusteringRunning}
+                title="Run clustering analysis on all records"
+              >
+                {isClusteringRunning ? (
+                  <>
+                    <div className="spinner-small" />
+                    Clustering...
+                  </>
+                ) : (
+                  <>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <circle cx="12" cy="12" r="3"></circle>
+                      <circle cx="12" cy="5" r="2"></circle>
+                      <circle cx="12" cy="19" r="2"></circle>
+                      <circle cx="5" cy="12" r="2"></circle>
+                      <circle cx="19" cy="12" r="2"></circle>
+                      <line x1="12" y1="8" x2="12" y2="9"></line>
+                      <line x1="12" y1="15" x2="12" y2="16"></line>
+                      <line x1="8" y1="12" x2="9" y2="12"></line>
+                      <line x1="15" y1="12" x2="16" y2="12"></line>
+                    </svg>
+                    Run Clustering
+                  </>
+                )}
+              </button>
+            </>
           )}
           
           <div className="search-container">

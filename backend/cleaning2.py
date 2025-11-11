@@ -10,8 +10,12 @@ load_dotenv()
 # ==============================
 # Logging
 # ==============================
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.WARNING)  # OPTIMIZED: Only show warnings and errors
 logger = logging.getLogger(__name__)
+
+# Silence verbose HTTP request logging from httpx/supabase
+logging.getLogger("httpx").setLevel(logging.WARNING)
+logging.getLogger("httpcore").setLevel(logging.WARNING)
 
 # ==============================
 # ExcelToSupabase class
@@ -170,7 +174,31 @@ class ExcelToSupabase:
             return 'Unknown'
 
     def dataframe_to_dict_list(self, df: pd.DataFrame) -> List[Dict[str, Any]]:
-        return df.to_dict('records')
+        """Convert DataFrame to list of dictionaries with proper JSON serialization"""
+        import datetime
+        
+        # Convert to dict first
+        records = df.to_dict('records')
+        
+        # Clean each record to ensure JSON serialization
+        cleaned_records = []
+        for record in records:
+            cleaned_record = {}
+            for key, value in record.items():
+                # Handle different datetime types
+                if isinstance(value, (pd.Timestamp, datetime.datetime)):
+                    cleaned_record[key] = value.strftime('%Y-%m-%d %H:%M:%S')
+                elif isinstance(value, datetime.time):
+                    cleaned_record[key] = value.strftime('%H:%M:%S')
+                elif isinstance(value, datetime.date):
+                    cleaned_record[key] = value.strftime('%Y-%m-%d')
+                elif pd.isna(value):
+                    cleaned_record[key] = None
+                else:
+                    cleaned_record[key] = value
+            cleaned_records.append(cleaned_record)
+        
+        return cleaned_records
 
     def check_existing_data(self, table_name: str) -> Dict[str, Any]:
         """Get existing data with optimized duplicate checking using sets - OPTIMIZED VERSION"""
@@ -374,32 +402,39 @@ class ExcelToSupabase:
         """Use Supabase upsert with comprehensive conflict resolution including offense type"""
         try:
             total_records = len(data)
-            logger.info(f" Starting to upsert {total_records} records into {table_name}")
-            logger.info(" Using upsert mode - will update existing records or insert new ones")
+            
+            inserted_count = 0
+            duplicate_count = 0
             
             for i in range(0, total_records, batch_size):
                 batch = data[i:i + batch_size]
                 
                 try:
-                    # Use upsert with on_conflict parameter including offense type and time
+                    # OPTIMIZED: Use upsert with count to track new inserts
                     result = self.supabase.table(table_name).upsert(
                         batch,
-                        on_conflict="barangay,lat,lng,datecommitted,timecommitted,offensetype",  # All key fields including time
-                        ignore_duplicates=False  # Update instead of ignoring
+                        ignore_duplicates=True,  # Skip duplicates silently
+                        count='exact'  # Count affected rows to track new inserts
                     ).execute()
                     
-                    if hasattr(result, 'error') and result.error:
-                        logger.error(f" Error upserting batch {i//batch_size + 1}: {result.error}")
-                        # Fall back to individual upserts
-                        self.upsert_batch_individually(table_name, batch, i//batch_size + 1)
-                    else:
-                        logger.info(f" Upserted batch {i//batch_size + 1}/{(total_records + batch_size - 1)//batch_size}")
+                    # Count new inserts (count will be 0 for duplicates)
+                    batch_inserted = result.count if hasattr(result, 'count') and result.count else 0
+                    inserted_count += batch_inserted
+                    duplicate_count += (len(batch) - batch_inserted)
                         
                 except Exception as e:
-                    logger.error(f" Exception upserting batch {i//batch_size + 1}: {str(e)}")
-                    self.upsert_batch_individually(table_name, batch, i//batch_size + 1)
+                    # Only log if it's NOT a duplicate key error
+                    error_str = str(e)
+                    if 'duplicate key' not in error_str.lower() and '23505' not in error_str:
+                        logger.error(f" Batch {i//batch_size + 1} error: {str(e)}")
+                    else:
+                        # All duplicates in this batch
+                        duplicate_count += len(batch)
             
-            logger.info(f" Successfully upserted all {total_records} records")
+            # Output summary for server.js to parse (hidden markers + visible message)
+            print(f"[SUMMARY]INSERTED:{inserted_count}", flush=True)  # Hidden marker
+            print(f"[SUMMARY]DUPLICATES:{duplicate_count}", flush=True)  # Hidden marker
+            print(f"   Upsert complete: {inserted_count} new, {duplicate_count} duplicates", flush=True)
             return True
             
         except Exception as e:
@@ -407,18 +442,34 @@ class ExcelToSupabase:
             return False
 
     def upsert_batch_individually(self, table_name: str, batch: List[Dict[str, Any]], batch_num: int):
-        """Try to upsert records individually when batch fails"""
-        logger.info(f" Attempting individual upserts for batch {batch_num}")
+        """Try to upsert records individually when batch fails - DEPRECATED (should not be called)"""
+        # This function is kept for backward compatibility but should not be called
+        # with the optimized batch upsert using ignore_duplicates=True
+        logger.warning(f" Fallback to individual upserts triggered for batch {batch_num} - this is slow!")
+        
+        duplicates = 0
+        errors = 0
         
         for i, record in enumerate(batch):
             try:
                 result = self.supabase.table(table_name).upsert([record], ignore_duplicates=True).execute()
                 if hasattr(result, 'error') and result.error:
-                    logger.warning(f" Failed to upsert individual record {i+1}: {result.error}")
-                else:
-                    logger.debug(f" Individual upsert successful for record {i+1}")
+                    # Only log actual errors, not duplicate conflicts
+                    if 'duplicate key' in str(result.error):
+                        duplicates += 1
+                    else:
+                        errors += 1
+                        if errors <= 5:  # Only log first 5 errors
+                            logger.error(f" Record {i+1} error: {result.error}")
             except Exception as e:
-                logger.warning(f" Exception upserting individual record {i+1}: {str(e)}")
+                if 'duplicate key' not in str(e):
+                    errors += 1
+                    if errors <= 5:
+                        logger.error(f" Record {i+1} exception: {str(e)}")
+                else:
+                    duplicates += 1
+        
+        logger.warning(f" Batch {batch_num}: {duplicates} duplicates skipped, {errors} errors")
 
 # ==============================
 # Configuration
@@ -427,7 +478,7 @@ SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_KEY")
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 TABLE_NAME = 'road_traffic_accident'
-USE_UPSERT = False  # Set to True to use upsert instead of duplicate filtering
+USE_UPSERT = True  # OPTIMIZED: Use database upsert instead of manual duplicate filtering
 
 def find_latest_excel_file():
     """Find the most recent Excel file in the data folder"""

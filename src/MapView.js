@@ -18,6 +18,7 @@ import "./PageHeader.css";
 import { DateTime } from "./DateTime";
 import L from "leaflet";
 import { useLocation } from "react-router-dom";
+import { usePageState } from './contexts/PageStateContext';
 import FullscreenFilters from './FullscreenFilters';
 import MultiSelectDropdown from './MultiSelectDropdown';
 import SingleSelectDropdown from './SingleSelectDropdown';
@@ -405,13 +406,16 @@ export default function MapView() {
   const recordDetails = location.state?.recordDetails;
 
   const [accidentData, setAccidentData] = useState(null);
-  const [showClusters, setShowClusters] = useState(true);
-  const [showHeatmap, setShowHeatmap] = useState(true);
-  const [showMarkers, setShowMarkers] = useState(false);
+  
+  // Use persistent state for layer visibility
+  const [showClusters, setShowClusters] = usePageState('showClusters', true);
+  const [showHeatmap, setShowHeatmap] = usePageState('showHeatmap', true);
+  const [showMarkers, setShowMarkers] = usePageState('showMarkers', false);
+  
   const [loading, setLoading] = useState(true);
 
   const [selectedRecord, setSelectedRecord] = useState(null);
-  const [displayMode, setDisplayMode] = useState('points');
+  const [displayMode, setDisplayMode] = usePageState('displayMode', 'points');
 
   const [searchTerm, setSearchTerm] = useState('');
   const [searchResults, setSearchResults] = useState([]);
@@ -432,11 +436,11 @@ export default function MapView() {
     }
   }, [fromRecords]);
 
-  // CHANGED: Filter states - selectedYears is now an array
-  const [selectedYears, setSelectedYears] = useState([]); // Empty array means "all"
-  const [selectedLocation, setSelectedLocation] = useState("all");
-  const [selectedOffenseType, setSelectedOffenseType] = useState("all");
-  const [selectedSeverity, setSelectedSeverity] = useState("all");
+  // CHANGED: Filter states - selectedYears is now an array (use persistent state)
+  const [selectedYears, setSelectedYears] = usePageState('selectedYears', []); // Empty array means "all"
+  const [selectedLocation, setSelectedLocation] = usePageState('selectedLocation', "all");
+  const [selectedOffenseType, setSelectedOffenseType] = usePageState('selectedOffenseType', "all");
+  const [selectedSeverity, setSelectedSeverity] = usePageState('selectedSeverity', "all");
 
   // Extract unique years, locations, offense types, and severities
   const { availableYears, availableLocations, availableOffenseTypes, availableSeverities } = useMemo(() => {

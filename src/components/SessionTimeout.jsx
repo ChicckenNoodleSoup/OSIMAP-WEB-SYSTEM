@@ -2,25 +2,29 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getTimeUntilExpiration, extendSession, clearUserData, isAuthenticated } from '../utils/authUtils';
 import { logAuthEvent } from '../utils/loggingUtils';
+import { useUpload } from '../contexts/UploadContext';
 
 function SessionTimeout() {
   const [timeLeft, setTimeLeft] = useState(0);
   const [showModal, setShowModal] = useState(false);
   const hasLoggedExpiration = useRef(false);
+  const intervalRef = useRef(null); // Track interval to prevent StrictMode duplicates
   const navigate = useNavigate();
+  const { clearAll, hasActiveUploads } = useUpload();
 
   useEffect(() => {
-    let interval;
+    // Clear any existing interval first (prevents StrictMode duplicates)
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
 
     const checkSession = () => {
       const timeUntilExpiration = getTimeUntilExpiration();
       setTimeLeft(timeUntilExpiration);
 
-      console.log('Session check - Time left:', timeUntilExpiration, 'ms');
-
       // Show warning when 2 minutes left (for 15-minute sessions)
       if (timeUntilExpiration <= 2 * 60 * 1000 && timeUntilExpiration > 0) {
-        console.log('Showing session timeout modal');
         setShowModal(true);
       } else {
         setShowModal(false);
@@ -30,7 +34,10 @@ function SessionTimeout() {
       if (timeUntilExpiration <= 0 && !hasLoggedExpiration.current) {
         hasLoggedExpiration.current = true;
         // Clear the interval immediately to prevent multiple calls
-        clearInterval(interval);
+        if (intervalRef.current) {
+          clearInterval(intervalRef.current);
+          intervalRef.current = null;
+        }
         handleLogout();
       }
     };
@@ -39,9 +46,14 @@ function SessionTimeout() {
     checkSession();
 
     // Check every second for real-time updates
-    interval = setInterval(checkSession, 1000);
+    intervalRef.current = setInterval(checkSession, 1000);
 
-    return () => clearInterval(interval);
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+    };
   }, []);
 
   // Auto-extend session on user activity
@@ -74,6 +86,7 @@ function SessionTimeout() {
 
   const handleLogout = async () => {
     await logAuthEvent.sessionExpired();
+    await clearAll(); // SECURITY: Clear all upload data and cancel processing
     clearUserData();
     navigate('/signin', { replace: true });
   };

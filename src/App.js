@@ -15,6 +15,9 @@ import AdminDashboard from './AdminDashboard';
 import SessionTimeout from './components/SessionTimeout';
 import AccountStatusChecker from './components/AccountStatusChecker';
 import { UserProvider } from './UserContext';
+import { UploadProvider, useUpload } from './contexts/UploadContext';
+import { PageStateProvider, useClearPageStates } from './contexts/PageStateContext';
+import { UploadProgressWidget } from './components/UploadProgressWidget';
 import { isAuthenticated, clearUserData, extendSession } from './utils/authUtils';
 import { logAuthEvent } from './utils/loggingUtils';
 import './App.css';
@@ -25,15 +28,17 @@ function ProtectedRoute({ isAuthenticated, children }) {
   return isAuthenticated ? children : <Navigate to="/signin" />;
 }
 
-function App() {
+// Main app component that has access to UploadContext and PageStateContext
+function AppContent() {
   const [authState, setAuthState] = useState(isAuthenticated());
   const [authReady, setAuthReady] = useState(false);
+  const { clearAll, hasActiveUploads, activeUploads } = useUpload();
+  const clearPageStates = useClearPageStates();
 
   useEffect(() => {
     // Check authentication status on app load
     const checkAuth = () => {
       const authStatus = isAuthenticated();
-      console.log('Auth check - status:', authStatus);
       setAuthState(authStatus);
       setAuthReady(true);
     };
@@ -58,7 +63,55 @@ function App() {
   }, []);
 
   const handleLogout = async () => {
+    // Check if there are active uploads
+    const processingTasks = activeUploads.filter(u => u.status === 'processing');
+    
+    if (processingTasks.length > 0) {
+      // Determine task type(s)
+      const hasUpload = processingTasks.some(t => t.type === 'upload');
+      const hasClustering = processingTasks.some(t => t.type === 'clustering');
+      
+      let title, description, consequences;
+      
+      if (hasUpload && hasClustering) {
+        // Both types
+        title = '⚠️ Tasks in Progress';
+        description = 'File upload and clustering analysis are currently running.';
+        consequences = '• Both tasks will be cancelled\n' +
+                      '• Processing will stop immediately\n' +
+                      '• Uploaded data may be incomplete';
+      } else if (hasClustering) {
+        // Only clustering
+        title = '⚠️ Clustering in Progress';
+        description = 'Clustering analysis is currently running.';
+        consequences = '• The clustering task will be cancelled\n' +
+                      '• Analysis will stop immediately\n' +
+                      '• Cluster data may be incomplete';
+      } else {
+        // Only upload
+        title = '⚠️ Upload in Progress';
+        description = 'A file is currently being uploaded and processed.';
+        consequences = '• The upload will be cancelled\n' +
+                      '• Processing will stop immediately\n' +
+                      '• Uploaded data may be incomplete';
+      }
+      
+      const confirmLogout = window.confirm(
+        `${title}\n\n` +
+        `${description}\n\n` +
+        'If you log out now:\n' +
+        consequences + '\n\n' +
+        'Do you want to cancel and log out?'
+      );
+      
+      if (!confirmLogout) {
+        return; // User chose to stay and let task(s) finish
+      }
+    }
+    
     await logAuthEvent.logout();
+    await clearAll(); // SECURITY: Clear all upload data and cancel backend processing
+    clearPageStates(); // Clear all saved page states
     clearUserData();
     setAuthState(false);
   };
@@ -70,6 +123,7 @@ function App() {
   return (
     <BrowserRouter>
       <UserProvider>
+        <UploadProgressWidget />
         <Routes>
           {/* Public routes */}
           <Route
@@ -129,6 +183,17 @@ function App() {
       </Routes>
     </UserProvider>
   </BrowserRouter>
+  );
+}
+
+// Wrapper component that provides UploadContext and PageStateContext
+function App() {
+  return (
+    <UploadProvider>
+      <PageStateProvider>
+        <AppContent />
+      </PageStateProvider>
+    </UploadProvider>
   );
 }
 
