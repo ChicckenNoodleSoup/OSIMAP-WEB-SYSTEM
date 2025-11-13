@@ -322,7 +322,7 @@ function CurrentRecords() {
     }
 
     try {
-      const response = await fetch("http://localhost:5000/run-clustering", {
+      const response = await fetch("https://osimap-web-system.onrender.com/run-clustering", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

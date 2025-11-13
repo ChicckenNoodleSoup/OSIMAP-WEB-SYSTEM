@@ -93,7 +93,7 @@ function Dashboard() {
     
     try {
       // Fetch cluster data from GeoJSON file (like MapView does)
-      const response = await fetch("http://localhost:5000/data/accidents_clustered.geojson");
+      const response = await fetch("https://osimap-web-system.onrender.com/data/accidents_clustered.geojson");
       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
       const geoData = await response.json();
       
