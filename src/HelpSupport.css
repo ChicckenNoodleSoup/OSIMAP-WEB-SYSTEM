@@ -1,4 +1,4 @@
-/* Scroll wrapper */
+/* Scroll wrapper - Scrollbar styles now in styles/scrollbar.css */
 .scroll-wrapper,
 .help-scroll-wrapper {
   max-height: 100vh;
@@ -6,37 +6,6 @@
   overflow: auto;
   padding: 1rem;
   box-sizing: border-box;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(255, 255, 255, 0.3) rgba(241, 239, 236, 0.05);
-}
-
-/* Custom Webkit Scrollbar */
-.scroll-wrapper::-webkit-scrollbar,
-.help-scroll-wrapper::-webkit-scrollbar {
-  width: 12px;
-  height: 12px;
-}
-
-.scroll-wrapper::-webkit-scrollbar-track,
-.help-scroll-wrapper::-webkit-scrollbar-track {
-  background: rgba(241, 239, 236, 0.05);
-  border-radius: 10px;
-}
-
-.scroll-wrapper::-webkit-scrollbar-thumb,
-.help-scroll-wrapper::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.2);
-  border-radius: 10px;
-  backdrop-filter: blur(6px);
-  border: 2px solid rgba(241, 239, 236, 0.1);
-  transition: background 0.3s ease, transform 0.2s ease;
-}
-
-.scroll-wrapper::-webkit-scrollbar-thumb:hover,
-.help-scroll-wrapper::-webkit-scrollbar-thumb:hover {
-  background: rgba(0, 133, 255, 0.6);
-  transform: scaleX(1.1);
-  box-shadow: 0 0 6px rgba(0, 133, 255, 0.6);
 }
 
 /* Help & Support container */

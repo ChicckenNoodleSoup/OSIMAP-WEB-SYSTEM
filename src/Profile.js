@@ -1,15 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { useUser } from "./UserContext";
-import { createClient } from "@supabase/supabase-js";
+import { supabase } from "./supabaseClient";
 import { secureHash, verifySecureHash } from "./utils/passwordUtils";
 import { validatePassword, validateFullName, validateEmail, validateStation } from "./utils/validation";
 import { logProfileEvent } from "./utils/loggingUtils";
 import SingleSelectDropdown from "./SingleSelectDropdown";
 import "./Profile.css";
-
-const SUPABASE_URL = process.env.REACT_APP_SUPABASE_URL;
-const SUPABASE_KEY = process.env.REACT_APP_SUPABASE_KEY;
-const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 function Profile() {
   const [activeTab, setActiveTab] = useState("overview");

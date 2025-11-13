@@ -157,4 +157,6 @@ const FullscreenFilters = ({
   );
 };
 
-export default FullscreenFilters;
+// OPTIMIZATION: Prevent unnecessary re-renders
+// Memoize to avoid re-rendering when parent re-renders but props haven't changed
+export default React.memo(FullscreenFilters);

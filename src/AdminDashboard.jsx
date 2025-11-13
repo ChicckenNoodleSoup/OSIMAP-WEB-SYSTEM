@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { createClient } from "@supabase/supabase-js";
+import { supabase } from './supabaseClient';
 import { sendAccountStatusEmail } from './utils/emailService';
 import { isAdministrator } from './utils/authUtils';
 import { logAccountEvent } from './utils/loggingUtils';
@@ -9,13 +9,10 @@ import SingleSelectDropdown from './SingleSelectDropdown';
 import RoleProtectedRoute from './components/RoleProtectedRoute';
 import { DateTime } from './DateTime';
 import { Shield, Users, Activity, CheckCircle, XCircle, Clock, Mail, User, UserCog, UserPlus } from 'lucide-react';
+import { LoadingSpinner } from './components/LoadingSpinner';
 import './AdminDashboard.css';
 import './Spinner.css';
 import './PageHeader.css';
-
-const SUPABASE_URL = process.env.REACT_APP_SUPABASE_URL;
-const SUPABASE_KEY = process.env.REACT_APP_SUPABASE_KEY;
-const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 function AdminDashboard() {
   const [allAccounts, setAllAccounts] = useState([]);
@@ -538,27 +535,7 @@ function AdminDashboard() {
     return (
       <div className="scroll-wrapper">
         <div className="admin-dashboard-container">
-          <div className="loading-center full-height" role="status" aria-live="polite">
-            <div style={{display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10}}>
-              <svg 
-                className="loading-spinner" 
-                viewBox="-13 -13 45 45" 
-                xmlns="http://www.w3.org/2000/svg"
-                aria-hidden="true"
-              >
-                <circle className="box5631" cx="13" cy="1" r="5"/>
-                <circle className="box5631" cx="25" cy="1" r="5"/>
-                <circle className="box5631" cx="1" cy="13" r="5"/>
-                <circle className="box5631" cx="13" cy="13" r="5"/>
-                <circle className="box5631" cx="25" cy="13" r="5"/>
-                <circle className="box5631" cx="1" cy="25" r="5"/>
-                <circle className="box5631" cx="13" cy="25" r="5"/>
-                <circle className="box5631" cx="25" cy="25" r="5"/>
-                <circle className="box5631" cx="1" cy="1" r="5"/>
-              </svg>
-              <div className="loading-text">Loading accounts...</div>
-            </div>
-          </div>
+          <LoadingSpinner text="Loading accounts..." variant="full-height" />
         </div>
       </div>
     );
@@ -842,27 +819,7 @@ function AdminDashboard() {
         {activeTab === 'logs' && (
           <>
             {logsLoading ? (
-              <div className="loading-center compact" role="status" aria-live="polite">
-                <div style={{display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10}}>
-                  <svg 
-                    className="loading-spinner" 
-                    viewBox="-13 -13 45 45" 
-                    xmlns="http://www.w3.org/2000/svg"
-                    aria-hidden="true"
-                  >
-                    <circle className="box5631" cx="13" cy="1" r="5"/>
-                    <circle className="box5631" cx="25" cy="1" r="5"/>
-                    <circle className="box5631" cx="1" cy="13" r="5"/>
-                    <circle className="box5631" cx="13" cy="13" r="5"/>
-                    <circle className="box5631" cx="25" cy="13" r="5"/>
-                    <circle className="box5631" cx="1" cy="25" r="5"/>
-                    <circle className="box5631" cx="13" cy="25" r="5"/>
-                    <circle className="box5631" cx="25" cy="25" r="5"/>
-                    <circle className="box5631" cx="1" cy="1" r="5"/>
-                  </svg>
-                  <div className="loading-text">Loading user activity logs...</div>
-                </div>
-              </div>
+              <LoadingSpinner text="Loading user activity logs..." variant="compact" />
             ) : userLogs.length === 0 ? (
               <div className="no-data">
                 <Activity size={48} className="no-data-icon" />

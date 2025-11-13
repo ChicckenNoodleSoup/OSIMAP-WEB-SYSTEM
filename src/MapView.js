@@ -22,6 +22,7 @@ import { usePageState } from './contexts/PageStateContext';
 import FullscreenFilters from './FullscreenFilters';
 import MultiSelectDropdown from './MultiSelectDropdown';
 import SingleSelectDropdown from './SingleSelectDropdown';
+import { LoadingSpinner } from './components/LoadingSpinner';
 
 // Cluster colors
 const getClusterColor = (clusterId) => {
@@ -559,7 +560,6 @@ export default function MapView() {
       const isCacheValid = cachedGeoJSON && cacheTimestamp && (now - cacheTimestamp < CACHE_DURATION);
       
       if (isCacheValid) {
-        console.log("Using cached GeoJSON data");
         setAccidentData(cachedGeoJSON);
         setLoading(false);
         return;
@@ -570,7 +570,6 @@ export default function MapView() {
         let res = await fetch("http://localhost:5000/data/accidents_clustered.geojson");
         if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
         const data = await res.json();
-        console.log("Fetched GeoJSON:", data.features?.length, "points");
         
         // Cache the data
         cachedGeoJSON = data;
@@ -582,7 +581,6 @@ export default function MapView() {
         
         // If fetch fails but we have old cached data, use it
         if (cachedGeoJSON) {
-          console.log("Using stale cached data due to fetch error");
           setAccidentData(cachedGeoJSON);
         }
       } finally {
@@ -691,24 +689,7 @@ export default function MapView() {
   if (loading) return (
     <div className="scroll-wrapper">
       <div className="mapview-container">
-        <div className="loading-spinner-container">
-          <svg 
-            className="loading-spinner" 
-            viewBox="-13 -13 45 45" 
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <circle className="box5631" cx="13" cy="1" r="5"/>
-            <circle className="box5631" cx="25" cy="1" r="5"/>
-            <circle className="box5631" cx="1" cy="13" r="5"/>
-            <circle className="box5631" cx="13" cy="13" r="5"/>
-            <circle className="box5631" cx="25" cy="13" r="5"/>
-            <circle className="box5631" cx="1" cy="25" r="5"/>
-            <circle className="box5631" cx="13" cy="25" r="5"/>
-            <circle className="box5631" cx="25" cy="25" r="5"/>
-            <circle className="box5631" cx="1" cy="1" r="5"/>
-          </svg>
-          <p className="loading-text">Loading Clustered Data...</p>
-        </div>
+        <LoadingSpinner text="Loading Clustered Data..." variant="full-height" />
       </div>
     </div>
   );

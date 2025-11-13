@@ -5,8 +5,9 @@ import { usePageState } from './contexts/PageStateContext';
 import './Dashboard.css';
 import './PageHeader.css';
 import { DateTime } from './DateTime';
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from './supabaseClient';
 import DashboardMapInsightsCarousel from './components/DashboardMapInsightsCarousel';
+import { LoadingSpinner } from './components/LoadingSpinner';
 import { Bar } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
@@ -17,10 +18,6 @@ import {
   Tooltip,
   Legend
 } from 'chart.js';
-
-const SUPABASE_URL = process.env.REACT_APP_SUPABASE_URL;
-const SUPABASE_KEY = process.env.REACT_APP_SUPABASE_KEY;
-const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // Register ChartJS components
 ChartJS.register(
@@ -359,7 +356,7 @@ function Dashboard() {
             <div className="barangay-section" onClick={e => e.stopPropagation()}>
               <div className="barangay-title">Per Barangay</div>
               {loadingBarangays ? (
-                <div className="stat-loading">Loading...</div>
+                <LoadingSpinner text="Loading data" variant="compact" />
               ) : Object.keys(barangayCounts).length === 0 ? (
                 <div className="stat-none">No data</div>
               ) : (
@@ -561,7 +558,7 @@ function Dashboard() {
             <div className="severity-section">
               <div className="severity-title">By Severity</div>
               {loadingSeverity ? (
-                <div className="stat-loading">Loading…</div>
+                <LoadingSpinner text="Loading data" variant="compact" />
               ) : (
                 <ul className="severity-list">
                   {Object.keys(severityCounts).length===0 ? (

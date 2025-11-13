@@ -90,4 +90,11 @@ const SeverityDistributionChart = ({ labels, data }) => {
   );
 };
 
-export default SeverityDistributionChart;
+// OPTIMIZATION: Prevent unnecessary re-renders
+// Only re-render when labels or data arrays change
+export default React.memo(SeverityDistributionChart, (prevProps, nextProps) => {
+  return (
+    prevProps.labels === nextProps.labels &&
+    prevProps.data === nextProps.data
+  );
+});

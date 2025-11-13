@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import './DateTime.css';
 
-export function DateTime() {
+// Component definition without memo (has internal state that updates)
+function DateTimeComponent() {
   const [currentTime, setCurrentTime] = useState(new Date());
 
   useEffect(() => {
@@ -24,3 +25,7 @@ export function DateTime() {
     </span>
   );
 }
+
+// OPTIMIZATION: Memoize to prevent re-renders from parent
+// DateTime doesn't receive props, so it only needs to re-render on its own state changes
+export const DateTime = React.memo(DateTimeComponent);

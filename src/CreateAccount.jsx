@@ -2,13 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './CreateAccount.css';
 import { validateFullName, validateEmail, validatePassword, validateConfirmPassword, getPasswordRequirements } from './utils/validation';
-import { createClient } from "@supabase/supabase-js";
+import { supabase } from './supabaseClient';
 import { secureHash } from './utils/passwordUtils';
 import { logAccountEvent } from './utils/loggingUtils';
-
-const SUPABASE_URL = process.env.REACT_APP_SUPABASE_URL;
-const SUPABASE_KEY = process.env.REACT_APP_SUPABASE_KEY;
-const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 function CreateAccount() {
   const [username, setUsername] = useState('');

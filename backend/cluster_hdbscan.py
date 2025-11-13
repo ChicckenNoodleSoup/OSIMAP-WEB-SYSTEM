@@ -375,6 +375,19 @@ class AccidentClusterAnalyzer:
         invalid_mask = (self.clustered_df["cluster"] != -1) & (~self.clustered_df["cluster"].isin(valid_ids))
         self.clustered_df.loc[invalid_mask, "cluster"] = -1
         
+        # Create the same mapping that renumber_clusters_sequentially will use
+        unique_clusters_before = sorted([c for c in self.clustered_df["cluster"].unique() if c != -1])
+        cluster_id_mapping = {old_id: new_id for new_id, old_id in enumerate(unique_clusters_before)}
+        
+        # Renumber clusters sequentially to remove gaps from invalid cluster removal
+        self.renumber_clusters_sequentially()
+        
+        # Update cluster_ids in stats to match the new numbering
+        for stat in stats:
+            old_id = stat["cluster_id"]
+            if old_id in cluster_id_mapping:
+                stat["cluster_id"] = cluster_id_mapping[old_id]
+        
         # Sort by danger score
         stats = sorted(stats, key=lambda x: x["danger_score"], reverse=True)
         self.cluster_centers = stats

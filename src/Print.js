@@ -2,14 +2,10 @@ import React, { useState, useEffect, useRef } from 'react';
 import './Print.css';
 import './Spinner.css';
 import './PageHeader.css';
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from './supabaseClient';
 import { DateTime } from './DateTime';
 import { logSystemEvent } from './utils/loggingUtils';
-
-const supabase = createClient(
-  process.env.REACT_APP_SUPABASE_URL,
-  process.env.REACT_APP_SUPABASE_KEY
-); 
+import { LoadingSpinner } from './components/LoadingSpinner'; 
 
 const fetchAllRecords = async (tableName, orderField = 'id', filters = {}) => {
   const pageSize = 1000;
@@ -273,27 +269,7 @@ function Print() {
   if (loading) {
     return (
       <div className="p-8">
-        <div className="loading-center full-height" role="status" aria-live="polite">
-          <div style={{display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10}}>
-            <svg 
-              className="loading-spinner" 
-              viewBox="-13 -13 45 45" 
-              xmlns="http://www.w3.org/2000/svg"
-              aria-hidden="true"
-            >
-              <circle className="box5631" cx="13" cy="1" r="5"/>
-              <circle className="box5631" cx="25" cy="1" r="5"/>
-              <circle className="box5631" cx="1" cy="13" r="5"/>
-              <circle className="box5631" cx="13" cy="13" r="5"/>
-              <circle className="box5631" cx="25" cy="13" r="5"/>
-              <circle className="box5631" cx="1" cy="25" r="5"/>
-              <circle className="box5631" cx="13" cy="25" r="5"/>
-              <circle className="box5631" cx="25" cy="25" r="5"/>
-              <circle className="box5631" cx="1" cy="1" r="5"/>
-            </svg>
-            <div className="loading-text">Loading data...</div>
-          </div>
-        </div>
+        <LoadingSpinner text="Loading data..." variant="full-height" />
       </div>
     );
   }

@@ -129,4 +129,15 @@ const SingleSelectDropdown = ({
   );
 };
 
-export default SingleSelectDropdown;
+// OPTIMIZATION: Prevent unnecessary re-renders
+// Only re-render if props actually change
+export default React.memo(SingleSelectDropdown, (prevProps, nextProps) => {
+  return (
+    prevProps.selectedValue === nextProps.selectedValue &&
+    prevProps.options === nextProps.options &&
+    prevProps.onChange === nextProps.onChange &&
+    prevProps.placeholder === nextProps.placeholder &&
+    prevProps.allLabel === nextProps.allLabel &&
+    prevProps.allValue === nextProps.allValue
+  );
+});

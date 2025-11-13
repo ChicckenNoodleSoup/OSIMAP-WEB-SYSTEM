@@ -3,16 +3,13 @@ import "./CurrentRecords.css";
 import "./Spinner.css";
 import "./PageHeader.css";
 import { DateTime } from "./DateTime";
-import { createClient } from "@supabase/supabase-js";
+import { supabase } from "./supabaseClient";
 import { useNavigate } from "react-router-dom";
 import { usePageState } from "./contexts/PageStateContext";
 import SingleSelectDropdown from "./SingleSelectDropdown";
 import { isAdministrator } from "./utils/authUtils";
 import { useUpload } from "./contexts/UploadContext";
-
-const SUPABASE_URL = process.env.REACT_APP_SUPABASE_URL;
-const SUPABASE_KEY = process.env.REACT_APP_SUPABASE_KEY;
-const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+import { LoadingSpinner } from "./components/LoadingSpinner";
 
 function CurrentRecords() {
   // Use persistent state for filters, search, sort, and pagination
@@ -45,6 +42,8 @@ function CurrentRecords() {
     year: ''
   });
   const [message, setMessage] = useState('');
+  const [activeTooltip, setActiveTooltip] = useState(null);
+  const tooltipTimers = React.useRef({});
 
   // Clustering with background task support
   const { startUpload, activeUploads } = useUpload();
@@ -302,7 +301,7 @@ function CurrentRecords() {
       setTimeout(() => setMessage(''), 3000);
       setShowModal(false);
       
-      // Refresh records - simple reload
+    
       window.location.reload();
     } catch (error) {
       console.error('Error:', error);
@@ -355,6 +354,31 @@ function CurrentRecords() {
       setTimeout(() => setMessage(''), 5000);
     }
   };
+
+  // Tooltip handlers
+  const handleTooltipMouseEnter = (tooltipId) => {
+    if (tooltipTimers.current[tooltipId]) {
+      clearTimeout(tooltipTimers.current[tooltipId]);
+    }
+    tooltipTimers.current[tooltipId] = setTimeout(() => {
+      setActiveTooltip(tooltipId);
+    }, 600); // Show tooltip after 600ms
+  };
+
+  const handleTooltipMouseLeave = (tooltipId) => {
+    if (tooltipTimers.current[tooltipId]) {
+      clearTimeout(tooltipTimers.current[tooltipId]);
+    }
+    setActiveTooltip(null);
+  };
+
+  // Tooltip renderer component
+  const Tooltip = ({ id, text, children }) => (
+    <div className="tooltip-wrapper" onMouseEnter={() => handleTooltipMouseEnter(id)} onMouseLeave={() => handleTooltipMouseLeave(id)}>
+      {children}
+      {activeTooltip === id && <div className="tooltip-text">{text}</div>}
+    </div>
+  );
   
 
 
@@ -477,7 +501,9 @@ function CurrentRecords() {
               className="clear-filters-btn"
               disabled={selectedBarangay === "all" && selectedSeverity === "all" && sortBy === "date-desc" && !searchTerm}
             >
-              Clear All Filters
+              <Tooltip id="clear-filters" text="Reset all filters and search to show all records">
+                Clear All Filters
+              </Tooltip>
           </button>
           </div>
         </div>
@@ -551,27 +577,7 @@ function CurrentRecords() {
 
         <div className="records-card">
           {loading ? (
-            <div className="loading-center compact" role="status" aria-live="polite">
-              <div style={{display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10}}>
-                <svg 
-                  className="loading-spinner" 
-                  viewBox="-13 -13 45 45" 
-                  xmlns="http://www.w3.org/2000/svg"
-                  aria-hidden="true"
-                >
-                  <circle className="box5631" cx="13" cy="1" r="5"/>
-                  <circle className="box5631" cx="25" cy="1" r="5"/>
-                  <circle className="box5631" cx="1" cy="13" r="5"/>
-                  <circle className="box5631" cx="13" cy="13" r="5"/>
-                  <circle className="box5631" cx="25" cy="13" r="5"/>
-                  <circle className="box5631" cx="1" cy="25" r="5"/>
-                  <circle className="box5631" cx="13" cy="25" r="5"/>
-                  <circle className="box5631" cx="25" cy="25" r="5"/>
-                  <circle className="box5631" cx="1" cy="1" r="5"/>
-                </svg>
-                <div className="loading-text">Loading records...</div>
-              </div>
-            </div>
+            <LoadingSpinner text="Loading records..." variant="compact" />
           ) : (
             <div className="table-body-wrapper">
               <table className="records-table">

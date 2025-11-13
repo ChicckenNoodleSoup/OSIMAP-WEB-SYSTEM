@@ -98,4 +98,11 @@ const HourlyDistributionChart = ({ labels, data }) => {
   );
 };
 
-export default HourlyDistributionChart;
+// OPTIMIZATION: Prevent unnecessary re-renders
+// Only re-render when labels or data arrays change
+export default React.memo(HourlyDistributionChart, (prevProps, nextProps) => {
+  return (
+    prevProps.labels === nextProps.labels &&
+    prevProps.data === nextProps.data
+  );
+});
