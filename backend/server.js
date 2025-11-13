@@ -81,8 +81,112 @@ const SEVERITY_CALC_COLUMNS = [
 
 const ALL_REQUIRED_COLUMNS = [...REQUIRED_COLUMNS, ...SEVERITY_CALC_COLUMNS];
 
+// Function to validate CSV file structure
+function validateCSVFile(filePath) {
+  const errors = [];
+  let totalRecords = 0;
+  const validSheets = [];
+  
+  try {
+    // Read CSV file using XLSX library
+    const workbook = XLSX.readFile(filePath, { type: 'file' });
+    
+    // CSV files are typically imported as a single sheet
+    const sheetName = workbook.SheetNames[0];
+    const worksheet = workbook.Sheets[sheetName];
+    const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+    
+    if (jsonData.length === 0) {
+      errors.push("❌ CSV file is completely empty - please add data to this file");
+      return { valid: false, errors, recordsProcessed: 0, sheetsProcessed: [] };
+    }
+    
+    // Get header row and normalize column names (lowercase, trim, remove spaces)
+    const headers = jsonData[0] || [];
+    const normalizedHeaders = headers.map(h => 
+      String(h).trim().toLowerCase().replace(/\s+/g, '_').replace(/[^\w]/g, '')
+    );
+    
+    // Check for required columns - use exact matching
+    const missingColumns = ALL_REQUIRED_COLUMNS.filter(col => {
+      const normalizedCol = col.replace(/_/g, '').toLowerCase();
+      
+      // Check for exact match or very close match (allowing underscores/spaces)
+      const found = normalizedHeaders.some(header => {
+        const normalizedHeader = header.toLowerCase();
+        
+        // Exact match after normalization
+        if (normalizedHeader === normalizedCol) return true;
+        
+        // Also check with underscores preserved
+        const colWithUnderscore = col.toLowerCase();
+        if (normalizedHeader === colWithUnderscore) return true;
+        
+        return false;
+      });
+      
+      return !found;
+    });
+    
+    if (missingColumns.length > 0) {
+      // Group missing columns for better readability
+      const missingBasic = missingColumns.filter(col => REQUIRED_COLUMNS.includes(col));
+      const missingSeverity = missingColumns.filter(col => SEVERITY_CALC_COLUMNS.includes(col));
+      
+      if (missingBasic.length > 0) {
+        errors.push(`❌ CSV file is missing basic columns: ${missingBasic.join(', ')}`);
+      }
+      if (missingSeverity.length > 0) {
+        errors.push(`❌ CSV file is missing severity columns: ${missingSeverity.join(', ')}`);
+      }
+    }
+    
+    // Check if CSV has data rows
+    if (jsonData.length < 2) {
+      errors.push(`❌ CSV file only has column headers but no data rows`);
+    } else {
+      const dataRows = jsonData.length - 1; // Exclude header row
+      totalRecords += dataRows;
+      validSheets.push('CSV_Data'); // Use generic name for CSV
+    }
+    
+    if (errors.length === 0) {
+      console.log(`✅ CSV Validation passed: ${totalRecords} records`);
+      return { 
+        valid: true, 
+        errors: [], 
+        recordsProcessed: totalRecords, 
+        sheetsProcessed: validSheets 
+      };
+    } else {
+      return { 
+        valid: false, 
+        errors, 
+        recordsProcessed: 0, 
+        sheetsProcessed: [] 
+      };
+    }
+    
+  } catch (error) {
+    console.error("Error validating CSV file:", error);
+    if (error.message.includes('Unsupported file')) {
+      errors.push(`❌ This file appears to be corrupted or is not a valid CSV file`);
+    } else if (error.message.includes('ENOENT') || error.message.includes('no such file')) {
+      errors.push(`❌ File could not be found - please try uploading again`);
+    } else {
+      errors.push(`❌ Unable to read CSV file - it may be corrupted or have an invalid format`);
+    }
+    return { 
+      valid: false, 
+      errors, 
+      recordsProcessed: 0, 
+      sheetsProcessed: [] 
+    };
+  }
+}
+
 // Function to validate Excel file structure
-function validateExcelFile(filePath) {
+function validateExcelFile(filePath, requireYearInSheetName = true) {
   const errors = [];
   let totalRecords = 0;
   const validSheets = [];
@@ -99,12 +203,14 @@ function validateExcelFile(filePath) {
     
     // Validate each sheet
     sheetNames.forEach((sheetName) => {
-      // 1. Check if sheet name contains a year (1900-2099)
-      const yearRegex = /\b(19|20)\d{2}\b/;
-      const yearMatch = sheetName.match(yearRegex);
-      
-      if (!yearMatch) {
-        errors.push(`❌ Sheet name "${sheetName}" must include a 4-digit year (e.g., "2023", "Accidents_2024", or "Data_2025")`);
+      // 1. Check if sheet name contains a year (1900-2099) - only if required
+      if (requireYearInSheetName) {
+        const yearRegex = /\b(19|20)\d{2}\b/;
+        const yearMatch = sheetName.match(yearRegex);
+        
+        if (!yearMatch) {
+          errors.push(`❌ Sheet name "${sheetName}" must include a 4-digit year (e.g., "2023", "Accidents_2024", or "Data_2025")`);
+        }
       }
       
       // 2. Check if sheet has required columns
@@ -607,9 +713,27 @@ app.post("/upload", upload.single("file"), (req, res) => {
 
   const filePath = req.file.path;
   const fileName = req.file.originalname;
+  const fileExtension = path.extname(fileName).toLowerCase();
   
-  // Validate the Excel file structure BEFORE processing
-  const validation = validateExcelFile(filePath);
+  // Parse metadata if provided
+  let metadata = {};
+  try {
+    if (req.body.metadata) {
+      metadata = JSON.parse(req.body.metadata);
+    }
+  } catch (err) {
+    console.warn("Could not parse metadata:", err);
+  }
+  
+  // Validate the file structure BEFORE processing (CSV or Excel)
+  let validation;
+  if (fileExtension === '.csv') {
+    validation = validateCSVFile(filePath);
+  } else {
+    // Pass requireYearInSheetName from metadata (defaults to true for backward compatibility)
+    const requireYear = metadata.requireYearInSheetName !== undefined ? metadata.requireYearInSheetName : true;
+    validation = validateExcelFile(filePath, requireYear);
+  }
   
   if (!validation.valid) {
     // Validation failed - delete the uploaded file and return errors
@@ -631,7 +755,7 @@ app.post("/upload", upload.single("file"), (req, res) => {
     }
     
     return res.status(400).json({ 
-      message: "Excel file validation failed",
+      message: "File validation failed",
       error: "File does not meet requirements",
       validationErrors: validation.errors
     });

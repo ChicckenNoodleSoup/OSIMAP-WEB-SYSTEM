@@ -156,8 +156,8 @@ export default function AddRecord() {
 
   // File validation constants
   const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
-  const MIN_FILE_SIZE = 1024; // 1KB
-  const ALLOWED_EXTENSIONS = ['.xlsx', '.xls'];
+  const MIN_FILE_SIZE = 50; // 50 bytes (just to catch empty files)
+  const ALLOWED_EXTENSIONS = ['.xlsx', '.xls', '.csv'];
   const REQUIRED_COLUMNS = [
     'barangay',
     'lat',
@@ -219,13 +219,13 @@ export default function AddRecord() {
     // 3. Validate file extension
     const fileExtension = fileName.substring(fileName.lastIndexOf('.')).toLowerCase();
     if (!ALLOWED_EXTENSIONS.includes(fileExtension)) {
-      errors.push(`❌ Invalid file type "${fileExtension}" - only .xlsx and .xls files are allowed`);
+      errors.push(`❌ Invalid file type "${fileExtension}" - only .xlsx, .xls, and .csv files are allowed`);
     }
 
     // 4. Check for double extensions (potential security risk)
     const extensionCount = (fileName.match(/\./g) || []).length;
     if (extensionCount > 1) {
-      errors.push('❌ File has multiple extensions - please use a single extension (.xlsx or .xls)');
+      errors.push('❌ File has multiple extensions - please use a single extension (.xlsx, .xls, or .csv)');
     }
 
     // 5. Check if file name is suspicious (e.g., starts with dot, hidden file)
@@ -237,10 +237,12 @@ export default function AddRecord() {
     const validMimeTypes = [
       'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', // .xlsx
       'application/vnd.ms-excel', // .xls
+      'text/csv', // .csv
+      'application/csv', // .csv (alternative)
     ];
 
     if (!validMimeTypes.includes(file.type) && file.type !== '') {
-      errors.push(`❌ File type doesn't match Excel format - make sure it's a genuine .xlsx or .xls file`);
+      errors.push(`❌ File type doesn't match Excel or CSV format - make sure it's a genuine .xlsx, .xls, or .csv file`);
     }
 
     return errors;
@@ -279,7 +281,7 @@ export default function AddRecord() {
           if (error.code === 'file-too-large') {
             errors.push(`❌ "${file.name}" exceeds the maximum file size of 50MB`);
           } else if (error.code === 'file-invalid-type') {
-            errors.push(`❌ "${file.name}" is not a valid Excel file - only .xlsx and .xls formats are accepted`);
+            errors.push(`❌ "${file.name}" is not a valid file - only .xlsx, .xls, and .csv formats are accepted`);
           } else if (error.code === 'too-many-files') {
             errors.push('❌ Please upload only one file at a time');
           } else if (error.code === 'validation-failed') {
@@ -325,6 +327,9 @@ export default function AddRecord() {
       const formData = new FormData();
       formData.append("file", fileToUpload);
 
+      // Determine if this is a CSV file
+      const isCSV = fileToUpload.name.toLowerCase().endsWith('.csv');
+
       // Add metadata for backend validation
       formData.append("metadata", JSON.stringify({
         originalName: file.name,
@@ -334,7 +339,8 @@ export default function AddRecord() {
         requiredColumns: REQUIRED_COLUMNS,
         severityCalcColumns: SEVERITY_CALC_COLUMNS,
         allRequiredColumns: ALL_REQUIRED_COLUMNS,
-        requireYearInSheetName: true
+        requireYearInSheetName: !isCSV, // Only require year in sheet name for Excel files
+        isCSV: isCSV
       }));
 
       setProcessingStage("uploading");
@@ -422,6 +428,7 @@ export default function AddRecord() {
     accept: {
       "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": [".xlsx"],
       "application/vnd.ms-excel": [".xls"],
+      "text/csv": [".csv"],
     },
     maxFiles: 1,
     maxSize: MAX_FILE_SIZE,
@@ -758,10 +765,11 @@ export default function AddRecord() {
 
             <div className="addrec-edit-instructions" role="status">
               <strong>💡 How to Add Records</strong>
-              <div>• Drag and drop your Excel file or click to browse.</div>
-              <div>• Supported formats: <code>.xlsx</code> and <code>.xls</code> (max 50MB).</div>
+              <div>• Drag and drop your Excel or CSV file or click to browse.</div>
+              <div>• Supported formats: <code>.xlsx</code>, <code>.xls</code>, and <code>.csv</code> (max 50MB).</div>
               <div>• Required columns: barangay, lat, lng, datecommitted, timecommitted, offensetype, victimcount, suspectcount, victiminjured, victimkilled, victimunharmed, suspectkilled.</div>
-              <div>• Sheet names must contain a year (e.g., "2023", "Accidents_2024").</div>
+              <div>• For Excel files: Sheet names must contain a year (e.g., "2023", "Accidents_2024").</div>
+              <div>• For CSV files: Year is automatically extracted from the datecommitted column.</div>
               <div>• The system will validate, upload, process, and convert data into GeoJSON.</div>
               <div>• Follow the progress steps below — each icon shows the current stage.</div>
               <div>• When complete, your new data will be reflected on the map and current records.</div>
@@ -832,7 +840,7 @@ export default function AddRecord() {
             ) : isDragReject ? (
               <>
                 <p className="title error">Invalid File Type</p>
-                <p className="subtitle error">Please upload only Excel files (.xlsx, .xls)</p>
+                <p className="subtitle error">Please upload only Excel or CSV files (.xlsx, .xls, .csv)</p>
               </>
             ) : isDragActive ? (
               <>
@@ -841,11 +849,11 @@ export default function AddRecord() {
               </>
             ) : (
               <>
-                <p className="title">Drag & Drop your Excel file</p>
+                <p className="title">Drag & Drop your Excel or CSV file</p>
                 <p className="subtitle">
                   or <span className="highlight">choose a file</span> to upload
                 </p>
-                <p className="note">Supported formats: .xlsx, .xls</p>
+                <p className="note">Supported formats: .xlsx, .xls, .csv</p>
               </>
             )}
           </div>
