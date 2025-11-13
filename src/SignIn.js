@@ -96,12 +96,51 @@ function SignIn({ setIsAuthenticated }) {
       }
 
       if (data) {
+        // Check if account is already revoked due to too many failed attempts
+        if (data.status === 'revoked') {
+          await logAuthEvent.loginBlockedRejected(null, username);
+          setErrorMessage('Your account has been revoked. Please contact the administrator.');
+          return;
+        }
+
         // Verify the password
         const isPasswordValid = await verifySecureHash(password, data.password);
         
         if (!isPasswordValid) {
-          await logAuthEvent.failedLogin(null, username);
-          throw new Error('Invalid credentials');
+          // Increment failed_attempts
+          const newFailedAttempts = (data.failed_attempts || 0) + 1;
+          
+          if (newFailedAttempts >= 5) {
+            // Revoke account and reset failed_attempts
+            await supabase
+              .from('police')
+              .update({ 
+                status: 'revoked',
+                failed_attempts: 0
+              })
+              .eq('email', username);
+            
+            await logAuthEvent.failedLogin(null, username);
+            setErrorMessage('Too many failed login attempts. Your account has been revoked. Please contact the administrator.');
+            return;
+          } else {
+            // Update failed_attempts count
+            await supabase
+              .from('police')
+              .update({ failed_attempts: newFailedAttempts })
+              .eq('email', username);
+            
+            await logAuthEvent.failedLogin(null, username);
+            throw new Error('Invalid credentials');
+          }
+        }
+
+        // Password is valid - reset failed_attempts to 0
+        if (data.failed_attempts > 0) {
+          await supabase
+            .from('police')
+            .update({ failed_attempts: 0 })
+            .eq('email', username);
         }
 
         // Check if user is Administrator - they can log in regardless of status
@@ -122,12 +161,6 @@ function SignIn({ setIsAuthenticated }) {
           if (data.status === 'rejected') {
             await logAuthEvent.loginBlockedRejected(null, username);
             setErrorMessage('Your account has been rejected. Please contact the administrator.');
-            return;
-          }
-          
-          if (data.status === 'revoked') {
-            await logAuthEvent.loginBlockedRejected(null, username);
-            setErrorMessage('Your account has been revoked. Please contact the administrator.');
             return;
           }
           
@@ -159,7 +192,9 @@ function SignIn({ setIsAuthenticated }) {
       }
       
       // Show error inside card
-      setErrorMessage('Invalid username or password.');
+      if (!errorMessage) {
+        setErrorMessage('Invalid username or password.');
+      }
     } finally {
       setIsLoading(false);
     }

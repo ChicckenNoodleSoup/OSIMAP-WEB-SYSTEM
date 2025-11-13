@@ -90,7 +90,8 @@
 .help-text {
   text-align: justify;
   display: block;
-  margin-top: -1rem;
+  margin-top: 1.5rem;
+  margin-bottom: 2rem;
   padding-top: 0;
   line-height: 1.6;
 }
@@ -101,13 +102,14 @@
   flex-wrap: wrap;
   gap: 75px;
   justify-content: space-between;
+  margin-top: 2rem;
 }
 
 .text-column {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 20px;
-  margin-bottom: 15px;
+  margin-bottom: 25px;
   flex: 1 1 45%; /* like records page responsive cards */
   min-width: 280px;
 }
@@ -116,6 +118,15 @@
 .columnTwo {
   flex: 1;
   min-width: 0;
+}
+
+.columnOne h3,
+.columnTwo h3 {
+  color: white;
+  font-size: 1.5rem;
+  margin-bottom: 1.5rem;
+  margin-top: 0.5rem;
+  font-weight: 600;
 }
 
 .help-icon {

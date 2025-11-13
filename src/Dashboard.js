@@ -264,9 +264,12 @@ function Dashboard() {
 
   useEffect(() => {
     fetchUserData();
-    fetchCountForYear(year);
-    fetchClusteredAccidentCount(year);
-    fetchSeverityCounts(year);
+    // Fetch all data in parallel for faster loading
+    Promise.all([
+      fetchCountForYear(year),
+      fetchClusteredAccidentCount(year),
+      fetchSeverityCounts(year)
+    ]);
   }, [year]);
 
   return (

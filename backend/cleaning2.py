@@ -26,12 +26,23 @@ class ExcelToSupabase:
 
     def read_all_sheets(self, file_path: str) -> Dict[str, pd.DataFrame]:
         try:
-            all_sheets = pd.read_excel(file_path, sheet_name=None)
-            logger.info(f"Found {len(all_sheets)} sheets in {file_path}")
-            logger.info(f"Sheet names: {list(all_sheets.keys())}")
+            # Check if file is CSV or Excel
+            if file_path.lower().endswith('.csv'):
+                # Read CSV file and return it as a single "sheet"
+                df = pd.read_csv(file_path)
+                # Use filename without extension as sheet name
+                sheet_name = os.path.basename(file_path).replace('.csv', '')
+                all_sheets = {sheet_name: df}
+                logger.info(f"Read CSV file: {file_path}")
+                logger.info(f"CSV has {len(df)} rows")
+            else:
+                # Read Excel file with all sheets
+                all_sheets = pd.read_excel(file_path, sheet_name=None)
+                logger.info(f"Found {len(all_sheets)} sheets in {file_path}")
+                logger.info(f"Sheet names: {list(all_sheets.keys())}")
             return all_sheets
         except Exception as e:
-            logger.error(f"Error reading Excel file: {str(e)}")
+            logger.error(f"Error reading file: {str(e)}")
             raise
 
     def process_all_sheets(self, file_path: str, table_name: str, add_year_column: bool = True) -> bool:
@@ -39,6 +50,7 @@ class ExcelToSupabase:
             all_sheets = self.read_all_sheets(file_path)
             total_success = True
             combined_data = []
+            is_csv = file_path.lower().endswith('.csv')
 
             for sheet_name, df in all_sheets.items():
                 logger.info(f"Processing sheet: {sheet_name}")
@@ -49,10 +61,20 @@ class ExcelToSupabase:
                     continue
 
                 if add_year_column:
-                    year = self.extract_year_from_sheet_name(sheet_name)
-                    if year:
-                        df_clean['year'] = year
-                        logger.info(f"Added year column with value: {year}")
+                    # For CSV files, extract year from datecommitted column
+                    if is_csv:
+                        if 'year' not in df_clean.columns and 'datecommitted' in df_clean.columns:
+                            # Extract year from datecommitted column
+                            df_clean['year'] = pd.to_datetime(df_clean['datecommitted'], errors='coerce').dt.year
+                            logger.info(f"Extracted year from datecommitted column for CSV file")
+                        elif 'year' in df_clean.columns:
+                            logger.info("CSV already has year column")
+                    else:
+                        # For Excel files, extract year from sheet name
+                        year = self.extract_year_from_sheet_name(sheet_name)
+                        if year:
+                            df_clean['year'] = year
+                            logger.info(f"Added year column with value: {year}")
 
                 sheet_data = self.dataframe_to_dict_list(df_clean)
                 combined_data.extend(sheet_data)
@@ -481,7 +503,7 @@ TABLE_NAME = 'road_traffic_accident'
 USE_UPSERT = True  # OPTIMIZED: Use database upsert instead of manual duplicate filtering
 
 def find_latest_excel_file():
-    """Find the most recent Excel file in the data folder"""
+    """Find the most recent Excel or CSV file in the data folder"""
     # Get data folder path (inside backend directory)
     script_dir = os.path.dirname(os.path.abspath(__file__))
     data_folder = os.path.join(script_dir, "data")
@@ -490,20 +512,22 @@ def find_latest_excel_file():
         logger.error(f"Data folder not found: {data_folder}")
         return None
     
-    excel_files = [f for f in os.listdir(data_folder) if f.endswith(('.xlsx', '.xls'))]
-    if not excel_files:
-        logger.error("No Excel files found in data folder")
+    # Look for both Excel and CSV files
+    data_files = [f for f in os.listdir(data_folder) if f.endswith(('.xlsx', '.xls', '.csv'))]
+    if not data_files:
+        logger.error("No Excel or CSV files found in data folder")
         return None
     
-    # Get the most recently modified Excel file
-    excel_files_with_time = []
-    for f in excel_files:
+    # Get the most recently modified file (Excel or CSV)
+    files_with_time = []
+    for f in data_files:
         full_path = os.path.join(data_folder, f)
         mod_time = os.path.getmtime(full_path)
-        excel_files_with_time.append((full_path, mod_time))
+        files_with_time.append((full_path, mod_time))
     
-    latest_file = max(excel_files_with_time, key=lambda x: x[1])[0]
-    logger.info(f"Processing latest Excel file: {latest_file}")
+    latest_file = max(files_with_time, key=lambda x: x[1])[0]
+    file_type = "CSV" if latest_file.lower().endswith('.csv') else "Excel"
+    logger.info(f"Processing latest {file_type} file: {latest_file}")
     return latest_file
 
 # ==============================
@@ -511,22 +535,22 @@ def find_latest_excel_file():
 # ==============================
 def main():
     try:
-        logger.info(" Starting Excel to Supabase import...")
+        logger.info(" Starting data import to Supabase...")
         
-        # Find the latest Excel file
-        excel_file = find_latest_excel_file()
-        if not excel_file:
+        # Find the latest Excel or CSV file
+        data_file = find_latest_excel_file()
+        if not data_file:
             return False
         
         # Initialize importer and process
         importer = ExcelToSupabase(SUPABASE_URL, SUPABASE_KEY)
-        success = importer.process_all_sheets(excel_file, TABLE_NAME, add_year_column=True)
+        success = importer.process_all_sheets(data_file, TABLE_NAME, add_year_column=True)
         
         if success:
-            logger.info(" Excel to Supabase import completed successfully!")
+            logger.info(" Data import to Supabase completed successfully!")
             return True
         else:
-            logger.error(" Excel to Supabase import failed!")
+            logger.error(" Data import to Supabase failed!")
             return False
             
     except Exception as e:

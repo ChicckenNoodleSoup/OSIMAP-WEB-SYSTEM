@@ -166,13 +166,19 @@ function Print() {
   const fetchInitialData = async () => {
     setLoading(true);
     try {
-      const allAccidentData = await fetchAllRecords('road_traffic_accident', 'datecommitted');
+      // Fetch accidents and clusters in parallel for faster loading
+      const [allAccidentData, clusterResult] = await Promise.all([
+        fetchAllRecords('road_traffic_accident', 'datecommitted'),
+        supabase
+          .from('Cluster_Centers')
+          .select('*')
+          .order('danger_score', { ascending: false })
+      ]);
 
-      // Extract unique barangays
+      // Process accident data
       const allBarangays = [...new Set(allAccidentData.map(a => a.barangay))].sort();
       setBarangayList(allBarangays);
 
-      // Find min and max dates from records
       const dates = allAccidentData
         .map(a => a.datecommitted)
         .filter(Boolean)
@@ -185,14 +191,9 @@ function Print() {
 
       setAccidents(allAccidentData);
 
-      // Fetch cluster data
-      const { data: clusterData, error: clusterError } = await supabase
-        .from('Cluster_Centers')
-        .select('*')
-        .order('danger_score', { ascending: false });
-      if (clusterError) throw clusterError;
-
-      setClusters(clusterData || []);
+      // Process cluster data
+      if (clusterResult.error) throw clusterResult.error;
+      setClusters(clusterResult.data || []);
     } catch (error) {
       console.error('Error fetching data:', error);
     }
@@ -323,12 +324,12 @@ function Print() {
       </div>
       {/* Filter Section */}
       <div className="no-print">
-        <div className="frosted-container" style={{ maxWidth: 'none', width: '100%' }}>
-          <div className="dashboard-card p-6 mb-6" style={{ width: '100%', maxWidth: 'none' }}>
-            <h2 className="text-2xl font-bold mb-4">Report Filters</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div>
-            <label className="block text-sm font-medium mb-2">Start Date</label>
+        <div className="frosted-container" style={{ maxWidth: 'none', width: '100%', marginBottom: '50px' }}>
+          <div className="dashboard-card p-6 mb-6" style={{ width: '100%', maxWidth: 'none', padding: '40px 48px' }}>
+            <h2 className="text-2xl font-bold mb-8">Report Filters</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div style={{ marginBottom: '8px' }}>
+            <label className="block text-sm font-medium mb-4">Start Date</label>
             <input
               type="date"
               value={startDate}
@@ -338,8 +339,8 @@ function Print() {
               className="filter-input"
             />
           </div>
-          <div>
-            <label className="block text-sm font-medium mb-2">End Date</label>
+          <div style={{ marginBottom: '8px' }}>
+            <label className="block text-sm font-medium mb-4">End Date</label>
             <input
               type="date"
               value={endDate}
@@ -349,8 +350,8 @@ function Print() {
               className="filter-input"
             />
           </div>
-          <div>
-            <label className="block text-sm font-medium mb-2">Barangay</label>
+          <div style={{ marginBottom: '8px' }}>
+            <label className="block text-sm font-medium mb-4">Barangay</label>
             <CustomDropdown
               options={barangayList}
               value={selectedBarangay}
@@ -358,8 +359,8 @@ function Print() {
               allLabel="All Barangays"
             />
           </div>
-          <div>
-            <label className="block text-sm font-medium mb-2">Severity</label>
+          <div style={{ marginBottom: '8px' }}>
+            <label className="block text-sm font-medium mb-4">Severity</label>
             <CustomDropdown
               options={['Critical', 'High', 'Medium', 'Low', 'Minor']}
               value={selectedSeverity}
@@ -369,11 +370,11 @@ function Print() {
           </div>
             </div>
             {minDate && (
-              <p className="text-xs text-gray-400 mt-2">
+              <p className="text-xs text-gray-400 mt-8 mb-4">
                 Available date range: {minDate} to {maxDate}
               </p>
             )}
-            <div className="mt-4 flex gap-4 items-start">
+            <div className="mt-8 flex gap-4 items-start">
               <button
                 onClick={handleClearFilters}
                 disabled={isPrinting || (!startDate && !endDate && !selectedBarangay && !selectedSeverity)}
