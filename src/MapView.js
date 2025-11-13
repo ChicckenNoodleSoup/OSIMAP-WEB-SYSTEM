@@ -102,6 +102,20 @@ function ClusterCenters({ clusterCenters, showClusters }) {
                 {properties.barangays.length > 2 ? "..." : ""}
               </div>
             )}
+            {properties.offense_counts && (
+              <div style={{ marginTop: '6px' }}>
+                <b>Offense Types:</b>
+                <ul style={{ margin: 0, paddingLeft: '16px' }}>
+                  {Object.entries(properties.offense_counts)
+                    .sort((a, b) => b[1] - a[1]) // sort by count descending
+                    .slice(0, 5) // show top 5 types
+                    .map(([offense, count]) => (
+                      <li key={offense}>{offense}: {count}</li>
+                    ))}
+                </ul>
+              </div>
+            )}
+
           </div>
         </Tooltip>
       </Circle>
@@ -505,15 +519,27 @@ export default function MapView() {
     
     // Update cluster count based on filtered clusters
     const updatedClusters = filteredClusters.map(c => {
-      const accidentCount = accidents.filter(a => a.properties.cluster === c.properties.cluster_id).length;
+      const clusterId = c.properties.cluster_id;
+      const clusterAccidents = accidents.filter(a => a.properties.cluster === clusterId);
+      const accidentCount = clusterAccidents.length;
+    
+      // Count offense types within this cluster
+      const offenseCounts = {};
+      clusterAccidents.forEach(a => {
+        const offense = a.properties.offensetype || "Unknown";
+        offenseCounts[offense] = (offenseCounts[offense] || 0) + 1;
+      });
+    
       return {
         ...c,
         properties: {
           ...c.properties,
           accident_count: accidentCount,
+          offense_counts: offenseCounts, // <-- NEW
         }
       };
     });
+    
 
     return {
       accidentPoints: accidents,
