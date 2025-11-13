@@ -174,4 +174,11 @@ const DashboardMapInsightsCarousel = ({ selectedYear, supabaseClient }) => {
   );
 };
 
-export default DashboardMapInsightsCarousel;
+// OPTIMIZATION: Prevent unnecessary re-renders
+// Only re-render when selectedYear or supabaseClient changes
+export default React.memo(DashboardMapInsightsCarousel, (prevProps, nextProps) => {
+  return (
+    prevProps.selectedYear === nextProps.selectedYear &&
+    prevProps.supabaseClient === nextProps.supabaseClient
+  );
+});

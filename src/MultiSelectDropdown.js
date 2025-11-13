@@ -164,4 +164,19 @@ const MultiSelectDropdown = ({
   );
 };
 
-export default MultiSelectDropdown;
+// OPTIMIZATION: Prevent unnecessary re-renders
+// Custom comparison for array props (selectedValues)
+export default React.memo(MultiSelectDropdown, (prevProps, nextProps) => {
+  // Deep comparison for selectedValues array
+  const valuesEqual = 
+    prevProps.selectedValues.length === nextProps.selectedValues.length &&
+    prevProps.selectedValues.every((val, idx) => val === nextProps.selectedValues[idx]);
+  
+  return (
+    valuesEqual &&
+    prevProps.options === nextProps.options &&
+    prevProps.onChange === nextProps.onChange &&
+    prevProps.placeholder === nextProps.placeholder &&
+    prevProps.allLabel === nextProps.allLabel
+  );
+});

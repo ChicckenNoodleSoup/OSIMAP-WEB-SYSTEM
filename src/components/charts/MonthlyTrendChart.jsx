@@ -101,4 +101,11 @@ const MonthlyTrendChart = ({ labels, data }) => {
   );
 };
 
-export default MonthlyTrendChart;
+// OPTIMIZATION: Prevent unnecessary re-renders
+// Only re-render when labels or data arrays change
+export default React.memo(MonthlyTrendChart, (prevProps, nextProps) => {
+  return (
+    prevProps.labels === nextProps.labels &&
+    prevProps.data === nextProps.data
+  );
+});
