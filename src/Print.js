@@ -323,12 +323,12 @@ function Print() {
       </div>
       {/* Filter Section */}
       <div className="no-print">
-        <div className="frosted-container" style={{ maxWidth: 'none', width: '100%' }}>
-          <div className="dashboard-card p-6 mb-6" style={{ width: '100%', maxWidth: 'none' }}>
-            <h2 className="text-2xl font-bold mb-4">Report Filters</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div>
-            <label className="block text-sm font-medium mb-2">Start Date</label>
+        <div className="frosted-container" style={{ maxWidth: 'none', width: '100%', marginBottom: '50px' }}>
+          <div className="dashboard-card p-6 mb-6" style={{ width: '100%', maxWidth: 'none', padding: '40px 48px' }}>
+            <h2 className="text-2xl font-bold mb-8">Report Filters</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div style={{ marginBottom: '8px' }}>
+            <label className="block text-sm font-medium mb-4">Start Date</label>
             <input
               type="date"
               value={startDate}
@@ -338,8 +338,8 @@ function Print() {
               className="filter-input"
             />
           </div>
-          <div>
-            <label className="block text-sm font-medium mb-2">End Date</label>
+          <div style={{ marginBottom: '8px' }}>
+            <label className="block text-sm font-medium mb-4">End Date</label>
             <input
               type="date"
               value={endDate}
@@ -349,8 +349,8 @@ function Print() {
               className="filter-input"
             />
           </div>
-          <div>
-            <label className="block text-sm font-medium mb-2">Barangay</label>
+          <div style={{ marginBottom: '8px' }}>
+            <label className="block text-sm font-medium mb-4">Barangay</label>
             <CustomDropdown
               options={barangayList}
               value={selectedBarangay}
@@ -358,8 +358,8 @@ function Print() {
               allLabel="All Barangays"
             />
           </div>
-          <div>
-            <label className="block text-sm font-medium mb-2">Severity</label>
+          <div style={{ marginBottom: '8px' }}>
+            <label className="block text-sm font-medium mb-4">Severity</label>
             <CustomDropdown
               options={['Critical', 'High', 'Medium', 'Low', 'Minor']}
               value={selectedSeverity}
@@ -369,11 +369,11 @@ function Print() {
           </div>
             </div>
             {minDate && (
-              <p className="text-xs text-gray-400 mt-2">
+              <p className="text-xs text-gray-400 mt-8 mb-4">
                 Available date range: {minDate} to {maxDate}
               </p>
             )}
-            <div className="mt-4 flex gap-4 items-start">
+            <div className="mt-8 flex gap-4 items-start">
               <button
                 onClick={handleClearFilters}
                 disabled={isPrinting || (!startDate && !endDate && !selectedBarangay && !selectedSeverity)}
