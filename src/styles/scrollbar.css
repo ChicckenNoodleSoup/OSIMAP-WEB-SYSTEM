@@ -1,0 +1,110 @@
+/* 
+ * OSIMAP Unified Scrollbar Styles
+ * Single source of truth for all scrollbar styling across the application
+ * Uses CSS variables from tokens.css for easy theming
+ */
+
+/* ========================================
+ * MAIN SCROLLBAR STYLES (Firefox)
+ * ======================================== */
+.custom-scrollbar,
+.scroll-wrapper,
+.help-scroll-wrapper,
+.admindash-scroll-wrapper,
+.dashboard {
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+}
+
+/* ========================================
+ * WEBKIT SCROLLBAR (Chrome, Safari, Edge)
+ * Main containers
+ * ======================================== */
+.custom-scrollbar::-webkit-scrollbar,
+.scroll-wrapper::-webkit-scrollbar,
+.help-scroll-wrapper::-webkit-scrollbar,
+.admindash-scroll-wrapper::-webkit-scrollbar,
+.dashboard::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track,
+.scroll-wrapper::-webkit-scrollbar-track,
+.help-scroll-wrapper::-webkit-scrollbar-track,
+.admindash-scroll-wrapper::-webkit-scrollbar-track,
+.dashboard::-webkit-scrollbar-track {
+  background: var(--scrollbar-track);
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb,
+.scroll-wrapper::-webkit-scrollbar-thumb,
+.help-scroll-wrapper::-webkit-scrollbar-thumb,
+.admindash-scroll-wrapper::-webkit-scrollbar-thumb,
+.dashboard::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 10px;
+  backdrop-filter: blur(6px);
+  border: 2px solid var(--scrollbar-border);
+  transition: background var(--transition-normal), transform var(--transition-fast);
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover,
+.scroll-wrapper::-webkit-scrollbar-thumb:hover,
+.help-scroll-wrapper::-webkit-scrollbar-thumb:hover,
+.admindash-scroll-wrapper::-webkit-scrollbar-thumb:hover,
+.dashboard::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover);
+  transform: scaleX(1.1);
+  box-shadow: var(--shadow-blue);
+}
+
+/* ========================================
+ * SECONDARY SCROLLABLE ELEMENTS (Thinner)
+ * Tables, lists, nested scrollables
+ * ======================================== */
+.table-body-wrapper,
+.accounts-scrollable-wrapper,
+.logs-scrollable-wrapper,
+.users-list-scrollable {
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+}
+
+.table-body-wrapper::-webkit-scrollbar,
+.accounts-scrollable-wrapper::-webkit-scrollbar,
+.logs-scrollable-wrapper::-webkit-scrollbar,
+.users-list-scrollable::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+.table-body-wrapper::-webkit-scrollbar-track,
+.accounts-scrollable-wrapper::-webkit-scrollbar-track,
+.logs-scrollable-wrapper::-webkit-scrollbar-track,
+.users-list-scrollable::-webkit-scrollbar-track {
+  background: var(--scrollbar-track);
+  border-radius: 10px;
+}
+
+.table-body-wrapper::-webkit-scrollbar-thumb,
+.accounts-scrollable-wrapper::-webkit-scrollbar-thumb,
+.logs-scrollable-wrapper::-webkit-scrollbar-thumb,
+.users-list-scrollable::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 10px;
+  backdrop-filter: blur(6px);
+  border: 2px solid var(--scrollbar-border);
+  transition: background var(--transition-normal);
+}
+
+.table-body-wrapper::-webkit-scrollbar-thumb:hover,
+.accounts-scrollable-wrapper::-webkit-scrollbar-thumb:hover,
+.logs-scrollable-wrapper::-webkit-scrollbar-thumb:hover,
+.users-list-scrollable::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover);
+  transform: scaleX(1.1);
+  box-shadow: var(--shadow-blue);
+}
+

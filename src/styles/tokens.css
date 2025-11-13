@@ -1,53 +1,213 @@
-/* Design tokens: colors, spacing, radii, shadows, z-index, typography */
+/* 
+ * OSIMAP Design Tokens - Centralized CSS Variables
+ * Single source of truth for colors, spacing, shadows, and more
+ * Benefits: Easy theming, consistent design, future dark mode support
+ */
+
 :root {
-  /* Brand */
+  /* ========================================
+   * PRIMARY BRAND COLORS
+   * ======================================== */
   --color-primary: #0085FF;
+  --primary-blue: #0085FF; /* Alias for consistency across codebase */
   --color-primary-600: #0072d9;
   --color-primary-700: #005fb3;
+  --primary-text: #f1efec; /* Most commonly used text color */
+  --background-dark: #0a1e3c; /* Main dark background */
 
-  /* Neutrals */
+  /* ========================================
+   * NEUTRALS & BACKGROUNDS
+   * ======================================== */
   --color-bg: #0b0f1a;
+  --background-gradient-start: #0a1e3c;
+  --background-gradient-end: #1a3a5c;
+  
+  /* Glass morphism effects (frosted glass look) */
   --color-surface: rgba(255, 255, 255, 0.06);
+  --glass-bg: rgba(255, 255, 255, 0.06); /* Alias */
   --color-surface-strong: rgba(255, 255, 255, 0.12);
+  --glass-bg-hover: rgba(255, 255, 255, 0.08);
+  --glass-bg-active: rgba(255, 255, 255, 0.1);
+  
+  /* Borders */
   --color-border: rgba(255, 255, 255, 0.15);
+  --glass-border: rgba(241, 239, 236, 0.1);
+  --glass-border-hover: rgba(241, 239, 236, 0.2);
+  
+  /* Text colors */
   --color-text: #ffffff;
   --color-text-muted: #e6f2ff;
   --color-overlay: rgba(0, 0, 0, 0.5);
 
-  /* Semantic */
-  --color-success: #22c55e;
-  --color-warning: #f59e0b;
-  --color-danger: #ef4444;
+  /* ========================================
+   * INPUT & FORM ELEMENTS
+   * ======================================== */
+  --glass-input: rgba(241, 239, 236, 0.1);
+  --glass-input-hover: rgba(241, 239, 236, 0.12);
+  --glass-input-focus: rgba(241, 239, 236, 0.15);
 
-  /* Heatmap gradient stops */
+  /* ========================================
+   * SEMANTIC STATUS COLORS
+   * ======================================== */
+  --color-success: #22c55e;
+  --status-success: #22c55e; /* Alias */
+  --color-warning: #f59e0b;
+  --status-warning: #f59e0b; /* Alias */
+  --color-danger: #ef4444;
+  --status-error: #ef4444; /* Alias */
+  --status-info: #3b82f6;
+
+  /* ========================================
+   * SEVERITY LEVELS (Accident Classification)
+   * ======================================== */
+  --severity-critical: #dc2626;
+  --severity-high: #ea580c;
+  --severity-medium: #eab308;
+  --severity-low: #22c55e;
+  --severity-minor: #60a5fa;
+
+  /* ========================================
+   * HEATMAP GRADIENT COLORS
+   * ======================================== */
   --heat-blue: #0000ff;
   --heat-cyan: #00ffff;
   --heat-lime: #00ff00;
   --heat-yellow: #ffff00;
   --heat-red: #ff0000;
 
-  /* Spacing scale */
+  /* ========================================
+   * CHART/VISUALIZATION COLORS
+   * ======================================== */
+  --chart-yellow: rgba(255, 209, 102, 0.6);
+  --chart-yellow-border: rgba(255, 209, 102, 1);
+  --chart-yellow-hover: rgba(255, 209, 102, 0.8);
+  
+  --chart-green: rgba(153, 247, 109, 0.6);
+  --chart-green-border: rgba(153, 247, 109, 1);
+  --chart-green-hover: rgba(153, 247, 109, 0.8);
+  
+  --chart-red: rgba(255, 107, 107, 0.6);
+  --chart-red-border: rgba(255, 107, 107, 1);
+  --chart-red-hover: rgba(255, 107, 107, 0.8);
+  
+  --chart-blue: rgba(66, 184, 255, 0.6);
+  --chart-blue-border: rgba(66, 184, 255, 1);
+  --chart-blue-hover: rgba(66, 184, 255, 0.8);
+
+  /* ========================================
+   * SPECIAL PURPOSE COLORS
+   * ======================================== */
+  --noise-cluster-color: #95a5a6;
+  --dashboard-accent: #ffd166;
+  --tooltip-bg: rgba(10, 30, 60, 0.95);
+
+  /* ========================================
+   * SPACING SCALE
+   * ======================================== */
   --space-1: 4px;
   --space-2: 8px;
   --space-3: 12px;
   --space-4: 16px;
   --space-5: 20px;
   --space-6: 24px;
+  --space-8: 32px;
+  --space-12: 48px;
 
-  /* Radius */
+  /* ========================================
+   * BORDER RADIUS
+   * ======================================== */
   --radius-sm: 8px;
   --radius-md: 16px;
   --radius-lg: 20px;
-  --radius-xl: 28px; /* existing usage; can be standardized later */
+  --radius-xl: 28px;
+  --radius-full: 9999px;
 
-  /* Shadows */
-  --shadow-soft: 0 6px 18px rgba(0, 0, 0, 0.25);
-  --shadow-glow: 0 0 12px rgba(0, 133, 255, 0.6);
+  /* ========================================
+   * SHADOWS
+   * ======================================== */
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 6px 18px rgba(0, 0, 0, 0.25);
+  --shadow-soft: 0 6px 18px rgba(0, 0, 0, 0.25); /* Existing alias */
+  --shadow-lg: 0 10px 40px rgba(0, 0, 0, 0.4);
+  --shadow-xl: 0 20px 60px rgba(0, 0, 0, 0.5);
+  
+  /* Colored shadows */
+  --shadow-glow: 0 0 12px rgba(0, 133, 255, 0.6); /* Existing */
+  --shadow-blue: 0 0 6px rgba(0, 133, 255, 0.6);
+  --shadow-blue-sm: 0 0 0 3px rgba(0, 133, 255, 0.1);
 
-  /* Z-index */
+  /* ========================================
+   * TRANSITIONS
+   * ======================================== */
+  --transition-fast: 0.15s ease;
+  --transition-normal: 0.3s ease;
+  --transition-slow: 0.5s ease;
+
+  /* ========================================
+   * OPACITY LEVELS
+   * ======================================== */
+  --opacity-disabled: 0.5;
+  --opacity-hover: 0.8;
+  --opacity-active: 0.9;
+
+  /* ========================================
+   * Z-INDEX LAYERS (Stacking Context)
+   * ======================================== */
+  --z-base: 1;
+  --z-dropdown: 10;
+  --z-sticky: 20;
+  --z-modal-backdrop: 50;
+  --z-modal: 100;
+  --z-tooltip: 200;
+  --z-notification: 300;
   --z-map-overlay: 1000;
   --z-map-controls: 1005;
   --z-map-top: 10001;
+
+  /* ========================================
+   * SCROLLBAR COLORS
+   * ======================================== */
+  --scrollbar-thumb: rgba(255, 255, 255, 0.3);
+  --scrollbar-thumb-hover: rgba(0, 133, 255, 0.6);
+  --scrollbar-track: rgba(241, 239, 236, 0.05);
+  --scrollbar-border: rgba(241, 239, 236, 0.1);
+
+  /* ========================================
+   * TYPOGRAPHY
+   * ======================================== */
+  --font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-size-xs: 0.75rem;
+  --font-size-sm: 0.875rem;
+  --font-size-base: 1rem;
+  --font-size-lg: 1.125rem;
+  --font-size-xl: 1.25rem;
+  --font-size-2xl: 1.5rem;
+  --font-size-3xl: 2rem;
 }
+
+/* ========================================
+ * FUTURE: DARK MODE SUPPORT
+ * Uncomment and customize when ready to implement dark mode
+ * ======================================== */
+/*
+[data-theme="dark"] {
+  --color-primary: #0095ff;
+  --primary-text: #ffffff;
+  --background-dark: #000000;
+}
+*/
+
+/* ========================================
+ * FUTURE: HIGH CONTRAST MODE (Accessibility)
+ * ======================================== */
+/*
+[data-theme="high-contrast"] {
+  --color-primary: #00aaff;
+  --primary-text: #ffffff;
+  --background-dark: #000000;
+  --glass-bg: rgba(255, 255, 255, 0.15);
+}
+*/
 
 
