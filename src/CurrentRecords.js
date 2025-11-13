@@ -42,6 +42,8 @@ function CurrentRecords() {
     year: ''
   });
   const [message, setMessage] = useState('');
+  const [activeTooltip, setActiveTooltip] = useState(null);
+  const tooltipTimers = React.useRef({});
 
   // Clustering with background task support
   const { startUpload, activeUploads } = useUpload();
@@ -299,7 +301,7 @@ function CurrentRecords() {
       setTimeout(() => setMessage(''), 3000);
       setShowModal(false);
       
-      // Refresh records - simple reload
+    
       window.location.reload();
     } catch (error) {
       console.error('Error:', error);
@@ -352,6 +354,31 @@ function CurrentRecords() {
       setTimeout(() => setMessage(''), 5000);
     }
   };
+
+  // Tooltip handlers
+  const handleTooltipMouseEnter = (tooltipId) => {
+    if (tooltipTimers.current[tooltipId]) {
+      clearTimeout(tooltipTimers.current[tooltipId]);
+    }
+    tooltipTimers.current[tooltipId] = setTimeout(() => {
+      setActiveTooltip(tooltipId);
+    }, 600); // Show tooltip after 600ms
+  };
+
+  const handleTooltipMouseLeave = (tooltipId) => {
+    if (tooltipTimers.current[tooltipId]) {
+      clearTimeout(tooltipTimers.current[tooltipId]);
+    }
+    setActiveTooltip(null);
+  };
+
+  // Tooltip renderer component
+  const Tooltip = ({ id, text, children }) => (
+    <div className="tooltip-wrapper" onMouseEnter={() => handleTooltipMouseEnter(id)} onMouseLeave={() => handleTooltipMouseLeave(id)}>
+      {children}
+      {activeTooltip === id && <div className="tooltip-text">{text}</div>}
+    </div>
+  );
   
 
 
@@ -474,7 +501,9 @@ function CurrentRecords() {
               className="clear-filters-btn"
               disabled={selectedBarangay === "all" && selectedSeverity === "all" && sortBy === "date-desc" && !searchTerm}
             >
-              Clear All Filters
+              <Tooltip id="clear-filters" text="Reset all filters and search to show all records">
+                Clear All Filters
+              </Tooltip>
           </button>
           </div>
         </div>
