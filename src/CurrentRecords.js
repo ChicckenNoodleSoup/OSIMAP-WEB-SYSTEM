@@ -304,7 +304,7 @@ function CurrentRecords() {
       setTimeout(() => setMessage(''), 3000);
       setShowModal(false);
       
-      // Refresh records - simple reload
+    
       window.location.reload();
     } catch (error) {
       console.error('Error:', error);
