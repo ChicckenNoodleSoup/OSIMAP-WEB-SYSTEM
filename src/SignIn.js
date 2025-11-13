@@ -1,14 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import './SignIn.css';
-import { createClient } from "@supabase/supabase-js";
+import { supabase } from './supabaseClient';
 import { setUserData, isAuthenticated } from './utils/authUtils';
 import { verifySecureHash } from './utils/passwordUtils';
 import { logAuthEvent } from './utils/loggingUtils';
-
-const SUPABASE_URL = process.env.REACT_APP_SUPABASE_URL;
-const SUPABASE_KEY = process.env.REACT_APP_SUPABASE_KEY;
-const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 function SignIn({ setIsAuthenticated }) {
   const [username, setUsername] = useState('');

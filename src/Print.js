@@ -2,14 +2,9 @@ import React, { useState, useEffect, useRef } from 'react';
 import './Print.css';
 import './Spinner.css';
 import './PageHeader.css';
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from './supabaseClient';
 import { DateTime } from './DateTime';
-import { logSystemEvent } from './utils/loggingUtils';
-
-const supabase = createClient(
-  process.env.REACT_APP_SUPABASE_URL,
-  process.env.REACT_APP_SUPABASE_KEY
-); 
+import { logSystemEvent } from './utils/loggingUtils'; 
 
 const fetchAllRecords = async (tableName, orderField = 'id', filters = {}) => {
   const pageSize = 1000;

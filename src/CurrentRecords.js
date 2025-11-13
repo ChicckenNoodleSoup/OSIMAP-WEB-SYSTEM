@@ -3,16 +3,12 @@ import "./CurrentRecords.css";
 import "./Spinner.css";
 import "./PageHeader.css";
 import { DateTime } from "./DateTime";
-import { createClient } from "@supabase/supabase-js";
+import { supabase } from "./supabaseClient";
 import { useNavigate } from "react-router-dom";
 import { usePageState } from "./contexts/PageStateContext";
 import SingleSelectDropdown from "./SingleSelectDropdown";
 import { isAdministrator } from "./utils/authUtils";
 import { useUpload } from "./contexts/UploadContext";
-
-const SUPABASE_URL = process.env.REACT_APP_SUPABASE_URL;
-const SUPABASE_KEY = process.env.REACT_APP_SUPABASE_KEY;
-const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 function CurrentRecords() {
   // Use persistent state for filters, search, sort, and pagination

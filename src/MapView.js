@@ -559,7 +559,6 @@ export default function MapView() {
       const isCacheValid = cachedGeoJSON && cacheTimestamp && (now - cacheTimestamp < CACHE_DURATION);
       
       if (isCacheValid) {
-        console.log("Using cached GeoJSON data");
         setAccidentData(cachedGeoJSON);
         setLoading(false);
         return;
@@ -570,7 +569,6 @@ export default function MapView() {
         let res = await fetch("http://localhost:5000/data/accidents_clustered.geojson");
         if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
         const data = await res.json();
-        console.log("Fetched GeoJSON:", data.features?.length, "points");
         
         // Cache the data
         cachedGeoJSON = data;
@@ -582,7 +580,6 @@ export default function MapView() {
         
         // If fetch fails but we have old cached data, use it
         if (cachedGeoJSON) {
-          console.log("Using stale cached data due to fetch error");
           setAccidentData(cachedGeoJSON);
         }
       } finally {

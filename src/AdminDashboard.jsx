@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { createClient } from "@supabase/supabase-js";
+import { supabase } from './supabaseClient';
 import { sendAccountStatusEmail } from './utils/emailService';
 import { isAdministrator } from './utils/authUtils';
 import { logAccountEvent } from './utils/loggingUtils';
@@ -12,10 +12,6 @@ import { Shield, Users, Activity, CheckCircle, XCircle, Clock, Mail, User, UserC
 import './AdminDashboard.css';
 import './Spinner.css';
 import './PageHeader.css';
-
-const SUPABASE_URL = process.env.REACT_APP_SUPABASE_URL;
-const SUPABASE_KEY = process.env.REACT_APP_SUPABASE_KEY;
-const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 function AdminDashboard() {
   const [allAccounts, setAllAccounts] = useState([]);

@@ -1,15 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";  
-import { createClient } from "@supabase/supabase-js";
+import { supabase } from "./supabaseClient";
 import { validateEmail } from './utils/validation';
 import "./ForgotPassword.css";
 
-const SUPABASE_URL = process.env.REACT_APP_SUPABASE_URL;
-const SUPABASE_KEY = process.env.REACT_APP_SUPABASE_KEY;
-const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
-
 // Replace with your deployed edge function URL
 const RESET_PASS_URL = "https://bdysgnfgqcywjrqaqdsj.supabase.co/functions/v1/send-otp";
+const SUPABASE_KEY = process.env.REACT_APP_SUPABASE_KEY;
 
 function ForgotPassword() {
   const navigate = useNavigate();  

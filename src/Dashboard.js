@@ -5,7 +5,7 @@ import { usePageState } from './contexts/PageStateContext';
 import './Dashboard.css';
 import './PageHeader.css';
 import { DateTime } from './DateTime';
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from './supabaseClient';
 import DashboardMapInsightsCarousel from './components/DashboardMapInsightsCarousel';
 import { Bar } from 'react-chartjs-2';
 import {
@@ -17,10 +17,6 @@ import {
   Tooltip,
   Legend
 } from 'chart.js';
-
-const SUPABASE_URL = process.env.REACT_APP_SUPABASE_URL;
-const SUPABASE_KEY = process.env.REACT_APP_SUPABASE_KEY;
-const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // Register ChartJS components
 ChartJS.register(
