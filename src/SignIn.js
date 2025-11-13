@@ -111,12 +111,13 @@ function SignIn({ setIsAuthenticated }) {
           const newFailedAttempts = (data.failed_attempts || 0) + 1;
           
           if (newFailedAttempts >= 5) {
-            // Revoke account and reset failed_attempts
+            // Revoke account and reset failed_attempts with timestamp
             await supabase
               .from('police')
               .update({ 
                 status: 'revoked',
-                failed_attempts: 0
+                failed_attempts: 0,
+                reviewed_at: new Date().toISOString()
               })
               .eq('email', username);
             
