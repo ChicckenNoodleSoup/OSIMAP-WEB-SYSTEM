@@ -89,27 +89,62 @@ function Dashboard() {
     }
   };
 
-  // Fetch clustered accidents with pagination
+  // Fetch clustered accidents from GeoJSON and barangay counts from Supabase
   const fetchClusteredAccidentCount = async (y) => {
     setLoadingClusters(true);
     setLoadingBarangays(true);
+    
     try {
+      // Fetch cluster data from GeoJSON file (like MapView does)
+      const response = await fetch("http://localhost:5000/data/accidents_clustered.geojson");
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+      const geoData = await response.json();
+      
+      // Filter to get cluster centers for the selected year
+      const clusterCenters = geoData.features.filter(f =>
+        f.properties && 
+        f.properties.type === "cluster_center"
+      );
+      
+      // Filter accidents by year
+      const accidents = geoData.features.filter(f =>
+        f.properties && 
+        f.geometry && 
+        f.geometry.coordinates &&
+        f.properties.type !== "cluster_center" &&
+        String(f.properties.year) === String(y)
+      );
+      
+      // Get unique cluster IDs from accidents in this year (excluding noise -1)
+      const uniqueClusterIds = new Set(
+        accidents
+          .map(f => f.properties.cluster)
+          .filter(cluster => cluster !== null && cluster !== undefined && cluster !== -1)
+      );
+      
+      // Count the number of distinct clusters
+      const clusterCount = uniqueClusterIds.size;
+      
+      console.log(`Year ${y}: ${accidents.length} accidents, ${clusterCount} clusters`);
+      
+      setClusteredAccidentsCount(clusterCount);
+      
+      // Fetch barangay counts from Supabase
       let allRecords = [];
       const pageSize = 1000;
       let from = 0;
       let to = pageSize - 1;
       let done = false;
 
-      // Fetch all records with pagination
       while (!done) {
         const { data, error } = await supabase
           .from('road_traffic_accident')
-          .select('lat,lng,barangay')
+          .select('barangay')
           .eq('year', Number(y))
           .range(from, to);
 
         if (error) {
-          console.error('Error fetching clustered data:', error);
+          console.error('Error fetching barangay data:', error);
           done = true;
         } else {
           allRecords = [...allRecords, ...(data || [])];
@@ -122,25 +157,14 @@ function Dashboard() {
         }
       }
 
-      const grid = new Map();
       const bCounts = {};
-
       allRecords.forEach(r => {
-        const lat = Number(r.lat);
-        const lng = Number(r.lng);
         const barangay = r.barangay || 'Unknown';
-        // clustering logic
-        if (Number.isFinite(lat) && Number.isFinite(lng)) {
-          const key = (Math.round(lat*100)/100).toFixed(2) + ',' + (Math.round(lng*100)/100).toFixed(2);
-          grid.set(key, (grid.get(key)||0)+1);
-        }
-        // barangay count
-        bCounts[barangay] = (bCounts[barangay]||0)+1;
+        bCounts[barangay] = (bCounts[barangay] || 0) + 1;
       });
 
-      const clusteredSum = Array.from(grid.values()).reduce((acc,v)=>acc+(v>=2?v:0),0);
-      setClusteredAccidentsCount(clusteredSum);
       setBarangayCounts(bCounts);
+      
     } catch (err) {
       console.error('Error in fetchClusteredAccidentCount:', err);
       setClusteredAccidentsCount(0);
@@ -531,7 +555,7 @@ function Dashboard() {
 
             <div className="dashboard-card-stat">
               <span className="stat-number">{loadingClusters?'...':(clusteredAccidentsCount ?? '0')}</span>
-              <span className="stat-label">Clustered Accident{clusteredAccidentsCount===1?'':'s'}</span>
+              <span className="stat-label">Cluster{clusteredAccidentsCount===1?'':'s'}</span>
             </div>
 
             <div className="severity-section">
