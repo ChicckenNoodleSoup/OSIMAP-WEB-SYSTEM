@@ -9,6 +9,7 @@ import { usePageState } from "./contexts/PageStateContext";
 import SingleSelectDropdown from "./SingleSelectDropdown";
 import { isAdministrator } from "./utils/authUtils";
 import { useUpload } from "./contexts/UploadContext";
+import { LoadingSpinner } from "./components/LoadingSpinner";
 
 function CurrentRecords() {
   // Use persistent state for filters, search, sort, and pagination
@@ -547,27 +548,7 @@ function CurrentRecords() {
 
         <div className="records-card">
           {loading ? (
-            <div className="loading-center compact" role="status" aria-live="polite">
-              <div style={{display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10}}>
-                <svg 
-                  className="loading-spinner" 
-                  viewBox="-13 -13 45 45" 
-                  xmlns="http://www.w3.org/2000/svg"
-                  aria-hidden="true"
-                >
-                  <circle className="box5631" cx="13" cy="1" r="5"/>
-                  <circle className="box5631" cx="25" cy="1" r="5"/>
-                  <circle className="box5631" cx="1" cy="13" r="5"/>
-                  <circle className="box5631" cx="13" cy="13" r="5"/>
-                  <circle className="box5631" cx="25" cy="13" r="5"/>
-                  <circle className="box5631" cx="1" cy="25" r="5"/>
-                  <circle className="box5631" cx="13" cy="25" r="5"/>
-                  <circle className="box5631" cx="25" cy="25" r="5"/>
-                  <circle className="box5631" cx="1" cy="1" r="5"/>
-                </svg>
-                <div className="loading-text">Loading records...</div>
-              </div>
-            </div>
+            <LoadingSpinner text="Loading records..." variant="compact" />
           ) : (
             <div className="table-body-wrapper">
               <table className="records-table">
