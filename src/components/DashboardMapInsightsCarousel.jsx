@@ -90,9 +90,36 @@ const DashboardMapInsightsCarousel = ({ selectedYear, supabaseClient }) => {
         padding: '40px', 
         textAlign: 'center', 
         color: '#ffffff',
-        fontSize: '14px'
+        fontSize: '14px',
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'center',
+        alignItems: 'center',
+        minHeight: '300px',
+        gap: '15px'
       }}>
-        Loading insights...
+        <svg 
+          className="loading-spinner-small-insights" 
+          viewBox="-13 -13 45 45" 
+          xmlns="http://www.w3.org/2000/svg"
+          aria-hidden="true"
+          style={{
+            width: '50px',
+            height: '50px',
+            color: '#ffffff'
+          }}
+        >
+          <circle className="box5631" cx="13" cy="1" r="5"/>
+          <circle className="box5631" cx="25" cy="1" r="5"/>
+          <circle className="box5631" cx="1" cy="13" r="5"/>
+          <circle className="box5631" cx="13" cy="13" r="5"/>
+          <circle className="box5631" cx="25" cy="13" r="5"/>
+          <circle className="box5631" cx="1" cy="25" r="5"/>
+          <circle className="box5631" cx="13" cy="25" r="5"/>
+          <circle className="box5631" cx="25" cy="25" r="5"/>
+          <circle className="box5631" cx="1" cy="1" r="5"/>
+        </svg>
+        <div className="loading-data-text">Loading data</div>
       </div>
     );
   }
