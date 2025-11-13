@@ -24,6 +24,7 @@ function CurrentRecords() {
   
   const [records, setRecords] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const recordsPerPage = 50;
   const navigate = useNavigate();
   const [barangayList, setBarangayList] = useState([]);
@@ -62,37 +63,68 @@ function CurrentRecords() {
       const pageSize = 1000;
       let from = 0;
       let to = pageSize - 1;
-      let done = false;
+      
+      // Fetch first batch immediately to show data quickly
+      const { data: firstBatch, error: firstError } = await supabase
+        .from("road_traffic_accident")
+        .select(
+          "id, barangay, lat, lng, datecommitted, timecommitted, offensetype, year, severity"
+        )
+        .order("datecommitted", { ascending: false })
+        .range(0, pageSize - 1);
 
-      while (!done) {
-        const { data, error } = await supabase
-          .from("road_traffic_accident")
-          .select(
-            "id, barangay, lat, lng, datecommitted, timecommitted, offensetype, year, severity"
-          )
-          .order("datecommitted", { ascending: false })
-          .range(from, to);
-
-        if (error) {
-          console.error("Error fetching records:", error.message);
-          done = true;
-        } else {
-          allRecords = [...allRecords, ...(data || [])];
-          if (!data || data.length < pageSize) done = true;
-          else {
-            from += pageSize;
-            to += pageSize;
-          }
-        }
+      if (firstError) {
+        console.error("Error fetching records:", firstError.message);
+        setLoading(false);
+        return;
       }
 
+      // Show first batch immediately
+      allRecords = firstBatch || [];
       setRecords(allRecords);
-      
-      // Extract unique barangays for filter
       const uniqueBarangays = [...new Set(allRecords.map(r => r.barangay).filter(Boolean))].sort();
       setBarangayList(uniqueBarangays);
-      
       setLoading(false);
+
+      // Continue fetching remaining records in background
+      if (firstBatch && firstBatch.length === pageSize) {
+        setLoadingMore(true);
+        from = pageSize;
+        to = pageSize * 2 - 1;
+        let done = false;
+
+        while (!done) {
+          const { data, error } = await supabase
+            .from("road_traffic_accident")
+            .select(
+              "id, barangay, lat, lng, datecommitted, timecommitted, offensetype, year, severity"
+            )
+            .order("datecommitted", { ascending: false })
+            .range(from, to);
+
+          if (error) {
+            console.error("Error fetching records:", error.message);
+            done = true;
+          } else if (!data || data.length === 0) {
+            done = true;
+          } else {
+            allRecords = [...allRecords, ...data];
+            setRecords([...allRecords]);
+            
+            // Update barangay list progressively
+            const updatedBarangays = [...new Set(allRecords.map(r => r.barangay).filter(Boolean))].sort();
+            setBarangayList(updatedBarangays);
+            
+            if (data.length < pageSize) {
+              done = true;
+            } else {
+              from += pageSize;
+              to += pageSize;
+            }
+          }
+        }
+        setLoadingMore(false);
+      }
     };
 
     fetchAllRecords();
@@ -613,6 +645,11 @@ function CurrentRecords() {
             Showing {displayStart}-{displayEnd} of {sortedRecords.length} records
             {sortedRecords.length !== records.length && (
               <span className="filtered-indicator"> (filtered from {records.length} total)</span>
+            )}
+            {loadingMore && (
+              <span className="loading-more-indicator" style={{ marginLeft: '10px', color: '#ffd166', fontSize: '0.9em' }}>
+                ⏳ Loading more records...
+              </span>
             )}
           </div>
           
