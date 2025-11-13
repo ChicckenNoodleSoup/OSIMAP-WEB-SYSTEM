@@ -133,27 +133,58 @@ function AdminDashboard() {
 
   const fetchAllAccounts = async () => {
     try {
-      const { data, error } = await supabase
+      // Use pagination for faster initial load
+      const pageSize = 100;
+      let allAccounts = [];
+      let from = 0;
+      let to = pageSize - 1;
+      
+      // Fetch first page immediately
+      const { data: firstBatch, error: firstError, count } = await supabase
         .from('police')
-        .select('*')
-        .order('created_at', { ascending: false });
+        .select('*', { count: 'exact' })
+        .order('created_at', { ascending: false })
+        .range(from, to);
 
-      if (error) {
-        console.error('Error fetching accounts:', error);
+      if (firstError) {
+        console.error('Error fetching accounts:', firstError);
         setMessage('Error loading accounts');
+        setIsLoading(false);
         return;
       }
 
-      // Show all accounts except administrators
-      const filteredAccounts = (data || []).filter(account => 
+      // Show first batch immediately (filtered)
+      const filteredFirstBatch = (firstBatch || []).filter(account => 
         account.role !== 'Administrator'
       );
+      setAllAccounts(filteredFirstBatch);
+      setIsLoading(false);
 
-      setAllAccounts(filteredAccounts);
+      // Continue fetching remaining accounts in background if there are more
+      if (count && count > pageSize) {
+        from = pageSize;
+        to = count - 1;
+        
+        const { data: remainingData, error: remainingError } = await supabase
+          .from('police')
+          .select('*')
+          .order('created_at', { ascending: false })
+          .range(from, to);
+
+        if (remainingError) {
+          console.error('Error fetching remaining accounts:', remainingError);
+          return;
+        }
+
+        const filteredRemaining = (remainingData || []).filter(account => 
+          account.role !== 'Administrator'
+        );
+        
+        setAllAccounts([...filteredFirstBatch, ...filteredRemaining]);
+      }
     } catch (error) {
       console.error('Error:', error);
       setMessage('Error loading accounts');
-    } finally {
       setIsLoading(false);
     }
   };
@@ -161,7 +192,9 @@ function AdminDashboard() {
   const fetchUserLogs = async () => {
     setLogsLoading(true);
     try {
-      const { data, error } = await supabase
+      // Fetch first 100 logs immediately for faster display
+      const pageSize = 100;
+      const { data: firstBatch, error: firstError, count } = await supabase
         .from('logs')
         .select(`
           *,
@@ -169,20 +202,45 @@ function AdminDashboard() {
             full_name,
             email
           )
-        `)
-        .order('created_at', { ascending: false });
+        `, { count: 'exact' })
+        .order('created_at', { ascending: false })
+        .range(0, pageSize - 1);
 
-      if (error) {
-        console.error('Error fetching user logs:', error);
+      if (firstError) {
+        console.error('Error fetching user logs:', firstError);
         setMessage('Error loading user logs');
+        setLogsLoading(false);
         return;
       }
 
-      setUserLogs(data || []);
+      // Show first batch immediately
+      setUserLogs(firstBatch || []);
+      setLogsLoading(false);
+
+      // Continue fetching remaining logs in background if there are more
+      if (count && count > pageSize) {
+        const { data: remainingData, error: remainingError } = await supabase
+          .from('logs')
+          .select(`
+            *,
+            police:user_id (
+              full_name,
+              email
+            )
+          `)
+          .order('created_at', { ascending: false })
+          .range(pageSize, count - 1);
+
+        if (remainingError) {
+          console.error('Error fetching remaining logs:', remainingError);
+          return;
+        }
+
+        setUserLogs([...(firstBatch || []), ...(remainingData || [])]);
+      }
     } catch (error) {
       console.error('Error:', error);
       setMessage('Error loading user logs');
-    } finally {
       setLogsLoading(false);
     }
   };

@@ -166,13 +166,19 @@ function Print() {
   const fetchInitialData = async () => {
     setLoading(true);
     try {
-      const allAccidentData = await fetchAllRecords('road_traffic_accident', 'datecommitted');
+      // Fetch accidents and clusters in parallel for faster loading
+      const [allAccidentData, clusterResult] = await Promise.all([
+        fetchAllRecords('road_traffic_accident', 'datecommitted'),
+        supabase
+          .from('Cluster_Centers')
+          .select('*')
+          .order('danger_score', { ascending: false })
+      ]);
 
-      // Extract unique barangays
+      // Process accident data
       const allBarangays = [...new Set(allAccidentData.map(a => a.barangay))].sort();
       setBarangayList(allBarangays);
 
-      // Find min and max dates from records
       const dates = allAccidentData
         .map(a => a.datecommitted)
         .filter(Boolean)
@@ -185,14 +191,9 @@ function Print() {
 
       setAccidents(allAccidentData);
 
-      // Fetch cluster data
-      const { data: clusterData, error: clusterError } = await supabase
-        .from('Cluster_Centers')
-        .select('*')
-        .order('danger_score', { ascending: false });
-      if (clusterError) throw clusterError;
-
-      setClusters(clusterData || []);
+      // Process cluster data
+      if (clusterResult.error) throw clusterResult.error;
+      setClusters(clusterResult.data || []);
     } catch (error) {
       console.error('Error fetching data:', error);
     }

@@ -397,6 +397,11 @@ const barangayCoordinates = {
   'telabastagan': [15.0608, 120.6860]
 };
 
+// Cache for GeoJSON data to avoid re-fetching
+let cachedGeoJSON = null;
+let cacheTimestamp = null;
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
 export default function MapView() {
   const location = useLocation();
   const fromRecords = location.state?.fromRecords;
@@ -523,15 +528,37 @@ export default function MapView() {
 
   useEffect(() => {
     async function fetchData() {
+      // Check if we have valid cached data
+      const now = Date.now();
+      const isCacheValid = cachedGeoJSON && cacheTimestamp && (now - cacheTimestamp < CACHE_DURATION);
+      
+      if (isCacheValid) {
+        console.log("Using cached GeoJSON data");
+        setAccidentData(cachedGeoJSON);
+        setLoading(false);
+        return;
+      }
+
       setLoading(true);
       try {
         let res = await fetch("http://localhost:5000/data/accidents_clustered.geojson");
         if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
         const data = await res.json();
         console.log("Fetched GeoJSON:", data.features?.length, "points");
+        
+        // Cache the data
+        cachedGeoJSON = data;
+        cacheTimestamp = Date.now();
+        
         setAccidentData(data);
       } catch (err) {
         console.error("Failed to load GeoJSON data:", err);
+        
+        // If fetch fails but we have old cached data, use it
+        if (cachedGeoJSON) {
+          console.log("Using stale cached data due to fetch error");
+          setAccidentData(cachedGeoJSON);
+        }
       } finally {
         setLoading(false);
       }
