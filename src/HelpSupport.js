@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { supabase } from './supabaseClient';
 import './HelpSupport.css';
 
 function HelpSupport() {
@@ -41,30 +42,36 @@ function HelpSupport() {
     setStatusMessage('');
 
     try {
-      const response = await fetch('http://localhost:3002/api/send-support-email', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
+      // Call Supabase Edge Function for support email
+      const { data, error } = await supabase.functions.invoke('send-support-email', {
+        body: {
           name: userData.full_name,
           email: userData.email,
           message: message,
           to: 'osimapdatabase@gmail.com'
-        }),
+        }
       });
 
-      const result = await response.json();
-
-      if (result.success) {
-        setStatusMessage('Message sent successfully!');
-        // Clear message
-        setMessage('');
-        setTimeout(() => setStatusMessage(''), 5000);
-      } else {
+      if (error) {
+        console.error('Supabase Edge Function error:', error);
         setStatusMessage('Failed to send message. Please try again.');
         setTimeout(() => setStatusMessage(''), 5000);
+        return;
       }
+
+      // Check if the response indicates success
+      if (data && data.success === false) {
+        console.error('Edge Function returned error:', data.error);
+        setStatusMessage('Failed to send message. Please try again.');
+        setTimeout(() => setStatusMessage(''), 5000);
+        return;
+      }
+
+      setStatusMessage('Message sent successfully!');
+      // Clear message
+      setMessage('');
+      setTimeout(() => setStatusMessage(''), 5000);
+
     } catch (error) {
       console.error('Error sending message:', error);
       setStatusMessage('Failed to send message. Please try again.');
