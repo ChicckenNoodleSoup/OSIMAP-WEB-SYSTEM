@@ -63,7 +63,7 @@
   left: -5%;
   width: 105%;
   height: 100%;
-  background: linear-gradient(to bottom, #000000, #0085FF);
+  background: linear-gradient(to bottom, #000000, #628ECB);
   border-top-left-radius: 2vw;
   border-bottom-left-radius: 2vw;
   z-index: 1;
@@ -137,7 +137,7 @@ h6 {
 
 /* Primary */
 .create-card button[type="submit"] {
-  background: #0085FF;
+  background: #628ECB;
   color: #F1EFEC;
   border: none;
   box-shadow: 0 0.3rem 0.3rem rgba(0, 0, 0, 0.25);
@@ -151,7 +151,7 @@ h6 {
 .back-btn {
   background: transparent;
   color: #ffffff;
-  border: 2px solid #0085FF;
+  border: 2px solid #628ECB;
 }
 
 .back-btn:hover {
@@ -396,7 +396,7 @@ h6 {
 
 .requirements-title {
   font-size: clamp(0.85rem, 1vw, 0.95rem);
-  color: #0085FF;
+  color: #628ECB;
   font-weight: bold;
   margin-bottom: 0.75rem;
   padding-bottom: 0.5rem;

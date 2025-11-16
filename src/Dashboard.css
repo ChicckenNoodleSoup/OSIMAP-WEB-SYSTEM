@@ -73,7 +73,7 @@
 }
 
 .dashboard-card {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.35), rgba(255, 255, 255, 0.25));
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.10), rgba(255, 255, 255, 0.05));
   backdrop-filter: blur(16px); 
   border-radius: 28px;
   padding: 20px;
