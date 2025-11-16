@@ -13,13 +13,13 @@
   --color-primary-600: #0072d9;
   --color-primary-700: #005fb3;
   --primary-text: #f1efec; /* Most commonly used text color */
-  --background-dark: #0a1e3c; /* Main dark background */
+  --background-dark: #005C99; /* Main dark background */
 
   /* ========================================
    * NEUTRALS & BACKGROUNDS
    * ======================================== */
-  --color-bg: #0b0f1a;
-  --background-gradient-start: #0a1e3c;
+  --color-bg: #005C99;
+  --background-gradient-start: #005C99;
   --background-gradient-end: #1a3a5c;
   
   /* Glass morphism effects (frosted glass look) */
