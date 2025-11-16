@@ -54,9 +54,9 @@
 /* Navigation buttons - OUTSIDE chart area, matching Dashboard style */
 .insights-carousel-wrapper .swiper-button-next,
 .insights-carousel-wrapper .swiper-button-prev {
-  color: #ffff !important;
-  background: rgba(255, 209, 102, 0.3) !important;
-  border: 2px solid rgba(255, 209, 102, 0.6);
+  color: #ffffff !important;
+  background: rgba(255, 255, 255, 0.15) !important;
+  border: 1px solid rgba(255, 255, 255, 0.3);
   width: 2.2rem;
   height: 2.2rem;
   border-radius: 50%;
@@ -68,7 +68,7 @@
   z-index: 1001; /* above overlay */
   mix-blend-mode: normal; /* avoid blending with overlay */
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3), 
-              0 0 20px rgba(255, 209, 102, 0.2),
+              0 0 20px rgba(255, 255, 255, 0.2),
               inset 0 1px 2px rgba(255, 255, 255, 0.1);
   opacity: 1 !important;
 }
@@ -81,29 +81,50 @@
   left: 0.2rem;
 }
 
-.insights-carousel-wrapper .swiper-button-next:after,
-.insights-carousel-wrapper .swiper-button-prev:after {
-  font-size: 1rem;
+.insights-carousel-wrapper .swiper-button-next::after,
+.insights-carousel-wrapper .swiper-button-prev::after {
+  font-size: 0 !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+.insights-carousel-wrapper .swiper-button-next svg,
+.insights-carousel-wrapper .swiper-button-prev svg {
+  display: none !important;
+}
+
+.insights-carousel-wrapper .swiper-button-next::before,
+.insights-carousel-wrapper .swiper-button-prev::before {
+  font-size: 1.2rem;
   font-weight: bold;
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+  display: inline-block;
+}
+
+.insights-carousel-wrapper .swiper-button-next::before {
+  content: '→';
+}
+
+.insights-carousel-wrapper .swiper-button-prev::before {
+  content: '←';
 }
 
 .insights-carousel-wrapper .swiper-button-next:hover:not(.swiper-button-disabled),
 .insights-carousel-wrapper .swiper-button-prev:hover:not(.swiper-button-disabled) {
-  background: rgba(255, 209, 102, 0.5) !important;
+  background: rgba(255, 255, 255, 0.25) !important;
   border-color: #ffffff;
   transform: translateY(-50%) scale(1.12);
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4), 
-              0 0 30px rgba(255, 209, 102, 0.4),
+              0 0 30px rgba(255, 255, 255, 0.4),
               inset 0 1px 2px rgba(255, 255, 255, 0.15);
-  text-shadow: 0 0 12px rgba(255, 209, 102, 0.6);
+  text-shadow: 0 0 12px rgba(255, 255, 255, 0.6);
 }
 
 .insights-carousel-wrapper .swiper-button-disabled {
   opacity: 0.5 !important;
   cursor: not-allowed;
-  background: rgba(255, 209, 102, 0.15) !important;
-  border-color: rgba(255, 209, 102, 0.3);
+  background: rgba(255, 255, 255, 0.08) !important;
+  border-color: rgba(255, 255, 255, 0.15);
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
 }
 
@@ -158,18 +179,6 @@
   .insights-carousel-wrapper .swiper {
     padding: 0 7% 2.3rem 7%;
   }
-  
-  .insights-carousel-wrapper .swiper-button-next,
-  .insights-carousel-wrapper .swiper-button-prev {
-    width: 2rem;
-    height: 2rem;
-    opacity: 1 !important;
-  }
-  
-  .insights-carousel-wrapper .swiper-button-next:after,
-  .insights-carousel-wrapper .swiper-button-prev:after {
-    font-size: 0.9rem;
-  }
 }
 
 /* Responsive adjustments for mobile */
@@ -177,39 +186,12 @@
   .insights-carousel-wrapper .swiper {
     padding: 0 6% 2rem 6%;
   }
-
-  .insights-carousel-wrapper .swiper-button-next,
-  .insights-carousel-wrapper .swiper-button-prev {
-    width: 1.8rem;
-    height: 1.8rem;
-    opacity: 1 !important;
-    background: rgba(255, 209, 102, 0.35) !important;
-  }
-
-  .insights-carousel-wrapper .swiper-button-next:after,
-  .insights-carousel-wrapper .swiper-button-prev:after {
-    font-size: 0.8rem;
-  }
 }
 
 /* Small mobile devices */
 @media (max-width: 480px) {
   .insights-carousel-wrapper .swiper {
     padding: 0 5% 1.8rem 5%;
-  }
-
-  .insights-carousel-wrapper .swiper-button-next,
-  .insights-carousel-wrapper .swiper-button-prev {
-    width: 1.6rem;
-    height: 1.6rem;
-    opacity: 1 !important;
-    background: rgba(255, 209, 102, 0.4) !important;
-    border-width: 1.5px;
-  }
-
-  .insights-carousel-wrapper .swiper-button-next:after,
-  .insights-carousel-wrapper .swiper-button-prev:after {
-    font-size: 0.7rem;
   }
   
   .insights-carousel-wrapper .swiper-pagination-bullet {
@@ -231,18 +213,5 @@
   
   .insights-carousel-wrapper .swiper {
     padding: 0 4.5% 1.6rem 4.5%;
-  }
-  
-  .insights-carousel-wrapper .swiper-button-next,
-  .insights-carousel-wrapper .swiper-button-prev {
-    width: 1.5rem;
-    height: 1.5rem;
-    opacity: 1 !important;
-    background: rgba(255, 209, 102, 0.45) !important;
-  }
-  
-  .insights-carousel-wrapper .swiper-button-next:after,
-  .insights-carousel-wrapper .swiper-button-prev:after {
-    font-size: 0.65rem;
   }
 }

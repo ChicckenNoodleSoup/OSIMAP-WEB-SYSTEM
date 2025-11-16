@@ -512,8 +512,8 @@
 }
 
 .carousel-button {
-  background: rgba(255, 209, 102, 0.15);
-  border: 1px solid rgba(255, 209, 102, 0.3);
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.3);
   color: #ffffff;
   width: 36px;
   height: 36px;
@@ -525,11 +525,11 @@
   font-size: 18px;
   transition: all 0.2s ease;
   flex-shrink: 0;
-  text-shadow: 0 0 8px rgba(255, 209, 102, 0.3);
+  text-shadow: 0 0 8px rgba(255, 255, 255, 0.3);
 }
 
 .carousel-button:hover:not(:disabled) {
-  background: rgba(255, 209, 102, 0.3);
+  background: rgba(255, 255, 255, 0.25);
   border-color: #ffffff;
   transform: scale(1.1);
 }
