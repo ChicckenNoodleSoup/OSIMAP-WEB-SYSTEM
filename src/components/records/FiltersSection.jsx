@@ -61,17 +61,15 @@ const FiltersSection = ({
         </div>
 
         <div className="filter-group">
-          <label className="filter-label">Sort By</label>
-          <select
-            value={sortBy}
-            onChange={(e) => setSortBy(e.target.value)}
-            className="sort-select"
-          >
-            <option value="date-desc">Date (Newest First)</option>
-            <option value="date-asc">Date (Oldest First)</option>
-            <option value="severity">Severity (High to Low)</option>
-            <option value="severity-asc">Severity (Low to High)</option>
-          </select>
+            <label className="filter-label">Sort By</label>
+              <SingleSelectDropdown
+                options={['Date (Newest First)', 'Date (Oldest First)', 'Severity (High to Low)', 'Severity (Low to High)']}
+                selectedValue={sortBy}
+                onChange={(value) => setSortBy(value)}
+                placeholder="Sort By"
+                allLabel="Default Sort"
+                allValue="date-desc"
+              />
         </div>
 
         <button

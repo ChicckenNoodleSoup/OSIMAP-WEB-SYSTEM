@@ -54,7 +54,7 @@
 /* Navigation buttons - OUTSIDE chart area, matching Dashboard style */
 .insights-carousel-wrapper .swiper-button-next,
 .insights-carousel-wrapper .swiper-button-prev {
-  color: #ffd166 !important;
+  color: #ffff !important;
   background: rgba(255, 209, 102, 0.3) !important;
   border: 2px solid rgba(255, 209, 102, 0.6);
   width: 2.2rem;
@@ -91,7 +91,7 @@
 .insights-carousel-wrapper .swiper-button-next:hover:not(.swiper-button-disabled),
 .insights-carousel-wrapper .swiper-button-prev:hover:not(.swiper-button-disabled) {
   background: rgba(255, 209, 102, 0.5) !important;
-  border-color: #ffd166;
+  border-color: #ffffff;
   transform: translateY(-50%) scale(1.12);
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4), 
               0 0 30px rgba(255, 209, 102, 0.4),
@@ -121,7 +121,7 @@
 }
 
 .insights-carousel-wrapper .swiper-pagination-bullet-active {
-  background: #ffd166;
+  background: #ffffff;
   width: 20px;
   border-radius: 4px;
   box-shadow: 0 0 8px rgba(255, 209, 102, 0.4);

@@ -1,12 +1,17 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800&display=swap');
+
 * {
   box-sizing: border-box;
 }
 
 /* Sidebar base */
 .sidebar {
+  font-family: Poppins;
+  font-weight: 600;
+  font-size: 14px;
   width: clamp(220px, 22vw, 350px);
   height: 100vh;
-  background: linear-gradient(to right, #000000, #0085FF);
+  background: linear-gradient(to right, #000000, #628ECB);
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -29,7 +34,7 @@
 }
 
 .sidebar::-webkit-scrollbar-thumb {
-  background: rgba(0, 133, 255, 0.5);
+  background: rgba(98,142,203);
   border-radius: 10px;
   transition: background 0.3s ease;
   min-height: 10px; /* Minimum thumb height */
@@ -37,7 +42,7 @@
 }
 
 .sidebar::-webkit-scrollbar-thumb:hover {
-  background: rgba(0, 133, 255, 0.8);
+  background: rgba(98,142,203);
 }
 
 /* Collapsed state */
@@ -57,6 +62,7 @@
   transition: height 0.5s ease;
   overflow: hidden;
   flex-shrink: 0; /* Prevent logo from shrinking */
+  margin-bottom: .6rem;
 }
 
 .logo-img {
@@ -109,6 +115,7 @@
   color: white;
   margin-top: -0.5rem;
   margin-left: 1.5rem;
+  margin-bottom: .5rem;
   cursor: pointer;
   transition: all 0.5s ease;
   flex-shrink: 0;
@@ -117,7 +124,7 @@
 .hamburger-menu:hover {
   transform: scale(1.05);
   transition: transform 0.3s ease;
-  color: #0085FF;
+  color: #628ECB;
 }
 
 .sidebar.collapsed .hamburger-menu {
@@ -171,7 +178,7 @@
 .menu-item:hover,
 .menu-item.active {
   background: rgba(0, 133, 255, 0.15);
-  box-shadow: 0 0 12px rgba(0, 133, 255, 0.6);
+  box-shadow: 0 0 12px rgba(98,142,203);
   border-radius: 12px;
   transition: all 0.3s ease;
 }
@@ -271,11 +278,11 @@
 /* Sidebar hover effect */
 .sidebar:hover {
   transform: scale(1.02);
-  box-shadow: 0 12px 32px rgba(0, 133, 255, 0.5);
+  box-shadow: 0 12px 32px rgba(98,142,203);
   background: linear-gradient(
     135deg, 
     rgba(0, 0, 0, 0.6), 
-    rgba(0, 133, 255, 0.6)
+    rgba(98,142,203)
   );
   transition: all 0.4s ease;
 }

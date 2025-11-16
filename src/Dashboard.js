@@ -406,7 +406,7 @@ function Dashboard() {
                             title: {
                               display: true,
                               text: getCurrentBarangayData().title,
-                              color: '#ffd166',
+                              color: '#ffffff',
                               font: {
                                 size: 14,
                                 weight: 'bold'
@@ -417,7 +417,7 @@ function Dashboard() {
                             },
                             tooltip: {
                               backgroundColor: 'rgba(10, 30, 60, 0.95)',
-                              titleColor: '#ffd166',
+                              titleColor: '#ffffff',
                               bodyColor: '#FFFFFF',
                               borderColor: 'rgba(255, 255, 255, 0.1)',
                               borderWidth: 1,
@@ -545,7 +545,7 @@ function Dashboard() {
 
             <div className="dashboard-card-stat">
               <span className="stat-number">{loadingClusters?'...':(clusteredAccidentsCount ?? '0')}</span>
-              <span className="stat-label">Cluster{clusteredAccidentsCount===1?'':'s'}</span>
+              <span className="stat-label">Accident Cluster{clusteredAccidentsCount===1?'':'s'}</span>
             </div>
 
             <div className="severity-section">
