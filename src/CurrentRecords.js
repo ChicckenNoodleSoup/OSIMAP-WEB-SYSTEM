@@ -582,7 +582,7 @@ function CurrentRecords() {
             <span className="filtered-indicator"> (filtered from {records.length} total)</span>
           )}
           {loadingMore && (
-            <span className="loading-more-indicator" style={{ marginLeft: '10px', color: '#ffd166', fontSize: '0.9em' }}>
+            <span className="loading-more-indicator" style={{ marginLeft: '10px', color: '#ffffff', fontSize: '0.9em' }}>
               ⏳ Loading more records...
             </span>
           )}

@@ -13,13 +13,13 @@
   --color-primary-600: #0072d9;
   --color-primary-700: #005fb3;
   --primary-text: #f1efec; /* Most commonly used text color */
-  --background-dark: #005C99; /* Main dark background */
+  --background-dark: #628ECB; /* Main dark background */
 
   /* ========================================
    * NEUTRALS & BACKGROUNDS
    * ======================================== */
-  --color-bg: #005C99;
-  --background-gradient-start: #005C99;
+  --color-bg: #628ECB;
+  --background-gradient-start: #628ECB;
   --background-gradient-end: #1a3a5c;
   
   /* Glass morphism effects (frosted glass look) */
@@ -98,7 +98,7 @@
    * SPECIAL PURPOSE COLORS
    * ======================================== */
   --noise-cluster-color: #95a5a6;
-  --dashboard-accent: #ffd166;
+  --dashboard-accent: #ffffff;
   --tooltip-bg: rgba(10, 30, 60, 0.95);
 
   /* ========================================
