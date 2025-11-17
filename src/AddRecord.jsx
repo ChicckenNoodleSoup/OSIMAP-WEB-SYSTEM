@@ -474,15 +474,11 @@ export default function AddRecord() {
             </button>
 
             <div className="addrec-edit-instructions" role="status">
-              <strong>💡 How to Add Records</strong>
-              <div>• Drag and drop your Excel or CSV file or click to browse.</div>
-              <div>• Supported formats: <code>.xlsx</code>, <code>.xls</code>, and <code>.csv</code> (max 50MB).</div>
-              <div>• Required columns: barangay, lat, lng, datecommitted, timecommitted, offensetype, victimcount, suspectcount, victiminjured, victimkilled, victimunharmed, suspectkilled.</div>
-              <div>• For Excel files: Sheet names must contain a year (e.g., "2023", "Accidents_2024").</div>
-              <div>• For CSV files: Year is automatically extracted from the datecommitted column.</div>
-              <div>• The system will validate, upload, process, and convert data into GeoJSON.</div>
-              <div>• Follow the progress steps below — each icon shows the current stage.</div>
-              <div>• When complete, your new data will be reflected on the map and current records.</div>
+              <strong>💡 Upload Tips</strong>
+              <div>• Drag and drop one Excel/CSV file (max 50 MB) or click to browse.</div>
+              <div>• Include barangay, lat, lng, datecommitted, timecommitted, offensetype, and victimcount, suspect count, victiminjured, victimkilled, victimunharmed, suspectkilled.</div>
+              <div>• Excel sheets must include the year in the sheet name; CSV years are auto-detected.</div>
+              <div>• Follow the progress steps below—records appear in the map and current records when finished.</div>
             </div>
           </div>
 
