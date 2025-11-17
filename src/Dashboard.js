@@ -38,6 +38,10 @@ function Dashboard() {
   // Use persistent state for year and currentPage
   const [year, setYear] = usePageState('year', currentYearDefault);
   const [currentPage, setCurrentPage] = usePageState('currentPage', 0);
+  const [yearLimits, setYearLimits] = useState({
+    min: currentYearDefault,
+    max: currentYearDefault
+  });
   
   const [count, setCount] = useState(null);
   const [loadingCount, setLoadingCount] = useState(false);
@@ -63,6 +67,11 @@ function Dashboard() {
     } catch (error) {
       console.error('Error fetching user data:', error);
     }
+  };
+
+  const clampYearToLimits = (value, limits = yearLimits) => {
+    if (!Number.isFinite(value)) return limits.min;
+    return Math.min(Math.max(value, limits.min), limits.max);
   };
 
   // Fetch total accidents for year
@@ -286,6 +295,43 @@ function Dashboard() {
     };
   }, [year]);
 
+  useEffect(() => {
+    const fetchYearRange = async () => {
+      try {
+        const [{ data: oldestData, error: oldestError }, { data: newestData, error: newestError }] = await Promise.all([
+          supabase
+            .from('road_traffic_accident')
+            .select('year')
+            .order('year', { ascending: true })
+            .limit(1),
+          supabase
+            .from('road_traffic_accident')
+            .select('year')
+            .order('year', { ascending: false })
+            .limit(1)
+        ]);
+
+        if (oldestError || newestError) {
+          console.error('Error fetching year range', oldestError || newestError);
+          return;
+        }
+
+        const minYear = oldestData?.[0]?.year ?? currentYearDefault;
+        const maxYear = newestData?.[0]?.year ?? currentYearDefault;
+        const nextLimits = { min: minYear, max: maxYear };
+        setYearLimits(nextLimits);
+        setYear(prev => {
+          const parsed = parseInt(prev, 10);
+          return clampYearToLimits(Number.isFinite(parsed) ? parsed : maxYear, nextLimits);
+        });
+      } catch (err) {
+        console.error('Error determining year range', err);
+      }
+    };
+
+    fetchYearRange();
+  }, []);
+
   return (
     <div className="dashboard">
       <div className="page-header">
@@ -337,9 +383,16 @@ function Dashboard() {
                 type="number"
                 className="dashboard-year-input"
                 value={year}
+                min={yearLimits.min}
+                max={yearLimits.max}
                 onChange={e => {
-                  const v = e.target.value.replace(/[^\d]/g, '');
-                  setYear(v === '' ? '' : parseInt(v, 10));
+                  const digitsOnly = e.target.value.replace(/[^\d]/g, '');
+                  if (digitsOnly === '') {
+                    setYear(yearLimits.min);
+                    return;
+                  }
+                  const parsed = parseInt(digitsOnly, 10);
+                  setYear(clampYearToLimits(parsed));
                 }}
                 aria-label="Select year"
               />

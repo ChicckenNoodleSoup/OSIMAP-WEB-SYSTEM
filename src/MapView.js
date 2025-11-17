@@ -727,15 +727,10 @@ export default function MapView() {
             </button>
 
             <div className="viewmap-edit-instructions" role="status">
-              <strong>💡 How Accident Heatmap Work</strong>
-              <div>• <b>Heatmap</b>: Shows accident density with a color gradient from blue (low) to red (high intensity).</div>
-              <div>• <b>Clusters</b>: Colored circles group nearby accidents.</div>
-              <div>• <b>Points</b>: Individual accident markers colored by their cluster assignment. Gray points are unclustered.</div>
-              <div>• Toggle <b>Heatmap</b>, <b>Clusters</b>, or <b>Points</b> using the checkboxes above the map.</div>
-              <div>• Use the filters to narrow results by <b>year</b>, <b>location</b>, <b>offense type</b>, or <b>severity</b>.</div>
-              <div>• Hover over clusters or points for detailed information (not available in heatmap mode).</div>
-              <div>• Click the <b>Legend</b> button (bottom-right) to view color meanings and click clusters to zoom.</div>
-              <div>• Use the fullscreen button (top-right) for an expanded map view.</div>
+              <strong>💡 Heatmap Tips</strong>
+              <div>• Colors show accident density (blue = low, red = high).</div>
+              <div>• Use filters or the Heatmap / Clusters / Points toggles to focus the view.</div>
+              <div>• Hover items for quick stats; open the legend or fullscreen controls for more context.</div>
             </div>
           </div>
 
