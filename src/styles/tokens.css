@@ -23,16 +23,26 @@
   --background-gradient-end: #1a3a5c;
   
   /* Glass morphism effects (frosted glass look) */
-  --color-surface: rgba(255, 255, 255, 0.06);
-  --glass-bg: rgba(255, 255, 255, 0.06); /* Alias */
+  --color-surface: rgba(255, 255, 255, 0.08);
+  --glass-bg-extra-soft: rgba(255, 255, 255, 0.025);
+  --glass-bg-soft: rgba(255, 255, 255, 0.05);
+  --glass-bg-medium: rgba(255, 255, 255, 0.065);
+  --glass-bg: rgba(255, 255, 255, 0.08); /* Default frosted */
+  --glass-bg-strong: rgba(255, 255, 255, 0.15);
   --color-surface-strong: rgba(255, 255, 255, 0.12);
-  --glass-bg-hover: rgba(255, 255, 255, 0.08);
-  --glass-bg-active: rgba(255, 255, 255, 0.1);
-  
+  --glass-panel-bg: rgba(24, 54, 86, 0.5); /* Dark frosted glass base */
+  --glass-panel-bg-soft: rgba(24, 54, 86, 0.4); /* Slightly lighter frosted surface */
+  --glass-panel-highlight: rgba(255, 255, 255, 0.18); /* Soft light layer for accents */
+  --glass-bg-hover: rgba(255, 255, 255, 0.1);
+  --glass-bg-active: rgba(255, 255, 255, 0.12);
+
   /* Borders */
   --color-border: rgba(255, 255, 255, 0.15);
-  --glass-border: rgba(241, 239, 236, 0.1);
-  --glass-border-hover: rgba(241, 239, 236, 0.2);
+  --glass-border-extra-soft: rgba(255, 255, 255, 0.04);
+  --glass-border-soft: rgba(255, 255, 255, 0.06);
+  --glass-border-subtle: rgba(241, 239, 236, 0.08);
+  --glass-border: rgba(241, 239, 236, 0.15);
+  --glass-border-hover: rgba(241, 239, 236, 0.25);
   
   /* Text colors */
   --color-text: #ffffff;

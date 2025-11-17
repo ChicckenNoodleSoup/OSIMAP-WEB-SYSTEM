@@ -204,7 +204,7 @@
 
 /* Frosted Card */
 .records-card {
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--glass-panel-bg-soft);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   border-radius: 28px;
@@ -213,6 +213,7 @@
   color: white;
   overflow-x: auto;
   transition: all 0.3s ease;
+  border: 1px solid var(--glass-border);
 }
 
 .records-card:hover {
@@ -249,8 +250,8 @@
   padding-left: 30px; 
   height: 36px;
   border-radius: 28px; 
-  border: 1px solid rgba(255,255,255,0.2);
-  background-color: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--glass-border);
+  background-color: var(--glass-panel-highlight);
   color: white;
 }
 
@@ -264,11 +265,11 @@
   align-items: flex-end;
   gap: 1rem;
   flex-wrap: wrap;
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--glass-panel-bg-soft);
   backdrop-filter: blur(8px);
   border-radius: 14px;
   padding: 1.25rem;
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--glass-border-soft);
   margin-bottom: 0.75rem;
   position: relative;
   z-index: 10;
@@ -342,9 +343,9 @@
 .sort-select {
   width: 100%;
   padding: 6px 10px;
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--glass-panel-highlight);
   backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid var(--glass-border);
   border-radius: 15px;
   color: #fff;
   font-size: 0.9rem;
@@ -354,14 +355,14 @@
 }
 
 .sort-select:hover {
-  background: rgba(255, 255, 255, 0.15);
+  background: var(--glass-panel-highlight);
   border-color: rgba(0, 133, 255, 0.5);
   box-shadow: 0 0 8px rgba(0, 133, 255, 0.3);
 }
 
 .sort-select:focus {
   outline: none;
-  background: rgba(255, 255, 255, 0.2);
+  background: var(--glass-panel-highlight);
   border-color: rgba(0, 133, 255, 0.8);
   box-shadow: 0 0 12px rgba(0, 133, 255, 0.5);
 }
@@ -702,17 +703,17 @@
 }
 
 .records-table tbody tr:hover {
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--glass-panel-highlight);
   box-shadow: 0 4px 12px rgba(0, 133, 255, 0.2);
   transform: translateY(-2px);
 }
 
 .records-table tbody tr:nth-child(even) {
-  background: rgba(255, 255, 255, 0.02);
+  background: var(--glass-bg-extra-soft);
 }
 
 .records-table tbody tr:nth-child(odd) {
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--glass-bg-soft);
 }
 
 /* Editable Row */
@@ -776,7 +777,7 @@ input[type="time"] {
   gap: 12px;
   margin: 0 0 1rem 0;
   font-size: 14px;
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--glass-panel-highlight);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   padding: 0.5rem 1rem;
@@ -787,7 +788,7 @@ input[type="time"] {
 .pagination-number {
   padding: 6px 12px;
   border-radius: 12px;
-  background: rgba(255,255,255,0.1);
+  background: var(--glass-panel-highlight);
   color: white;
   border: none;
   cursor: pointer;

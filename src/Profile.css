@@ -12,7 +12,7 @@
 .profile-container {
   width: 100%;
   max-width: 900px;
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--glass-panel-bg-soft);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(15px);
   border-radius: 20px;
@@ -53,7 +53,7 @@
   font-weight: 500;
   font-size: 0.9rem;
   color: #f1f1f1;
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--glass-panel-bg-soft);
   transition: all 0.3s ease;
 }
 
@@ -89,6 +89,7 @@
   text-align: center;
   font-weight: 500;
   backdrop-filter: blur(10px);
+  border: 1px solid var(--glass-border);
 }
 
 .profile-message.success {
@@ -107,7 +108,7 @@
   text-align: left;
   padding: 0.05rem 0.8rem;
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--glass-panel-bg-soft);
   display: flex;
   justify-content: space-between;
 }
@@ -141,8 +142,8 @@
   width: 80%;
   padding: 0.5rem 0.8rem;
   border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid var(--glass-border-soft);
+  background: var(--glass-panel-bg-soft);
   color: #fff;
   outline: none;
   font-size: 0.95rem;
@@ -161,7 +162,7 @@
 .profile-edit-input:focus,
 .profile-edit-select:focus {
   border-color: #00aaff;
-  background: rgba(255, 255, 255, 0.25);
+  background: var(--glass-panel-highlight);
 }
 
 /* Buttons at the bottom */

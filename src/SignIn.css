@@ -125,10 +125,11 @@
   left: -10%;
   width: 75%;
   height: 100%;
-  background: rgba(255, 255, 255, 0.2);
+  background: var(--glass-panel-bg-soft);
   border-top-left-radius: 2vw;
   border-bottom-left-radius: 2vw;
   z-index: 0;
+  opacity: 0.85;
 }
 
 .signin-form-side::before {
@@ -148,18 +149,18 @@
 .signin-card {
   position: relative;
   z-index: 2;
-  background: rgba(241, 239, 236, 0.05);
+  background: var(--glass-panel-bg-soft);
   border-radius: 3vw;
   padding: clamp(1rem, 4vw, 3rem);
   width: 90%;
   max-width: 30rem;
-  color: rgba(241, 239, 236, 0.5);
+  color: rgba(241, 239, 236, 0.85);
   box-shadow: 
     0 0.4rem 0.4rem rgba(0, 0, 0, 0.25),
     0 0 20px rgba(0, 133, 255, 0.1);
   font-weight: bold;
-  backdrop-filter: blur(5px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--glass-border);
   transition: all 0.3s ease;
 }
 
@@ -196,9 +197,9 @@ h6 {
   height: clamp(2.2rem, 5vh, 2.8rem);
   padding: 0.8em 1em;
   margin: 0.2em 0 1em;
-  border: none;
+  border: 1px solid var(--glass-border-soft);
   border-radius: 5rem;
-  background: rgba(241, 239, 236, 0.05);
+  background: var(--glass-panel-bg);
   color: rgb(255, 255, 255);
   font-size: clamp(0.9rem, 1vw, 1rem);
   font-weight: bold;
@@ -213,7 +214,7 @@ h6 {
   box-shadow: 
     inset 0 0 0 0.15rem rgba(0, 133, 255, 0.3),
     0 0 15px rgba(0, 133, 255, 0.2);
-  background: rgba(241, 239, 236, 0.08);
+  background: var(--glass-panel-highlight);
 }
 
 .signin-card input::placeholder {

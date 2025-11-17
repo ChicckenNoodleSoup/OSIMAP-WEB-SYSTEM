@@ -232,12 +232,12 @@
   flex-wrap: wrap;
   gap: 6px;
   align-items: center;
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--glass-panel-bg-soft);
   backdrop-filter: blur(12px);
   border-radius: 28px;
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
   padding: 0.75rem 1.5rem;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--glass-border-soft);
   margin-top: -25px;
   overflow: visible !important;
   position: relative;
@@ -267,7 +267,7 @@
 
 /* Card styling */
 .map-card {
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--glass-panel-bg-soft);
   backdrop-filter: blur(12px);
   border-radius: 28px;
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
@@ -278,6 +278,7 @@
   transition: all 0.5s ease-in-out;
   position: relative;
   z-index: 1;
+  border: 1px solid var(--glass-border);
 }
 
 /* Map wrapper inside the card */
@@ -307,7 +308,7 @@
   justify-content: space-between;
   align-items: center;
   color: #fff;
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--glass-panel-bg-soft);
   backdrop-filter: blur(12px);
   border-radius: 28px;
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
@@ -316,6 +317,7 @@
   position: relative;
   z-index: 1;
   gap: 20px;
+  border: 1px solid var(--glass-border);
 }
 
 /* Checkboxes container on the left */
@@ -583,9 +585,9 @@
   border-radius: 28px !important;
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
   padding: 20px !important;
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--glass-panel-bg-soft);
   backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  border: 1px solid var(--glass-border);
   transition: all 0.5s ease-in-out;
 }
 
@@ -595,9 +597,9 @@
   left: 50%;
   transform: translateX(-50%);
   z-index: 10001;
-  background: rgba(255, 255, 255, 0.12);
+  background: var(--glass-panel-bg-soft);
   backdrop-filter: blur(15px);
-  border: 1px solid rgba(255, 255, 255, 0.25);
+  border: 1px solid var(--glass-border-hover);
   width: auto;
   max-width: 80%;
   padding: 10px 20px;

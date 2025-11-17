@@ -85,9 +85,9 @@
   gap: 18px;
   text-align: center;
   padding: 48px 28px;
-  background: rgba(255,255,255,0.04);
+  background: var(--glass-panel-highlight);
   backdrop-filter: blur(10px);
-  border: 1px solid rgba(255,255,255,0.06);
+  border: 1px solid var(--glass-border);
   border-radius: 20px;
   box-shadow: 0 8px 22px rgba(0,0,0,0.28);
   max-width: 680px;
@@ -104,10 +104,10 @@
   gap: 8px;
   margin-bottom: 12px;
   padding: 4px;
-  background: rgba(255,255,255,0.02);
+  background: var(--glass-panel-bg-soft);
   backdrop-filter: blur(8px);
   border-radius: 10px;
-  border: 1px solid rgba(255,255,255,0.04);
+  border: 1px solid var(--glass-border-soft);
 }
 
 .tab-btn {
@@ -157,10 +157,10 @@
   align-items: center;
   gap: 14px;
   padding: 56px 20px;
-  background: rgba(255,255,255,0.02);
+  background: var(--glass-panel-highlight);
   backdrop-filter: blur(10px);
   border-radius: 18px;
-  border: 1px solid rgba(255,255,255,0.04);
+  border: 1px solid var(--glass-border);
   color: #e6f2ff;
 }
 
@@ -226,9 +226,9 @@
   margin-bottom: 1.5rem;
 }
 
-.accounts-column {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  .accounts-column {
+  background: var(--glass-panel-bg-soft);
+  border: 1px solid var(--glass-border);
   border-radius: 16px;
   backdrop-filter: blur(20px);
   overflow: hidden;
@@ -266,8 +266,8 @@
 }
 
 .account-card {
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--glass-panel-bg-soft);
+  border: 1px solid var(--glass-border-soft);
   border-radius: 12px;
   padding: 16px;
   margin-bottom: 12px;
@@ -347,10 +347,10 @@
 
 /* Container that visually wraps table */
 .accounts-table-container {
-  background: rgba(255,255,255,0.03);
+  background: var(--glass-panel-bg-soft);
   border-radius: 14px;
   overflow: hidden;
-  border: 1px solid rgba(255,255,255,0.04);
+  border: 1px solid var(--glass-border);
   box-shadow: 0 10px 30px rgba(0,0,0,0.35);
 }
 
@@ -401,8 +401,8 @@
 
 .account-row:hover {
   transform: translateY(-4px);
-  background: rgba(0,133,255,0.03);
-  border-color: rgba(0,133,255,0.06);
+  background: var(--glass-panel-bg-soft);
+  border-color: rgba(0,133,255,0.25);
 }
 
 /* Name cell (with icon, role, name, and email stacked) */
@@ -603,9 +603,9 @@
 }
 
 .log-card {
-  background: rgba(255,255,255,0.03);
+  background: var(--glass-panel-bg-soft);
   backdrop-filter: blur(8px);
-  border: 1px solid rgba(255,255,255,0.04);
+  border: 1px solid var(--glass-border);
   border-radius: 12px;
   padding: 14px 16px;
   box-shadow: 0 8px 22px rgba(0,0,0,0.28);
@@ -800,10 +800,10 @@
 }
 
 .role-assignment-container {
-  background: rgba(255, 255, 255, 0.02);
+  background: var(--glass-panel-bg-soft);
   border-radius: 14px;
   padding: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--glass-border-soft);
   overflow: visible;
 }
 
@@ -817,8 +817,8 @@
 /* Scrollbar styles now in styles/scrollbar.css */
 
 .role-user-card {
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: var(--glass-panel-bg-soft);
+  border: 1px solid var(--glass-border);
   border-radius: 12px;
   padding: 16px;
   margin-bottom: 12px;
@@ -836,8 +836,8 @@
 }
 
 .role-user-card:hover {
-  background: rgba(255, 255, 255, 0.05);
-  border-color: rgba(0, 133, 255, 0.2);
+  background: var(--glass-panel-bg-soft);
+  border-color: rgba(0, 133, 255, 0.4);
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
@@ -939,11 +939,11 @@
 }
 
 .admin-create-form {
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--glass-panel-bg-soft);
   backdrop-filter: blur(12px);
   border-radius: 16px;
   padding: 32px;
-  border: 2px solid rgba(255, 255, 255, 0.15);
+  border: 2px solid var(--glass-border);
   max-width: 800px;
   width: 100%;
   box-shadow: 
@@ -973,8 +973,8 @@
 
 .form-group input {
   padding: 12px 16px;
-  background: rgba(241, 239, 236, 0.12);
-  border: 2px solid rgba(255, 255, 255, 0.15);
+  background: var(--glass-panel-bg-soft);
+  border: 2px solid var(--glass-border-soft);
   border-radius: 10px;
   color: #ffffff;
   font-size: 0.95rem;
@@ -986,7 +986,7 @@
 .form-group input:focus {
   outline: none;
   border-color: rgba(0, 133, 255, 0.6);
-  background: rgba(241, 239, 236, 0.18);
+  background: var(--glass-panel-highlight);
   box-shadow: 0 0 0 4px rgba(0, 133, 255, 0.15);
 }
 

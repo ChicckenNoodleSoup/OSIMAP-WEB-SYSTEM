@@ -50,10 +50,11 @@
   left: -10%;
   width: 75%;
   height: 100%;
-  background: rgba(255, 255, 255, 0.2);
+  background: var(--glass-panel-bg-soft);
   border-top-left-radius: 2vw;
   border-bottom-left-radius: 2vw;
   z-index: 0;
+  opacity: 0.85;
 }
 
 .create-form-side::before {
@@ -73,7 +74,7 @@
 .create-card {
   position: relative;
   z-index: 2;
-  background: rgba(241, 239, 236, 0.05);
+  background: var(--glass-panel-bg-soft);
   border-radius: 3vw;
   padding: clamp(1rem, 4vw, 3rem);
   width: 90%;
@@ -82,6 +83,8 @@
   box-shadow: 0 0.4rem 0.4rem rgba(0, 0, 0, 0.25);
   font-weight: bold;
   overflow: visible;
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(8px);
 }
 
 .create-card-logo {
@@ -106,9 +109,9 @@ h6 {
   height: clamp(2.2rem, 5vh, 2.8rem);
   padding: 0.8em 1em;
   margin: 0.2em 0 1em;
-  border: none;
+  border: 1px solid var(--glass-border-soft);
   border-radius: 5rem;
-  background: rgba(241, 239, 236, 0.05);
+  background: var(--glass-panel-bg);
   color: #F1EFEC;
   font-size: clamp(0.9rem, 1vw, 1rem);
   font-weight: bold;
