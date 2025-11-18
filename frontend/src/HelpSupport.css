@@ -19,13 +19,6 @@
   padding-bottom: 80px !important;
 }
 
-/* Optional: let the page body scroll */
-body, html {
-  height: auto;
-  min-height: 100%;
-  overflow-y: auto;
-}
-
 .help-support-container {
   display: flex;
   flex-direction: column;
