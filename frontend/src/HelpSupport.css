@@ -1,21 +1,10 @@
 /* Scroll wrapper - Scrollbar styles now in styles/scrollbar.css */
-.scroll-wrapper,
-.help-scroll-wrapper {
-  width: 100%;
-  height: auto;       /* no fixed height */
-  max-height: none;   /* remove restrictions */
-  overflow: auto;     /* enable scrolling */
-  padding: 1rem;
-  box-sizing: border-box;
-}
-/* Scrollable help section naturally (page scrolls) */
-.help-scroll-wrapper {
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-  height: auto;          /* allow height to grow */
-  max-height: none;      /* remove restrictions */
-  padding: 1rem 1rem 80px 1rem;
+.scroll-wrapper {
+  padding: 24px;
+  min-height: 100vh;     /* at least full viewport height */
+  height: 100vh;         /* fill viewport height */
+  overflow-y: auto;      /* enable vertical scrolling if content overflows */
+  overflow-x: hidden;    /* prevent horizontal scrolling */
   box-sizing: border-box;
 }
 
