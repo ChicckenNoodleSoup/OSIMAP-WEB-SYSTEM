@@ -1,21 +1,29 @@
 /* Scroll wrapper - Scrollbar styles now in styles/scrollbar.css */
 .scroll-wrapper,
 .help-scroll-wrapper {
-  max-height: auto;
-  max-width: 100%;
-  overflow: auto;
+  width: 100%;
+  height: auto;       /* no fixed height */
+  max-height: none;   /* remove restrictions */
+  overflow: auto;     /* enable scrolling */
   padding: 1rem;
   box-sizing: border-box;
 }
-
 /* Help & Support container */
 .help-scroll-wrapper {
   display: flex;
   flex-direction: column;
-  height: auto;
-  overflow-y: auto;
+  height: auto;       /* remove fixed height */
+  max-height: none;   /* remove restrictions */
+  overflow-y: auto;   /* enable vertical scrolling */
   box-sizing: border-box;
   padding-bottom: 80px !important;
+}
+
+/* Optional: let the page body scroll */
+body, html {
+  height: auto;
+  min-height: 100%;
+  overflow-y: auto;
 }
 
 .help-support-container {
