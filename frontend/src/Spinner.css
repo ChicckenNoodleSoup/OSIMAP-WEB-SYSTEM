@@ -20,13 +20,11 @@
 
 /* Loading text */
 .loading-text {
-  font-size: 1rem;
-  font-weight: 500;
+  background: transparent; 
+  outline: none;
+  border: none;
+  font-size: 1.2rem;
   color: #ffffff;
-  -webkit-user-select: none; /* Safari, iOS Safari */
-  -moz-user-select: none;    /* Older Firefox */
-  -ms-user-select: none;     /* IE10+ */
-  user-select: none;         /* Standard */
 }
 
 
