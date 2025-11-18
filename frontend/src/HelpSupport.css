@@ -8,6 +8,24 @@
   box-sizing: border-box;
 }
 
+.help-scroll-wrapper {
+  max-height: 100vh;
+  max-width: 100%;
+  overflow: auto;
+  padding: 1rem;
+  box-sizing: border-box;
+}
+
+/* Help & Support container */
+.help-scroll-wrapper {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow-y: auto;
+  box-sizing: border-box;
+  padding-bottom: 80px !important;
+}
+
 .help-support-container {
   display: flex;
   flex-direction: column;
