@@ -17,6 +17,7 @@
   overflow-y: auto;       /* enable vertical scrolling */
   overflow-x: hidden;     /* prevent horizontal scrolling */
   box-sizing: border-box;
+  padding-bottom: 80px;
 }
 
 .help-support-container {
