@@ -1,29 +1,24 @@
 /* Scroll wrapper - Scrollbar styles now in styles/scrollbar.css */
+/* Scroll wrapper - enables vertical scrolling */
 .scroll-wrapper {
   padding: 24px;
-  min-height: 100vh;     /* at least full viewport height */
-  height: 100vh;         /* fill viewport height */
-  overflow-y: auto;      /* enable vertical scrolling if content overflows */
-  overflow-x: hidden;    /* prevent horizontal scrolling */
+  min-height: 100vh;
+  height: 100vh;
+  overflow-y: auto;
+  overflow-x: hidden;
   box-sizing: border-box;
 }
 
-.help-scroll-wrapper {
-  max-height: 100vh;
-  max-width: 100%;
-  overflow: auto;
-  padding: 1rem;
-  box-sizing: border-box;
-}
-
-/* Help & Support container */
+/* Help & Support scroll container */
 .help-scroll-wrapper {
   display: flex;
   flex-direction: column;
-  height: 100vh;
-  overflow-y: auto;
+  width: 100%;
+  height: auto;           /* grow naturally with content */
+  max-height: none;       /* remove height restriction */
+  overflow-y: auto;       /* scroll when content exceeds viewport */
+  padding: 1rem 1rem 80px 1rem;
   box-sizing: border-box;
-  padding-bottom: 80px !important;
 }
 
 .help-support-container {
