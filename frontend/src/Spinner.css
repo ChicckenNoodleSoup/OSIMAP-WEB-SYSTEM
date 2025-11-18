@@ -23,7 +23,6 @@
   font-size: 1rem;
   font-weight: 500;
   color: #ffffff;
-  animation: pulse 1.5s ease-in-out infinite;
 }
 
 @keyframes pulse {
