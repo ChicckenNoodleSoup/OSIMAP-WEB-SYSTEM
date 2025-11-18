@@ -8,15 +8,15 @@
   padding: 1rem;
   box-sizing: border-box;
 }
-/* Help & Support container */
+/* Scrollable help section naturally (page scrolls) */
 .help-scroll-wrapper {
   display: flex;
   flex-direction: column;
-  height: auto;       /* remove fixed height */
-  max-height: none;   /* remove restrictions */
-  overflow-y: auto;   /* enable vertical scrolling */
+  width: 100%;
+  height: auto;          /* allow height to grow */
+  max-height: none;      /* remove restrictions */
+  padding: 1rem 1rem 80px 1rem;
   box-sizing: border-box;
-  padding-bottom: 80px !important;
 }
 
 .help-support-container {
