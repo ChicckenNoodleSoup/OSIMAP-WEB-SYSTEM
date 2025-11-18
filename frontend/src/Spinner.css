@@ -23,7 +23,12 @@
   font-size: 1rem;
   font-weight: 500;
   color: #ffffff;
+  -webkit-user-select: none; /* Safari, iOS Safari */
+  -moz-user-select: none;    /* Older Firefox */
+  -ms-user-select: none;     /* IE10+ */
+  user-select: none;         /* Standard */
 }
+
 
 @keyframes pulse {
   0%, 100% {
