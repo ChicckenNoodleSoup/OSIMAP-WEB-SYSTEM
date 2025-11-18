@@ -2,7 +2,7 @@
 .scroll-wrapper,
 .help-scroll-wrapper {
   max-height: auto;
-  max-width: auto;
+  max-width: 100%;
   overflow: auto;
   padding: 1rem;
   box-sizing: border-box;
