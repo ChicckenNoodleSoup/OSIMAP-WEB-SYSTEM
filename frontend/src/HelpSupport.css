@@ -1,8 +1,8 @@
 /* Scroll wrapper - Scrollbar styles now in styles/scrollbar.css */
 .scroll-wrapper,
 .help-scroll-wrapper {
-  max-height: 100vh;
-  max-width: 100%;
+  max-height: auto;
+  max-width: auto;
   overflow: auto;
   padding: 1rem;
   box-sizing: border-box;
@@ -12,7 +12,7 @@
 .help-scroll-wrapper {
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  height: auto
   overflow-y: auto;
   box-sizing: border-box;
   padding-bottom: 80px !important;
