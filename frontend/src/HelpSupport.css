@@ -9,15 +9,13 @@
   box-sizing: border-box;
 }
 
-/* Help & Support scroll container */
+/* Help Scroll Wrapper - enables vertical scrolling */
 .help-scroll-wrapper {
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-  height: auto;           /* grow naturally with content */
-  max-height: none;       /* remove height restriction */
-  overflow-y: auto;       /* scroll when content exceeds viewport */
-  padding: 1rem 1rem 80px 1rem;
+  padding: 24px;
+  min-height: 100vh;      /* at least full viewport height */
+  height: 100vh;          /* fill viewport height */
+  overflow-y: auto;       /* enable vertical scrolling */
+  overflow-x: hidden;     /* prevent horizontal scrolling */
   box-sizing: border-box;
 }
 
