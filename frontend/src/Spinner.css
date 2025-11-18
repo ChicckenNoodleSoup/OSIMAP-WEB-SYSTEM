@@ -19,12 +19,16 @@
 }
 
 /* Loading text */
-.loading-text {
-  background: transparent; 
-  outline: none;
-  border: none;
-  font-size: 1.2rem;
-  color: #ffffff;
+.loading-text,
+.loading-text * {
+  background: none !important;
+  box-shadow: none !important;
+  outline: none !important;
+  -webkit-tap-highlight-color: transparent !important;
+   -webkit-user-select: none; /* Safari, iOS Safari */
+  -moz-user-select: none;    /* Older Firefox */
+  -ms-user-select: none;     /* IE10+ */
+  user-select: none;         /* Standard */
 }
 
 
