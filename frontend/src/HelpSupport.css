@@ -12,7 +12,7 @@
 .help-scroll-wrapper {
   display: flex;
   flex-direction: column;
-  height: auto
+  height: auto;
   overflow-y: auto;
   box-sizing: border-box;
   padding-bottom: 80px !important;
