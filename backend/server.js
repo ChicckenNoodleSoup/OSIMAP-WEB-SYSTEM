@@ -5,10 +5,15 @@ import cors from "cors";
 import fs from "fs";
 import { spawn } from "child_process";
 import XLSX from "xlsx";
-import NodeCache from "node-cache";  
+import NodeCache from "node-cache";
+import nodemailer from "nodemailer";
+import dotenv from "dotenv";
+
+// Load environment variables
+dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 5000; 
+const PORT = process.env.PORT || 5000;
 
 // Enable CORS
 app.use(cors());
@@ -426,7 +431,6 @@ function runSingleScript(scriptPath, onSuccess) {
   });
 }
 
-
 // Task Queue Processor - processes one task at a time
 const processQueue = () => {
   // If already processing or queue is empty, do nothing
@@ -562,6 +566,75 @@ const runClusteringPipeline = () => {
   });
 };
 
+// ============================================================================
+// EMAIL SUPPORT ROUTES (from second server)
+// ============================================================================
+
+// Support email endpoint
+app.post('/api/send-support-email', async (req, res) => {
+  const { name, email, message, to } = req.body;
+
+  try {
+    // Create transporter using Gmail
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+    });
+
+    // Email options
+    const mailOptions = {
+      from: process.env.EMAIL_USER,
+      to: to, // osimapdatabase@gmail.com
+      replyTo: email, // User's email for replies
+      subject: `Support Request from ${name}`,
+      html: `
+        <div style="font-family: Arial, sans-serif; padding: 20px; background-color: #f4f4f4;">
+          <div style="max-width: 600px; margin: 0 auto; background: white; padding: 20px; border-radius: 10px;">
+            <h2 style="color: #0085FF; border-bottom: 2px solid #0085FF; padding-bottom: 10px;">
+              New Support Message
+            </h2>
+            <div style="margin: 20px 0;">
+              <p><strong>From:</strong> ${name}</p>
+              <p><strong>Email:</strong> <a href="mailto:${email}">${email}</a></p>
+            </div>
+            <div style="background: #f9f9f9; padding: 15px; border-radius: 5px; margin: 20px 0;">
+              <p><strong>Message:</strong></p>
+              <p style="white-space: pre-wrap;">${message}</p>
+            </div>
+            <hr style="border: none; border-top: 1px solid #ddd; margin: 20px 0;">
+            <p style="color: #666; font-size: 14px;">
+              <em>You can reply directly to this email to respond to ${name}</em>
+            </p>
+          </div>
+        </div>
+      `,
+    };
+
+    // Send email
+    await transporter.sendMail(mailOptions);
+
+    res.json({ success: true, message: 'Email sent successfully' });
+  } catch (error) {
+    console.error('Error sending support email:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: 'Failed to send email',
+      details: error.message 
+    });
+  }
+});
+
+// Health check endpoint
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'OK', message: 'Server is running' });
+});
+
+// ============================================================================
+// ORIGINAL ROUTES (from first server)
+// ============================================================================
 
 // Root route
 app.get("/", (req, res) => {
@@ -923,5 +996,6 @@ app.post("/upload", upload.single("file"), (req, res) => {
 app.listen(PORT, () => {
   console.log(`\n🚀 OSIMAP Backend Server`);
   console.log(`📍 Running on http://localhost:${PORT}`);
-  console.log(`📂 Data folder: ${dataFolder}\n`);
+  console.log(`📂 Data folder: ${dataFolder}`);
+  console.log(`📧 Email support: ${process.env.EMAIL_USER ? 'Enabled' : 'Disabled (configure .env)'}\n`);
 });
